@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SimplePad</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: data:; style-src 'self' 'unsafe-inline' blob: data:; img-src 'self' data: blob:; worker-src 'self' blob: data:; font-src 'self' data: blob:; connect-src 'self' ws: wss: blob: data: http://localhost:* http://127.0.0.1:*; child-src 'self' blob:"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: #fff;
+        color: #18181b;
+        font:
+          14px/1.4 system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      #boot-msg {
+        padding: 16px;
+        color: #71717a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"><div id="boot-msg">Iniciando SimplePad…</div></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Allow text selection inside the editor area */
+.editor-surface {
+  user-select: text;
+}
+
+/* Monaco fills the flex area without extra chrome */
+.editor-surface .monaco-editor,
+.editor-surface .monaco-editor .overflow-guard {
+  border-radius: 0;
+}
+
+.editor-surface .monaco-editor {
+  outline: none;
+}
+
+/* Match SimplePad minimal background (light / dark via Monaco themes) */
+.editor-surface > section,
+.editor-surface > div {
+  height: 100%;
+}
