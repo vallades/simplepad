@@ -107,14 +107,19 @@ jobs:
         run: npx electron-vite build
 
       - name: Package installers
+        # Only inject signing vars when secrets exist — empty CSC_LINK breaks electron-builder
+        # ("not a file"). Unsigned CI builds use CSC_IDENTITY_AUTO_DISCOVERY=false above.
         env:
-          # Optional code-signing secrets (no-op if unset)
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npx electron-builder ${{ matrix.builder_args }} --publish never
+        run: |
+          # Unset empty secrets so electron-builder does not treat them as file paths
+          [ -z "$CSC_LINK" ] && unset CSC_LINK CSC_KEY_PASSWORD || true
+          [ -z "$APPLE_ID" ] && unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID || true
+          npx electron-builder ${{ matrix.builder_args }} --publish never
 
       - name: Upload platform artifacts
         uses: actions/upload-artifact@v4
