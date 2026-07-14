@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Columns2, Maximize2, Minimize2, Settings } from 'lucide-react'
 import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import SettingsModal from './components/SettingsModal'
@@ -23,6 +24,11 @@ import {
 } from './services/fileActions'
 import { exportActiveAsHtml, exportActiveAsPdf } from './services/exportActions'
 import { autoSaveTabOnSwitch, intervalMsFromSeconds, runAutoSavePass } from './services/autoSave'
+import {
+  handleUpdateEvent,
+  requestCheckForUpdates,
+  syncFocusModeToMain
+} from './services/updateBridge'
 import { applyThemeToDocument } from './utils/theme'
 import type { MenuCommand } from '../shared/session'
 
@@ -48,10 +54,40 @@ function App(): React.JSX.Element {
 
   const splitPreview = useUiStore((state) => state.splitPreview)
   const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
+  const focusMode = useUiStore((state) => state.focusMode)
+  const setFocusMode = useUiStore((state) => state.setFocusMode)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [appVersion, setAppVersion] = useState<string>('')
+  /** Detect macOS once — traffic-light left padding for hiddenInset */
+  const [isMac] = useState(() => {
+    if (typeof window !== 'undefined' && typeof window.api?.getPlatform === 'function') {
+      return window.api.getPlatform() === 'darwin'
+    }
+    if (typeof navigator !== 'undefined') {
+      return /Mac|iPhone|iPad/.test(navigator.userAgent)
+    }
+    return false
+  })
   const saveTimerRef = useRef<number | null>(null)
   const previousTabIdRef = useRef<string | null>(null)
+  const focusModeRef = useRef(focusMode)
+
+  useEffect(() => {
+    focusModeRef.current = focusMode
+  }, [focusMode])
+
+  const applyFocusMode = useCallback(
+    (enabled: boolean): void => {
+      setFocusMode(enabled)
+      void syncFocusModeToMain(enabled)
+    },
+    [setFocusMode]
+  )
+
+  const requestToggleFocusMode = useCallback((): void => {
+    applyFocusMode(!focusModeRef.current)
+  }, [applyFocusMode])
 
   const flushSession = useCallback(async (): Promise<boolean> => {
     const state = useTabsStore.getState()
@@ -112,13 +148,29 @@ function App(): React.JSX.Element {
         case 'export-pdf':
           void exportActiveAsPdf()
           break
+        case 'toggle-focus-mode':
+          requestToggleFocusMode()
+          break
+        case 'exit-focus-mode':
+          applyFocusMode(false)
+          break
+        case 'check-updates':
+          void requestCheckForUpdates()
+          break
         case 'quit':
           break
         default:
           break
       }
     },
-    [createNewTab, requestCloseActiveTab, toggleActiveMarkdown, toggleSplitPreview]
+    [
+      applyFocusMode,
+      createNewTab,
+      requestCloseActiveTab,
+      requestToggleFocusMode,
+      toggleActiveMarkdown,
+      toggleSplitPreview
+    ]
   )
 
   // Hydrate settings + session from main
@@ -127,6 +179,14 @@ function App(): React.JSX.Element {
     void (async () => {
       await loadSettings()
       if (cancelled) return
+      if (isElectronApiAvailable()) {
+        try {
+          const v = await window.api.getVersion()
+          if (!cancelled) setAppVersion(v)
+        } catch {
+          // ignore
+        }
+      }
       try {
         const { session } = await loadSessionFromMain()
         if (cancelled) return
@@ -141,7 +201,7 @@ function App(): React.JSX.Element {
     }
   }, [hydrateFromSession, loadSettings])
 
-  // Keep document theme in sync with OS when preference is "system"
+  // Theme
   useEffect(() => {
     applyThemeToDocument(themePreference)
     if (themePreference !== 'system') return
@@ -190,7 +250,7 @@ function App(): React.JSX.Element {
     previousTabIdRef.current = activeTabId
   }, [activeTabId])
 
-  // Auto-save on window blur / hide
+  // Auto-save on blur / hide
   useEffect(() => {
     if (!autoSaveEnabled) return
 
@@ -217,12 +277,18 @@ function App(): React.JSX.Element {
     return window.api.onMenuCommand(handleMenuCommand)
   }, [handleMenuCommand])
 
-  // Recent files from menu
+  // Recent files
   useEffect(() => {
     if (!isElectronApiAvailable()) return
     return window.api.onOpenRecent((filePath) => {
       void openRecentFile(filePath)
     })
+  }, [])
+
+  // Auto-updater events → toasts
+  useEffect(() => {
+    if (!isElectronApiAvailable() || typeof window.api.onUpdateEvent !== 'function') return
+    return window.api.onUpdateEvent(handleUpdateEvent)
   }, [])
 
   // Quit confirmation
@@ -248,6 +314,20 @@ function App(): React.JSX.Element {
   // Keyboard shortcuts
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
+      // F11 — distraction-free (also wired via native menu accelerator)
+      if (event.key === 'F11') {
+        event.preventDefault()
+        requestToggleFocusMode()
+        return
+      }
+
+      // Esc exits focus mode
+      if (event.key === 'Escape' && focusModeRef.current) {
+        event.preventDefault()
+        applyFocusMode(false)
+        return
+      }
+
       const mod = event.metaKey || event.ctrlKey
       if (!mod) return
 
@@ -259,6 +339,7 @@ function App(): React.JSX.Element {
         return
       }
 
+      // Global Preview toggle: Ctrl/Cmd+Shift+P
       if (key === 'p' && event.shiftKey) {
         event.preventDefault()
         toggleSplitPreview()
@@ -316,54 +397,114 @@ function App(): React.JSX.Element {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [
     activeTabId,
+    applyFocusMode,
     createNewTab,
     requestCloseActiveTab,
+    requestToggleFocusMode,
     switchTab,
     tabs,
     toggleActiveMarkdown,
     toggleSplitPreview
   ])
 
-  return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-3 py-1.5 dark:border-zinc-800">
-        <h1 className="text-sm font-semibold tracking-tight">SimplePad</h1>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            className={[
-              'rounded px-2 py-0.5 text-xs',
-              splitPreview
-                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
-            ].join(' ')}
-            onClick={() => toggleSplitPreview()}
-            title="Split View — Preview (⌘⇧P)"
-            aria-pressed={splitPreview}
-          >
-            Preview
-          </button>
-          <button
-            type="button"
-            className="rounded px-2 py-0.5 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-            onClick={() => setSettingsOpen(true)}
-            title="Configurações (⌘,)"
-          >
-            Configurações
-          </button>
-          <span className="pl-1 text-xs text-zinc-500">
-            {sessionHydrated && settingsHydrated ? 'Pronto' : 'Carregando…'}
-          </span>
-        </div>
-      </header>
+  const previewTitle = splitPreview
+    ? 'Ocultar Preview (Ctrl/Cmd+Shift+P)'
+    : 'Mostrar Preview / Split View (Ctrl/Cmd+Shift+P)'
 
-      <TabBar />
+  return (
+    <div
+      className={[
+        'flex h-screen w-screen flex-col overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100',
+        // macOS traffic lights clearance when titleBarStyle is hiddenInset
+        focusMode ? '' : 'pt-0'
+      ].join(' ')}
+      data-focus-mode={focusMode ? 'true' : 'false'}
+      data-preview={splitPreview ? 'true' : 'false'}
+    >
+      {!focusMode ? (
+        <header
+          className={[
+            'app-drag flex shrink-0 items-center justify-between border-b border-zinc-200 px-3 py-1.5 dark:border-zinc-800',
+            isMac ? 'mac-titlebar-pad' : ''
+          ].join(' ')}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="app-no-drag text-sm font-semibold tracking-tight">SimplePad</h1>
+            {splitPreview ? (
+              <span
+                className="app-no-drag inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                title="Split View ativo — Editor | Preview"
+              >
+                <Columns2 size={11} strokeWidth={2} aria-hidden />
+                Preview ativo
+              </span>
+            ) : null}
+            {appVersion ? (
+              <span className="app-no-drag text-[10px] text-zinc-400">v{appVersion}</span>
+            ) : null}
+          </div>
+          <div className="app-no-drag flex items-center gap-1">
+            <button
+              type="button"
+              className={[
+                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
+                splitPreview
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
+              ].join(' ')}
+              onClick={() => toggleSplitPreview()}
+              title={previewTitle}
+              aria-pressed={splitPreview}
+              aria-label={previewTitle}
+            >
+              <Columns2 size={14} strokeWidth={2} aria-hidden />
+              <span className="hidden sm:inline">Preview</span>
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+              onClick={() => requestToggleFocusMode()}
+              title="Modo Distração Zero (F11)"
+              aria-pressed={focusMode}
+            >
+              <Maximize2 size={14} strokeWidth={2} aria-hidden />
+              <span className="hidden sm:inline">Foco</span>
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+              onClick={() => setSettingsOpen(true)}
+              title="Configurações (Ctrl/Cmd+,)"
+            >
+              <Settings size={14} strokeWidth={2} aria-hidden />
+              <span className="hidden sm:inline">Config</span>
+            </button>
+            <span className="pl-1 text-[11px] text-zinc-400">
+              {sessionHydrated && settingsHydrated ? 'Pronto' : '…'}
+            </span>
+          </div>
+        </header>
+      ) : (
+        <div className="pointer-events-none absolute top-2 right-2 z-40">
+          <button
+            type="button"
+            className="pointer-events-auto inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/90 px-2 py-1 text-[11px] text-zinc-600 shadow-sm backdrop-blur hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300"
+            onClick={() => applyFocusMode(false)}
+            title="Sair do Modo Distração Zero (Esc ou F11)"
+          >
+            <Minimize2 size={12} aria-hidden />
+            Sair do foco
+          </button>
+        </div>
+      )}
+
+      {!focusMode ? <TabBar /> : null}
 
       <main className="flex min-h-0 flex-1 flex-col">
         <EditorWorkspace />
       </main>
 
-      <StatusBar />
+      {!focusMode ? <StatusBar /> : null}
       {settingsOpen ? <SettingsModal open onClose={() => setSettingsOpen(false)} /> : null}
       <ToastStack />
     </div>

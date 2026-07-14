@@ -16,6 +16,7 @@ import type {
   SessionLoadResult
 } from '../shared/session'
 import { exportDocument } from './exportManager'
+import { checkForUpdates, quitAndInstallUpdate } from './updater'
 import type {
   AppSettings,
   ConfirmDialogRequest,
@@ -272,6 +273,55 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+
+  ipcMain.handle('update:check', async (): Promise<IpcResult> => {
+    try {
+      await checkForUpdates({ silent: false })
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] update:check', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle('update:install', (): IpcResult => {
+    try {
+      quitAndInstallUpdate()
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] update:install', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle('window:set-focus-mode', (event, enabled: boolean): IpcResult => {
+    const window = getSenderWindow(event)
+    if (!window) {
+      return { ok: false, error: 'Janela não encontrada' }
+    }
+    try {
+      const on = Boolean(enabled)
+      if (on) {
+        window.setFullScreen(true)
+        if (process.platform !== 'darwin') {
+          window.setMenuBarVisibility(false)
+          window.setAutoHideMenuBar(true)
+        }
+      } else {
+        if (window.isFullScreen()) {
+          window.setFullScreen(false)
+        }
+        if (process.platform !== 'darwin') {
+          window.setMenuBarVisibility(true)
+          window.setAutoHideMenuBar(true)
+        }
+      }
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] window:set-focus-mode', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
 
   ipcMain.on('app:quit-response', (_event, allow: boolean) => {
     if (allow) {

@@ -33,6 +33,9 @@ export default defineConfig({
       include: ['monaco-editor', '@monaco-editor/react']
     },
     build: {
+      // Slightly smaller production assets
+      minify: 'esbuild',
+      cssCodeSplit: true,
       rollupOptions: {
         output: {
           manualChunks(id) {

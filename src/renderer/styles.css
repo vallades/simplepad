@@ -196,3 +196,28 @@ body {
 .preview-scroll {
   user-select: text;
 }
+
+/*
+ * macOS hiddenInset: traffic lights sit at ~x:16 over the webview.
+ * Leave enough room so "SimplePad" never sits under the red/yellow/green buttons.
+ */
+.mac-titlebar-pad {
+  padding-left: 78px;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+/* Electron drag regions for frameless / hiddenInset */
+.app-drag {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Cross-platform focus ring for keyboard users */
+button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+}

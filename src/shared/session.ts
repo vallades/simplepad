@@ -42,6 +42,20 @@ export type MenuCommand =
   | 'toggle-markdown'
   | 'export-html'
   | 'export-pdf'
+  | 'toggle-focus-mode'
+  | 'exit-focus-mode'
+  | 'check-updates'
+
+/** Events pushed from main (auto-updater) to the renderer. */
+export type UpdateEventType =
+  'checking' | 'available' | 'not-available' | 'progress' | 'downloaded' | 'error'
+
+export interface UpdateEventPayload {
+  type: UpdateEventType
+  version?: string
+  percent?: number
+  message?: string
+}
 
 export interface OpenedFileDTO {
   filePath: string

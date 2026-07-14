@@ -1,0 +1,5 @@
+# Used only when forceDevUpdateConfig=true (development).
+# Point this at a generic static feed or a GitHub release API mirror for local updater tests.
+provider: generic
+url: https://github.com/vallades/simplepad/releases/latest/download/
+updaterCacheDirName: simplepad-updater

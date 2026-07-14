@@ -8,6 +8,18 @@ import { registerIpcHandlers } from './ipc'
 import { isQuitAllowed, requestQuitConfirmation, wireQuitHandlers } from './quitController'
 import { getSessionManager } from './sessionManager'
 import { getPreferencesManager } from './preferencesManager'
+import { setupAutoUpdater } from './updater'
+
+// Must run before Menu is built — otherwise macOS menu bar shows "Electron" in dev.
+app.setName('SimplePad')
+if (process.platform === 'darwin') {
+  // Align About panel / dock naming with productName
+  app.setAboutPanelOptions({
+    applicationName: 'SimplePad',
+    applicationVersion: app.getVersion(),
+    copyright: 'Copyright © SimplePad contributors'
+  })
+}
 
 // Initialize electron-log for main process (writes under userData/logs)
 log.initialize()
@@ -21,7 +33,11 @@ function createWindow(): BrowserWindow {
     minHeight: 400,
     show: false,
     title: 'SimplePad',
-    autoHideMenuBar: false,
+    // hiddenInset embeds traffic lights over the web contents — header must pad ~76px left
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    trafficLightPosition: process.platform === 'darwin' ? { x: 16, y: 14 } : undefined,
+    autoHideMenuBar: process.platform !== 'darwin',
+    backgroundColor: '#ffffff',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -36,6 +52,11 @@ function createWindow(): BrowserWindow {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+  })
+
+  // Leave OS fullscreen → exit distraction-free chrome in the renderer
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow.webContents.send('menu:command', 'exit-focus-mode')
   })
 
   // Intercept window close so we can confirm unsaved work + flush session
@@ -74,6 +95,7 @@ app.whenReady().then(() => {
   wireQuitHandlers()
   createAppMenu()
   createWindow()
+  setupAutoUpdater()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -81,7 +103,7 @@ app.whenReady().then(() => {
     }
   })
 
-  log.info('[main] SimplePad ready, userData=', app.getPath('userData'))
+  log.info('[main] SimplePad v' + app.getVersion() + ' ready, userData=', app.getPath('userData'))
 })
 
 app.on('window-all-closed', () => {

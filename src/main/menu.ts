@@ -1,9 +1,10 @@
-import { BrowserWindow, Menu, app, type MenuItemConstructorOptions } from 'electron'
+import { BrowserWindow, Menu, shell, type MenuItemConstructorOptions } from 'electron'
 import { basename } from 'path'
 import log from 'electron-log/main'
 import type { MenuCommand } from '../shared/session'
 import { requestQuitConfirmation } from './quitController'
 import { getPreferencesManager } from './preferencesManager'
+import { checkForUpdates } from './updater'
 
 function sendMenuCommand(command: MenuCommand): void {
   const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null
@@ -59,9 +60,13 @@ export function createAppMenu(recentFiles?: string[]): void {
     ...(isMac
       ? [
           {
-            label: app.name,
+            // Prefer explicit product name so the bar never falls back to "Electron"
+            label: 'SimplePad',
             submenu: [
-              { role: 'about' as const },
+              {
+                label: 'Sobre o SimplePad',
+                role: 'about' as const
+              },
               { type: 'separator' as const },
               {
                 label: 'Configurações…',
@@ -71,7 +76,10 @@ export function createAppMenu(recentFiles?: string[]): void {
               { type: 'separator' as const },
               { role: 'services' as const },
               { type: 'separator' as const },
-              { role: 'hide' as const },
+              {
+                label: 'Ocultar SimplePad',
+                role: 'hide' as const
+              },
               { role: 'hideOthers' as const },
               { role: 'unhide' as const },
               { type: 'separator' as const },
@@ -173,6 +181,11 @@ export function createAppMenu(recentFiles?: string[]): void {
           accelerator: 'CmdOrCtrl+Shift+M',
           click: () => sendMenuCommand('toggle-markdown')
         },
+        {
+          label: 'Modo Distração Zero',
+          accelerator: 'F11',
+          click: () => sendMenuCommand('toggle-focus-mode')
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'forceReload' },
@@ -183,6 +196,39 @@ export function createAppMenu(recentFiles?: string[]): void {
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Ajuda',
+      submenu: [
+        {
+          label: 'Verificar atualizações…',
+          click: () => {
+            void checkForUpdates({ silent: false })
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Documentação no GitHub',
+          click: () => {
+            void shell.openExternal('https://github.com/vallades/simplepad')
+          }
+        },
+        {
+          label: 'Reportar problema',
+          click: () => {
+            void shell.openExternal('https://github.com/vallades/simplepad/issues')
+          }
+        },
+        { type: 'separator' },
+        ...(isMac
+          ? []
+          : [
+              {
+                label: 'Sobre o SimplePad',
+                click: () => sendMenuCommand('open-settings')
+              }
+            ])
       ]
     }
   ]

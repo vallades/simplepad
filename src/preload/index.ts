@@ -9,7 +9,8 @@ import type {
   OpenFileResult,
   SaveFileRequest,
   SaveFileResult,
-  SessionLoadResult
+  SessionLoadResult,
+  UpdateEventPayload
 } from '../shared/session'
 import type {
   AppSettings,
@@ -23,6 +24,9 @@ import type {
  */
 const api = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version'),
+
+  /** OS platform for renderer layout (e.g. macOS traffic-light inset). */
+  getPlatform: (): NodeJS.Platform => process.platform,
 
   loadSession: (): Promise<IpcResult<SessionLoadResult>> => ipcRenderer.invoke('session:load'),
 
@@ -60,6 +64,13 @@ const api = {
   exportFile: (request: ExportFileRequest): Promise<ExportFileResult> =>
     ipcRenderer.invoke('file:export', request),
 
+  checkForUpdates: (): Promise<IpcResult> => ipcRenderer.invoke('update:check'),
+
+  installUpdate: (): Promise<IpcResult> => ipcRenderer.invoke('update:install'),
+
+  setFocusMode: (enabled: boolean): Promise<IpcResult> =>
+    ipcRenderer.invoke('window:set-focus-mode', enabled),
+
   /** Notify main that quit was accepted (true) or canceled (false) */
   respondToQuit: (allow: boolean): void => {
     ipcRenderer.send('app:quit-response', allow)
@@ -87,6 +98,14 @@ const api = {
     }
     ipcRenderer.on('app:request-quit', listener)
     return () => ipcRenderer.removeListener('app:request-quit', listener)
+  },
+
+  onUpdateEvent: (callback: (payload: UpdateEventPayload) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, payload: UpdateEventPayload): void => {
+      callback(payload)
+    }
+    ipcRenderer.on('update:event', listener)
+    return () => ipcRenderer.removeListener('update:event', listener)
   }
 }
 

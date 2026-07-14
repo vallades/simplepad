@@ -1,40 +1,111 @@
 appId: com.simplepad.app
 productName: SimplePad
+copyright: Copyright © SimplePad contributors
+# electron-updater reads this for GitHub Releases
+publish:
+  provider: github
+  owner: vallades
+  repo: simplepad
+  releaseType: release
+
 directories:
   buildResources: build
+  output: dist
+
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  - '!docs/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.eslintrc.cjs,.prettierignore,.prettierrc,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md,SimplePad_PRD.md}'
+  - '!{.eslintcache,eslint.config.mjs,.eslintrc.cjs,.prettierignore,.prettierrc,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md,SimplePad_PRD.md,LICENSE}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
   - '!{husky,.husky}/**'
+  - '!**/__tests__/**'
+  - '!**/*.{test,spec}.{ts,tsx,js,jsx}'
+  - '!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}'
+  - '!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}'
+  - '!**/node_modules/*.d.ts'
+  - '!**/node_modules/.bin'
+
+asar: true
 asarUnpack:
   - resources/**
+
+compression: maximum
+npmRebuild: false
+electronLanguages:
+  - en-US
+  - pt-BR
+
+# ——— Windows ———
 win:
   executableName: SimplePad
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  artifactName: ${name}-${version}-win-${arch}.${ext}
+
 nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+
+portable:
+  artifactName: ${name}-${version}-portable.${ext}
+
+# ——— macOS ———
 mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSDocumentsFolderUsageDescription: SimplePad needs access to your Documents folder to open and save notes.
-    - NSDownloadsFolderUsageDescription: SimplePad needs access to your Downloads folder to open and save notes.
-  notarize: false
+  icon: build/icon.icns
   category: public.app-category.productivity
-dmg:
-  artifactName: ${name}-${version}.${ext}
-linux:
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # Set to true only when Apple credentials + notarize tooling are configured
+  notarize: false
+  # Default: current host arch. For universal: --x64 --arm64 or arch: [universal]
   target:
-    - AppImage
-    - deb
-  maintainer: SimplePad
+    - dmg
+    - zip
+  extendInfo:
+    NSDocumentsFolderUsageDescription: SimplePad needs access to your Documents folder to open and save notes.
+    NSDownloadsFolderUsageDescription: SimplePad needs access to your Downloads folder to open and save notes.
+    CFBundleDisplayName: SimplePad
+    CFBundleName: SimplePad
+
+dmg:
+  artifactName: ${name}-${version}-mac.${ext}
+  title: ${productName} ${version}
+
+# ——— Linux ———
+linux:
+  icon: build
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  maintainer: SimplePad <simplepad@users.noreply.github.com>
   category: Utility
   synopsis: Minimal multi-tab text editor
+  description: SimplePad — editor de texto minimalista com abas, Markdown preview e exportação.
+
 appImage:
-  artifactName: ${name}-${version}.${ext}
-npmRebuild: false
+  artifactName: ${name}-${version}-linux.${ext}
+
+deb:
+  artifactName: ${name}-${version}-linux.${ext}

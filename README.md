@@ -2,75 +2,48 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Stack:** Electron · Vite · React · TypeScript · Monaco Editor · Zustand · Tailwind CSS · electron-store · react-markdown
+**Versão:** 1.0.0 · **Licença:** [MIT](./LICENSE)
+
+**Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · electron-updater
 
 > Simples por design. Poderoso por escolha.
 
 ---
 
-## Status do projeto
+## Status
 
-| Área                                                | Status                  |
-| --------------------------------------------------- | ----------------------- |
-| Setup Electron + Vite + React + TS                  | Concluído               |
-| Qualidade (strict, ESLint, Prettier, Husky, Vitest) | Concluído               |
-| Sistema de abas (Zustand)                           | Concluído               |
-| Monaco Editor (modelo por aba)                      | Concluído               |
-| Persistência de sessão + preferências               | Concluído               |
-| Abrir / Salvar / Salvar como                        | Concluído               |
-| Menu nativo + atalhos + recentes                    | Concluído               |
-| Configurações + auto-save + toasts                  | Concluído (Fase 2)      |
-| Split View + Preview Markdown (GFM)                 | Concluído (Fase 3)      |
-| Exportar HTML / PDF                                 | Concluído (Fase 3)      |
-| Auto-update / code signing                          | Pendente (distribuição) |
-
-Documento de produto: [SimplePad_PRD.md](./SimplePad_PRD.md)
+| Área                           | Status    |
+| ------------------------------ | --------- |
+| MVP + abas + Monaco + arquivos | Concluído |
+| Configurações + auto-save      | Concluído |
+| Preview Markdown + export      | Concluído |
+| Distração zero + auto-update   | Concluído |
+| Distribuição (builder + docs)  | Concluído |
 
 ---
 
 ## Funcionalidades
 
-### Editor e abas
+- **Abas** com drag & drop, dirty state, undo/redo por aba
+- **Persistência de sessão** (conteúdo, cursor, scroll)
+- **Abrir / Salvar / Salvar como** + **Recentes**
+- **Configurações**: fonte, tamanho, tema, auto-save
+- **Split View** Editor \| Preview Markdown (GFM)
+- **Exportar** HTML e PDF
+- **Modo Distração Zero** (F11) — fullscreen sem chrome
+- **Auto-update** via GitHub Releases
+- Toasts e diálogos nativos
 
-- Múltiplas abas com drag & drop, dirty state (`*`), undo/redo por aba (Monaco)
-- Persistência de sessão (conteúdo, aba ativa, cursor, scroll)
-- Tema claro/escuro (sistema / forçado) + fonte monoespaçada configurável
+### Screenshots
 
-### Markdown
+Coloque imagens em [`docs/screenshots/`](./docs/screenshots/README.md):
 
-- **Auto-detect** por extensão (`.md` / `.markdown`) ao abrir/salvar
-- **Toggle manual** na status bar ou **Exibir → Modo Markdown** (`⌘⇧M` / `Ctrl+Shift+M`)
-- **Split View** Editor \| Preview (`⌘⇧P` / botão **Preview** no header)
-  - Preview com GFM: tabelas, listas de tarefas, código, links, etc.
-  - Debounce leve (~120 ms) no preview
-  - Scroll do editor sincroniza o preview (melhor esforço)
-  - Tema do preview acompanha claro/escuro do app
-
-### Exportações
-
-- **Arquivo → Exportar como… → HTML** / **PDF**
-- Atalhos rápidos na status bar: **HTML** · **PDF**
-- HTML: documento standalone com CSS minimalista
-- PDF: `webContents.printToPDF` em janela oculta (main process)
-
-### Outros
-
-- Auto-save configurável (só abas com path no disco)
-- Arquivos recentes (máx. 10)
-- Diálogos nativos de confirmação + toasts de erro
-
-### Screenshots (sugestão de pasta)
-
-Coloque capturas em `docs/screenshots/` (criar se necessário) e referencie aqui:
-
-| Arquivo sugerido                  | Conteúdo                  |
-| --------------------------------- | ------------------------- |
-| `docs/screenshots/editor.png`     | Editor full-width         |
-| `docs/screenshots/split-view.png` | Split Editor \| Preview   |
-| `docs/screenshots/settings.png`   | Modal de configurações    |
-| `docs/screenshots/export.png`     | Diálogo exportar HTML/PDF |
-
-Exemplo Markdown (quando as imagens existirem):
+| Arquivo          | Conteúdo            |
+| ---------------- | ------------------- |
+| `tabbar.png`     | Barra de abas       |
+| `split-view.png` | Editor + Preview    |
+| `settings.png`   | Configurações       |
+| `focus-mode.png` | Modo distração zero |
 
 ```markdown
 ![Split View](docs/screenshots/split-view.png)
@@ -78,121 +51,126 @@ Exemplo Markdown (quando as imagens existirem):
 
 ---
 
-## Requisitos
-
-- **Node.js** 20+ (recomendado 22 LTS)
-- **npm** 10+
-
 ## Começando
 
 ```bash
+# Node 20+ recomendado
 npm install
 npm run dev
 ```
 
-## Scripts
+### Scripts
 
-| Comando                                                 | Descrição                              |
-| ------------------------------------------------------- | -------------------------------------- |
-| `npm run dev`                                           | App em desenvolvimento                 |
-| `npm run build`                                         | Typecheck + build de produção (`out/`) |
-| `npm run test`                                          | Testes unitários (Vitest)              |
-| `npm run lint`                                          | ESLint                                 |
-| `npm run typecheck`                                     | TypeScript (main + renderer)           |
-| `npm run dist` / `dist:mac` / `dist:win` / `dist:linux` | Instaladores                           |
+| Comando              | Descrição                         |
+| -------------------- | --------------------------------- |
+| `npm run dev`        | Desenvolvimento                   |
+| `npm test`           | Testes unitários                  |
+| `npm run typecheck`  | TypeScript strict                 |
+| `npm run lint`       | ESLint                            |
+| `npm run build`      | Build de produção (`out/`)        |
+| `npm run dist`       | Instalador da plataforma atual    |
+| `npm run dist:mac`   | DMG + ZIP                         |
+| `npm run dist:win`   | NSIS + portable                   |
+| `npm run dist:linux` | AppImage + deb                    |
+| `npm run dist:all`   | mac + win + linux                 |
+| `npm run release`    | Build + publish (GitHub Releases) |
+
+Guia completo: [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)
 
 ---
 
 ## Atalhos
 
-| Atalho                   | Ação                   |
-| ------------------------ | ---------------------- |
-| `Ctrl/Cmd+N`             | Nova aba               |
-| `Ctrl/Cmd+O`             | Abrir                  |
-| `Ctrl/Cmd+S` / `Shift+S` | Salvar / Salvar como   |
-| `Ctrl/Cmd+W`             | Fechar aba             |
-| `Ctrl/Cmd+,`             | Configurações          |
-| `Ctrl/Cmd+Shift+P`       | Toggle Split / Preview |
-| `Ctrl/Cmd+Shift+M`       | Toggle modo Markdown   |
-| `Ctrl/Cmd+Tab`           | Alternar abas          |
+| Atalho                       | Ação                        |
+| ---------------------------- | --------------------------- |
+| `Ctrl/Cmd+N`                 | Nova aba                    |
+| `Ctrl/Cmd+O`                 | Abrir                       |
+| `Ctrl/Cmd+S`                 | Salvar                      |
+| `Ctrl/Cmd+Shift+S`           | Salvar como                 |
+| `Ctrl/Cmd+W`                 | Fechar aba                  |
+| `Ctrl/Cmd+,`                 | Configurações               |
+| `Ctrl/Cmd+Shift+P`           | Toggle Preview / Split View |
+| `Ctrl/Cmd+Shift+M`           | Toggle modo Markdown        |
+| `Ctrl/Cmd+Tab` / `Shift+Tab` | Alternar abas               |
+| `F11`                        | Modo Distração Zero         |
+| `Esc`                        | Sair do modo foco           |
+| `Ctrl/Cmd+Z` / `Y`           | Undo / Redo (Monaco)        |
+
+Menu **Ajuda → Verificar atualizações…** para checar updates.
 
 ---
 
-## Arquitetura (Fase 3)
+## Arquitetura
 
 ```
 src/
-├── main/
-│   ├── exportManager.ts     # HTML write + PDF printToPDF
-│   ├── menu.ts              # Exportar + Exibir Preview/Markdown
-│   └── …
-├── renderer/
-│   ├── components/
-│   │   ├── EditorWorkspace.tsx  # split container
-│   │   ├── PreviewPanel.tsx     # react-markdown + GFM
-│   │   ├── Editor.tsx           # Monaco (lazy)
-│   │   └── StatusBar.tsx
-│   ├── services/exportActions.ts
-│   ├── store/useUiStore.ts      # splitPreview + scroll ratio
-│   └── utils/markdownExport.ts  # HTML document builder
+├── main/           # Electron main, IPC, updater, export, menu
+├── preload/        # contextBridge tipado
+├── shared/         # contratos sessão/settings
+└── renderer/       # React UI, Monaco, preview, stores
 ```
 
-### Bundle / performance
+Dados locais:
 
-- Monaco e `react-markdown` em **chunks separados** (`monaco-editor`, `markdown`) via `manualChunks`
-- Editor e Preview carregados com `React.lazy` — preview só monta com split ativo
-- Monaco só inicializa quando o Editor monta
-
-Para medir o impacto no instalador:
-
-```bash
-npm run build
-du -sh out/renderer/assets/*
-npm run dist:mac   # ou dist da plataforma atual
-du -sh dist/*
-```
-
-Meta do PRD: instalador &lt; ~80 MB após otimizações (Monaco ainda domina o peso).
-
----
-
-## Persistência
-
-| Dado                | Arquivo            |
-| ------------------- | ------------------ |
-| Sessão de abas      | `session.json`     |
-| Settings + recentes | `preferences.json` |
+- `session.json` — abas
+- `preferences.json` — settings + recentes
 
 macOS: `~/Library/Application Support/simplepad/`
 
 ---
 
-## Qualidade
+## Build e distribuição
 
 ```bash
-npm test
-npm run typecheck
-npm run lint
+npm test && npm run typecheck && npm run lint
+npm run dist:mac    # ou dist:win / dist:linux
 ```
 
-## Segurança
+### Tamanho do instalador
 
-- `contextIsolation: true`, `nodeIntegration: false`
-- **`sandbox: false` no renderer** — necessário para workers do Monaco (documentado em `src/main/index.ts`)
-- Export PDF usa janela oculta **com sandbox: true**
+Electron + Monaco dominam o peso. Com `compression: maximum` e chunks lazy, o **shell** inicial é leve, mas o instalador completo costuma ficar **acima de 70 MB**. Isso é esperado; ver [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md).
+
+### Code signing / notarization
+
+Documentado em [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md) (Windows Authenticode, macOS Developer ID + notarize).
 
 ---
 
-## Próximos passos (distribuição)
+## Limitações conhecidas
 
-1. CI: test + build + artefatos mac/win/linux
-2. Code signing + notarization (macOS)
-3. `electron-updater` + canal de releases
-4. Opcional: layout de preview horizontal, tree-shake mais agressivo do Monaco
-5. Screenshots reais em `docs/screenshots/`
+- Renderer com **`sandbox: false`** por causa dos workers do Monaco
+- Auto-update em **dev** precisa de feed (`dev-app-update.yml`); sem feed, o erro no toast é esperado
+- Notarization macOS **desligada** por padrão (`notarize: false`)
+- Meta &lt; 70 MB de instalador é **difícil** com Electron+Monaco intactos
+
+---
+
+## Como contribuir
+
+1. Fork e clone
+2. `npm install`
+3. Crie branch: `git checkout -b feat/minha-feature`
+4. Commits no estilo [Conventional Commits](https://www.conventionalcommits.org/)
+5. `npm test && npm run lint && npm run typecheck`
+6. Abra um Pull Request
+
+Sugestões bem-vindas: acessibilidade, i18n, redução de bundle, temas.
+
+---
+
+## Roadmap futuro
+
+- [ ] CI multi-OS (GitHub Actions) com artefatos assinados
+- [ ] Preview layout vertical / painel redimensionável
+- [ ] Tree-shake mais agressivo dos workers Monaco
+- [ ] Canal de pre-releases no updater
+- [ ] Screenshots oficiais no README
+- [ ] Plugin / extensões leves (opcional)
+
+Histórico: [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
 ## Licença
 
-MIT
+[MIT](./LICENSE) © SimplePad contributors

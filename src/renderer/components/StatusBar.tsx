@@ -79,8 +79,11 @@ function StatusBar(): React.JSX.Element {
           Auto-save: {autoSaveEnabled ? 'ligado' : 'desligado'}
         </span>
         {splitPreview ? (
-          <span className="font-medium text-blue-600 dark:text-blue-400" title="Split View ativo">
-            Preview ativo
+          <span
+            className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            title="Split View ativo — Editor | Preview"
+          >
+            ● Preview
           </span>
         ) : null}
       </div>

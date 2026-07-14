@@ -14,6 +14,14 @@ describe('useUiStore', () => {
     expect(useUiStore.getState().splitPreview).toBe(false)
   })
 
+  it('toggles focus mode', () => {
+    expect(useUiStore.getState().focusMode).toBe(false)
+    useUiStore.getState().toggleFocusMode()
+    expect(useUiStore.getState().focusMode).toBe(true)
+    useUiStore.getState().setFocusMode(false)
+    expect(useUiStore.getState().focusMode).toBe(false)
+  })
+
   it('clamps editor scroll ratio', () => {
     useUiStore.getState().setEditorScrollRatio(1.5)
     expect(useUiStore.getState().editorScrollRatio).toBe(1)
