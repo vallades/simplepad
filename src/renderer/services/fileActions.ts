@@ -1,38 +1,82 @@
 import { useTabsStore } from '../store/useTabsStore'
 import { isMarkdownFile } from '../utils/fileUtils'
 import { isElectronApiAvailable } from './sessionBridge'
+import { showToast } from '../store/useToastStore'
 
 function fileNameFromPath(filePath: string): string {
   const parts = filePath.split(/[/\\]/)
   return parts[parts.length - 1] || filePath
 }
 
+function reportApiMissing(): void {
+  showToast('API de arquivos indisponível neste ambiente.', 'error')
+}
+
 /**
  * Opens native dialog and creates a tab per selected file.
+ * Focuses an existing tab when the same path is already open.
  */
 export async function openFilesFromDisk(): Promise<void> {
   if (!isElectronApiAvailable()) {
-    window.alert('API de arquivos indisponível.')
+    reportApiMissing()
     return
   }
 
   const result = await window.api.openFile()
   if (result.error) {
-    window.alert(result.error)
+    showToast(result.error, 'error')
     return
   }
   if (result.canceled || result.files.length === 0) return
 
-  const store = useTabsStore.getState()
   for (const file of result.files) {
-    store.createNewTab({
-      title: file.fileName,
-      content: file.content,
-      filePath: file.filePath,
-      isDirty: false,
-      isMarkdown: isMarkdownFile(file.fileName)
-    })
+    openOrFocusFile(file.filePath, file.fileName, file.content)
   }
+}
+
+/**
+ * Opens a known path (recent files). Focuses if already open.
+ */
+export async function openRecentFile(filePath: string): Promise<void> {
+  if (!filePath) return
+
+  const store = useTabsStore.getState()
+  const existing = store.tabs.find((tab) => tab.filePath === filePath)
+  if (existing) {
+    store.switchTab(existing.id)
+    return
+  }
+
+  if (!isElectronApiAvailable()) {
+    reportApiMissing()
+    return
+  }
+
+  const result = await window.api.openFilePath(filePath)
+  if (result.error) {
+    showToast(result.error, 'error')
+    return
+  }
+  if (result.canceled || !result.file) return
+
+  openOrFocusFile(result.file.filePath, result.file.fileName, result.file.content)
+}
+
+function openOrFocusFile(filePath: string, fileName: string, content: string): void {
+  const store = useTabsStore.getState()
+  const existing = store.tabs.find((tab) => tab.filePath === filePath)
+  if (existing) {
+    store.switchTab(existing.id)
+    return
+  }
+
+  store.createNewTab({
+    title: fileName,
+    content,
+    filePath,
+    isDirty: false,
+    isMarkdown: isMarkdownFile(fileName)
+  })
 }
 
 /**
@@ -44,7 +88,7 @@ export async function saveActiveTab(): Promise<boolean> {
   if (!tab) return false
 
   if (!isElectronApiAvailable()) {
-    window.alert('API de arquivos indisponível.')
+    reportApiMissing()
     return false
   }
 
@@ -54,7 +98,7 @@ export async function saveActiveTab(): Promise<boolean> {
       filePath: tab.filePath
     })
     if (result.error) {
-      window.alert(result.error)
+      showToast(result.error, 'error')
       return false
     }
     if (result.canceled || !result.filePath) return false
@@ -66,6 +110,31 @@ export async function saveActiveTab(): Promise<boolean> {
 }
 
 /**
+ * Saves a specific tab by id (used by auto-save). Only works when filePath is set.
+ */
+export async function saveTabById(tabId: string): Promise<boolean> {
+  const store = useTabsStore.getState()
+  const tab = store.tabs.find((item) => item.id === tabId)
+  if (!tab || !tab.filePath || !tab.isDirty) return false
+
+  if (!isElectronApiAvailable()) return false
+
+  const result = await window.api.saveFile({
+    content: tab.content,
+    filePath: tab.filePath
+  })
+
+  if (result.error) {
+    showToast(`Auto-save falhou: ${result.error}`, 'error')
+    return false
+  }
+  if (result.canceled || !result.filePath) return false
+
+  store.markAsSaved(tab.id, result.filePath)
+  return true
+}
+
+/**
  * Always shows the native Save As dialog for the active tab.
  */
 export async function saveActiveTabAs(): Promise<boolean> {
@@ -74,7 +143,7 @@ export async function saveActiveTabAs(): Promise<boolean> {
   if (!tab) return false
 
   if (!isElectronApiAvailable()) {
-    window.alert('API de arquivos indisponível.')
+    reportApiMissing()
     return false
   }
 
@@ -85,29 +154,68 @@ export async function saveActiveTabAs(): Promise<boolean> {
   })
 
   if (result.error) {
-    window.alert(result.error)
+    showToast(result.error, 'error')
     return false
   }
   if (result.canceled || !result.filePath) return false
 
   store.markAsSaved(tab.id, result.filePath)
-  // Ensure title reflects the chosen name even if markAsSaved already did
   store.updateTabTitle(tab.id, fileNameFromPath(result.filePath))
   return true
 }
 
 /**
- * Asks the user about a dirty tab before closing. Returns true if close may proceed.
+ * Native confirmation before closing a dirty tab.
+ * Returns true if close may proceed.
  */
-export function confirmCloseTab(title: string): boolean {
-  return window.confirm(`"${title}" tem alterações não salvas.\n\nFechar mesmo assim?`)
+export async function confirmCloseTab(title: string): Promise<boolean> {
+  if (!isElectronApiAvailable()) {
+    return window.confirm(`"${title}" tem alterações não salvas.\n\nFechar mesmo assim?`)
+  }
+
+  const result = await window.api.showConfirm({
+    type: 'warning',
+    title: 'Fechar aba',
+    message: `"${title}" tem alterações não salvas.`,
+    detail:
+      'Fechar sem salvar descartará as alterações desta aba (o rascunho da sessão ainda pode ser restaurado).',
+    buttons: ['Cancelar', 'Fechar sem salvar'],
+    defaultId: 0,
+    cancelId: 0
+  })
+
+  return result.response === 1
 }
 
 /**
- * Confirms leaving the app with unsaved changes.
+ * Native confirmation when quitting with unsaved changes.
  */
-export function confirmQuitWithUnsaved(): boolean {
-  return window.confirm(
-    'Há alterações não salvas em uma ou mais abas.\n\nSair mesmo assim? O rascunho da sessão ainda será guardado.'
-  )
+export async function confirmQuitWithUnsaved(): Promise<boolean> {
+  if (!isElectronApiAvailable()) {
+    return window.confirm(
+      'Há alterações não salvas em uma ou mais abas.\n\nSair mesmo assim? O rascunho da sessão ainda será guardado.'
+    )
+  }
+
+  const result = await window.api.showConfirm({
+    type: 'warning',
+    title: 'Sair do SimplePad',
+    message: 'Há alterações não salvas em uma ou mais abas.',
+    detail: 'Sair mesmo assim? O rascunho da sessão ainda será guardado.',
+    buttons: ['Cancelar', 'Sair'],
+    defaultId: 0,
+    cancelId: 0
+  })
+
+  return result.response === 1
+}
+
+export async function clearRecentFilesList(): Promise<void> {
+  if (!isElectronApiAvailable()) return
+  const result = await window.api.clearRecentFiles()
+  if (!result.ok && result.error) {
+    showToast(result.error, 'error')
+    return
+  }
+  showToast('Lista de recentes limpa.', 'info')
 }

@@ -19,8 +19,13 @@ function TabBar(): React.JSX.Element {
 
   const requestClose = useCallback(
     (tab: Tab) => {
-      if (tab.isDirty && !confirmCloseTab(tab.title)) return
-      closeTab(tab.id)
+      void (async () => {
+        if (tab.isDirty) {
+          const ok = await confirmCloseTab(tab.title)
+          if (!ok) return
+        }
+        closeTab(tab.id)
+      })()
     },
     [closeTab]
   )

@@ -3,19 +3,18 @@ import MonacoEditor, { type OnMount } from '@monaco-editor/react'
 import type { editor as MonacoEditorApi, IDisposable } from 'monaco-editor'
 import type * as Monaco from 'monaco-editor'
 import { useTabsStore } from '../store/useTabsStore'
+import { useSettingsStore, getEditorThemeId } from '../store/useSettingsStore'
+import { useUiStore } from '../store/useUiStore'
 import { setupMonaco } from '../monaco/setup'
 import {
   disposeModelsExcept,
+  getLanguageForTab,
   getOrCreateTabModel,
   restoreViewState,
   saveViewState
 } from '../monaco/modelRegistry'
-import {
-  DEFAULT_FONT_SIZE,
-  getDefaultEditorOptions,
-  themeFromColorScheme,
-  type MonacoThemeId
-} from '../utils/monacoUtils'
+import { getDefaultEditorOptions, type MonacoThemeId } from '../utils/monacoUtils'
+import { isResolvedDark } from '../utils/theme'
 import PlainEditor from './PlainEditor'
 
 type BootState = 'loading' | 'ready' | 'fallback'
@@ -25,10 +24,8 @@ type BootState = 'loading' | 'ready' | 'fallback'
  *
  * Critical: this component must NOT re-render on every keystroke/cursor move.
  * Content lives in Monaco models; the Zustand store is updated imperatively.
- * Re-rendering here + automaticLayout was causing "Maximum update depth exceeded".
  */
 function Editor(): React.JSX.Element {
-  // Primitives only — stable across content/cursor/scroll updates
   const activeTabId = useTabsStore((state) => state.activeTabId)
   const openTabKey = useTabsStore((state) => state.tabs.map((tab) => tab.id).join('|'))
   const activeTitle = useTabsStore((state) => {
@@ -39,10 +36,17 @@ function Editor(): React.JSX.Element {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.isDirty ?? false
   })
+  const isMarkdown = useTabsStore((state) => {
+    const tab = state.tabs.find((item) => item.id === state.activeTabId)
+    return tab?.isMarkdown ?? false
+  })
+
+  const fontSize = useSettingsStore((state) => state.fontSize)
+  const fontFamily = useSettingsStore((state) => state.fontFamily)
+  const themePreference = useSettingsStore((state) => state.theme)
 
   const editorRef = useRef<MonacoEditorApi.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<typeof Monaco | null>(null)
-  /** Suppress store writes while we programmatically switch models / restore state */
   const isApplyingRef = useRef(false)
   const applyingTimerRef = useRef<number | null>(null)
   const activeTabIdRef = useRef<string | null>(activeTabId)
@@ -51,19 +55,22 @@ function Editor(): React.JSX.Element {
 
   const [boot, setBoot] = useState<BootState>('loading')
   const [theme, setTheme] = useState<MonacoThemeId>(() =>
-    themeFromColorScheme(
+    getEditorThemeId(
+      themePreference,
       typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
     )
   )
 
-  const editorOptions = useMemo(() => getDefaultEditorOptions(DEFAULT_FONT_SIZE), [])
+  const editorOptions = useMemo(
+    () => getDefaultEditorOptions(fontSize, fontFamily),
+    [fontSize, fontFamily]
+  )
 
   const beginApplying = (): void => {
     isApplyingRef.current = true
     if (applyingTimerRef.current !== null) {
       window.clearTimeout(applyingTimerRef.current)
     }
-    // Hold the gate long enough to swallow Monaco's layout/cursor echo events
     applyingTimerRef.current = window.setTimeout(() => {
       isApplyingRef.current = false
       applyingTimerRef.current = null
@@ -86,7 +93,6 @@ function Editor(): React.JSX.Element {
     }
   }, [])
 
-  // Boot Monaco off the critical path; fall back to textarea on failure/timeout
   useEffect(() => {
     let cancelled = false
     const timeout = window.setTimeout(() => {
@@ -119,22 +125,49 @@ function Editor(): React.JSX.Element {
     }
   }, [])
 
+  // Resolve Monaco theme from settings + (optional) system preference
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const apply = (): void => setTheme(themeFromColorScheme(media.matches))
+    const apply = (): void => {
+      setTheme(getEditorThemeId(themePreference, isResolvedDark('system')))
+    }
     apply()
+
+    if (themePreference !== 'system') return
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
     media.addEventListener('change', apply)
     return () => media.removeEventListener('change', apply)
-  }, [])
+  }, [themePreference])
 
-  // Dispose models for closed tabs (ids only — not on content edits)
+  // Live-update font when settings change (without remounting)
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+    editor.updateOptions({ fontSize, fontFamily })
+  }, [fontSize, fontFamily])
+
+  // Update Monaco language when Markdown mode is toggled
+  useEffect(() => {
+    if (boot !== 'ready') return
+    const monacoApi = monacoRef.current
+    const editor = editorRef.current
+    if (!monacoApi || !editor || !activeTabId) return
+    const tab = useTabsStore.getState().tabs.find((item) => item.id === activeTabId)
+    if (!tab) return
+    const model = editor.getModel()
+    if (!model) return
+    const language = getLanguageForTab(tab)
+    if (model.getLanguageId() !== language) {
+      monacoApi.editor.setModelLanguage(model, language)
+    }
+  }, [isMarkdown, activeTabId, boot])
+
   useEffect(() => {
     if (boot !== 'ready') return
     const openIds = new Set(openTabKey.length > 0 ? openTabKey.split('|').filter(Boolean) : [])
     disposeModelsExcept(openIds)
   }, [openTabKey, boot])
 
-  // Switch model only when the active tab changes (not on every store write)
   useEffect(() => {
     if (boot !== 'ready') return
     const editor = editorRef.current
@@ -163,7 +196,6 @@ function Editor(): React.JSX.Element {
       return
     }
 
-    // Same tab already bound — do nothing (avoids restore loops)
     if (prevId === nextId && editor.getModel()) {
       return
     }
@@ -195,7 +227,6 @@ function Editor(): React.JSX.Element {
   }, [activeTabId, boot])
 
   const handleMount: OnMount = (editor, monacoApi) => {
-    // Drop listeners from a previous mount (React StrictMode remounts)
     for (const d of disposablesRef.current) {
       d.dispose()
     }
@@ -204,13 +235,14 @@ function Editor(): React.JSX.Element {
     editorRef.current = editor
     monacoRef.current = monacoApi
 
+    editor.updateOptions({ fontSize, fontFamily })
+
     disposablesRef.current.push(
       editor.onDidChangeModelContent(() => {
         if (isApplyingRef.current) return
         const tabId = activeTabIdRef.current
         const model = editor.getModel()
         if (!tabId || !model) return
-        // Imperative store write — no React setState in this component
         useTabsStore.getState().updateTabContent(tabId, model.getValue())
       }),
       editor.onDidChangeCursorPosition((event) => {
@@ -228,6 +260,14 @@ function Editor(): React.JSX.Element {
         const tabId = activeTabIdRef.current
         if (!tabId) return
         useTabsStore.getState().setScrollPosition(tabId, event.scrollTop)
+
+        // Publish scroll ratio for preview sync (no React re-render of Editor)
+        const scrollTop = editor.getScrollTop()
+        const scrollHeight = editor.getScrollHeight()
+        const height = editor.getLayoutInfo().height
+        const max = scrollHeight - height
+        const ratio = max > 0 ? Math.min(1, Math.max(0, scrollTop / max)) : 0
+        useUiStore.getState().setEditorScrollRatio(ratio)
       })
     )
 

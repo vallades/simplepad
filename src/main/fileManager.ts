@@ -49,11 +49,16 @@ export class FileManager {
   /**
    * Native save dialog → absolute path chosen by the user, or null if canceled.
    */
-  async showSaveDialog(window: BrowserWindow, defaultPath?: string): Promise<string | null> {
+  async showSaveDialog(
+    window: BrowserWindow,
+    defaultPath?: string,
+    filters: Electron.FileFilter[] = TEXT_FILTERS,
+    title = 'Salvar como'
+  ): Promise<string | null> {
     const result = await dialog.showSaveDialog(window, {
-      title: 'Salvar como',
+      title,
       defaultPath: defaultPath ?? 'Sem título.txt',
-      filters: TEXT_FILTERS
+      filters
     })
 
     if (result.canceled || !result.filePath) {
@@ -84,6 +89,28 @@ export class FileManager {
       log.error('[FileManager] writeFile error:', filePath, error)
       const message = error instanceof Error ? error.message : String(error)
       throw new Error(`Não foi possível salvar o arquivo:\n${filePath}\n\n${message}`)
+    }
+  }
+
+  /** Writes binary data (PDF export). */
+  async writeBinaryFile(filePath: string, data: Buffer): Promise<void> {
+    try {
+      await writeFile(filePath, data)
+      log.info('[FileManager] wrote binary', filePath, `(${data.byteLength} bytes)`)
+    } catch (error) {
+      log.error('[FileManager] writeBinaryFile error:', filePath, error)
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Não foi possível salvar o arquivo:\n${filePath}\n\n${message}`)
+    }
+  }
+
+  /** Reads a known path into an OpenedFileDTO (for recent files / re-open). */
+  async openByPath(filePath: string): Promise<OpenedFileDTO> {
+    const content = await this.readFile(filePath)
+    return {
+      filePath,
+      fileName: basename(filePath),
+      content
     }
   }
 }

@@ -1,8 +1,11 @@
 import { useTabsStore } from '../store/useTabsStore'
-import { countWords } from '../utils/fileUtils'
+import { useSettingsStore } from '../store/useSettingsStore'
+import { useUiStore } from '../store/useUiStore'
+import { countWords, shortenPath } from '../utils/fileUtils'
+import { exportActiveAsHtml, exportActiveAsPdf } from '../services/exportActions'
 
 /**
- * Minimal status bar: cursor, counts, dirty flag, path when available.
+ * Minimal status bar: cursor, counts, dirty, path, preview, export, encoding.
  */
 function StatusBar(): React.JSX.Element {
   const title = useTabsStore((state) => {
@@ -25,6 +28,8 @@ function StatusBar(): React.JSX.Element {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.isDirty ?? false
   })
+  const activeTabId = useTabsStore((state) => state.activeTabId)
+  const toggleMarkdownMode = useTabsStore((state) => state.toggleMarkdownMode)
   const line = useTabsStore((state) => {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.cursorPosition.lineNumber ?? 1
@@ -34,35 +39,97 @@ function StatusBar(): React.JSX.Element {
     return tab?.cursorPosition.column ?? 1
   })
 
+  const autoSaveEnabled = useSettingsStore((state) => state.autoSaveEnabled)
+  const autoSaveIntervalSeconds = useSettingsStore((state) => state.autoSaveIntervalSeconds)
+  const splitPreview = useUiStore((state) => state.splitPreview)
+  const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
+
   const words = countWords(content)
   const chars = content.length
-  const mode = isMarkdown ? 'Markdown' : 'Plain Text'
-  const locationLabel = filePath ?? title ?? '—'
+  const displayName = title ?? '—'
+  const pathTooltip = filePath ?? title ?? undefined
 
   return (
-    <footer className="flex shrink-0 items-center justify-between border-t border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex min-w-0 items-center gap-3">
+    <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
         <span className="tabular-nums">
           Ln {line}, Col {col}
         </span>
         <span>
           {words} palavra{words === 1 ? '' : 's'}
         </span>
-        <span>{chars} caracteres</span>
+        <span>
+          {chars} caractere{chars === 1 ? '' : 's'}
+        </span>
         <span
           className={
-            dirty ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+            dirty
+              ? 'font-medium text-amber-600 dark:text-amber-400'
+              : 'text-emerald-600 dark:text-emerald-400'
+          }
+          title={
+            dirty ? 'Há alterações não salvas neste arquivo' : 'Arquivo sincronizado com o disco'
           }
         >
           {dirty ? 'Não salvo' : 'Salvo'}
         </span>
-      </div>
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="max-w-[320px] truncate" title={filePath ?? title}>
-          {locationLabel}
+        <span
+          title={autoSaveEnabled ? `Intervalo: ${autoSaveIntervalSeconds}s` : 'Auto-save desligado'}
+        >
+          Auto-save: {autoSaveEnabled ? 'ligado' : 'desligado'}
         </span>
-        <span>{mode}</span>
-        <span>UTF-8</span>
+        {splitPreview ? (
+          <span className="font-medium text-blue-600 dark:text-blue-400" title="Split View ativo">
+            Preview ativo
+          </span>
+        ) : null}
+      </div>
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          className={[
+            'rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800',
+            isMarkdown ? 'text-blue-600 dark:text-blue-400' : ''
+          ].join(' ')}
+          title="Alternar modo Markdown (⌘⇧M)"
+          onClick={() => {
+            if (activeTabId) toggleMarkdownMode(activeTabId)
+          }}
+        >
+          {isMarkdown ? 'Markdown' : 'Plain Text'}
+        </button>
+        <button
+          type="button"
+          className={[
+            'rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800',
+            splitPreview ? 'text-blue-600 dark:text-blue-400' : ''
+          ].join(' ')}
+          title="Split View / Preview (⌘⇧P)"
+          onClick={() => toggleSplitPreview()}
+        >
+          Preview
+        </button>
+        <button
+          type="button"
+          className="rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          title="Exportar HTML"
+          onClick={() => void exportActiveAsHtml()}
+        >
+          HTML
+        </button>
+        <button
+          type="button"
+          className="rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          title="Exportar PDF"
+          onClick={() => void exportActiveAsPdf()}
+        >
+          PDF
+        </button>
+        <span className="max-w-[200px] truncate" title={pathTooltip}>
+          {displayName}
+          {filePath ? <span className="text-zinc-400"> · {shortenPath(filePath)}</span> : null}
+        </span>
+        <span title="Codificação de leitura/escrita">UTF-8</span>
       </div>
     </footer>
   )

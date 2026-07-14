@@ -7,6 +7,7 @@ import { createAppMenu } from './menu'
 import { registerIpcHandlers } from './ipc'
 import { isQuitAllowed, requestQuitConfirmation, wireQuitHandlers } from './quitController'
 import { getSessionManager } from './sessionManager'
+import { getPreferencesManager } from './preferencesManager'
 
 // Initialize electron-log for main process (writes under userData/logs)
 log.initialize()
@@ -26,6 +27,8 @@ function createWindow(): BrowserWindow {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      // Monaco workers require node-like worker plumbing; sandbox breaks them.
+      // Re-evaluate when migrating to a sandboxed worker strategy.
       sandbox: false,
       spellcheck: false
     }
@@ -63,8 +66,9 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Touch session manager early so the store file is ready
+  // Touch stores early so files are ready under userData
   getSessionManager()
+  getPreferencesManager()
 
   registerIpcHandlers()
   wireQuitHandlers()

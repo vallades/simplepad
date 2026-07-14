@@ -1,5 +1,6 @@
 import { SESSION_VERSION, type AppSession, type TabDTO } from '../../shared/session'
 import type { Tab } from '../types/tab'
+import { showToast } from '../store/useToastStore'
 
 /** Tab (renderer) → serializable DTO for main process */
 export function tabToDTO(tab: Tab): TabDTO {
@@ -57,17 +58,40 @@ export async function persistSessionToMain(
   const result = await window.api.saveSession(buildSessionPayload(tabs, activeTabId))
   if (!result.ok) {
     console.error('[sessionBridge] save failed:', result.error)
+    showToast(result.error ?? 'Falha ao salvar a sessão.', 'error')
     return false
   }
   return true
 }
 
-export async function loadSessionFromMain(): Promise<AppSession | null> {
-  if (!isElectronApiAvailable()) return null
+export interface LoadedSession {
+  session: AppSession | null
+  recoveredFromCorruption: boolean
+}
+
+export async function loadSessionFromMain(): Promise<LoadedSession> {
+  if (!isElectronApiAvailable()) {
+    return { session: null, recoveredFromCorruption: false }
+  }
+
   const result = await window.api.loadSession()
   if (!result.ok) {
     console.error('[sessionBridge] load failed:', result.error)
-    return null
+    showToast(result.error ?? 'Falha ao carregar a sessão.', 'error')
+    return { session: null, recoveredFromCorruption: false }
   }
-  return result.data ?? null
+
+  const payload = result.data
+  if (!payload) {
+    return { session: null, recoveredFromCorruption: false }
+  }
+
+  if (payload.recoveredFromCorruption) {
+    showToast('Sessão anterior estava corrompida — iniciando em branco.', 'info')
+  }
+
+  return {
+    session: payload.session ?? null,
+    recoveredFromCorruption: Boolean(payload.recoveredFromCorruption)
+  }
 }

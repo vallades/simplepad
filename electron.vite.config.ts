@@ -36,8 +36,39 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('monaco-editor')) {
+            // Keep Monaco in its own async chunk (lazy-loaded via Editor)
+            if (id.includes('monaco-editor') || id.includes('@monaco-editor')) {
               return 'monaco-editor'
+            }
+            // Markdown preview / export graph
+            if (
+              id.includes('node_modules/react-markdown') ||
+              id.includes('node_modules/remark') ||
+              id.includes('node_modules/mdast') ||
+              id.includes('node_modules/micromark') ||
+              id.includes('node_modules/unist') ||
+              id.includes('node_modules/hast') ||
+              id.includes('node_modules/vfile') ||
+              id.includes('node_modules/property-information') ||
+              id.includes('node_modules/devlop') ||
+              id.includes('node_modules/comma-separated-tokens') ||
+              id.includes('node_modules/space-separated-tokens') ||
+              id.includes('node_modules/decode-named-character-reference') ||
+              id.includes('node_modules/character-entities') ||
+              id.includes('node_modules/ccount') ||
+              id.includes('node_modules/trim-lines') ||
+              id.includes('node_modules/markdown-table') ||
+              id.includes('node_modules/escape-string-regexp') ||
+              id.includes('node_modules/style-to-object') ||
+              id.includes('node_modules/inline-style-parser') ||
+              id.includes('node_modules/estree-util') ||
+              id.includes('node_modules/unified') ||
+              id.includes('node_modules/bail') ||
+              id.includes('node_modules/trough') ||
+              id.includes('node_modules/extend') ||
+              id.includes('node_modules/is-plain-obj')
+            ) {
+              return 'markdown'
             }
             return undefined
           }

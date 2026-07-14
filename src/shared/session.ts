@@ -30,7 +30,18 @@ export interface AppSession {
 export const SESSION_VERSION = 1
 
 export type MenuCommand =
-  'new-tab' | 'open-file' | 'save-file' | 'save-file-as' | 'close-tab' | 'quit'
+  | 'new-tab'
+  | 'open-file'
+  | 'save-file'
+  | 'save-file-as'
+  | 'close-tab'
+  | 'quit'
+  | 'open-settings'
+  | 'clear-recent'
+  | 'toggle-preview'
+  | 'toggle-markdown'
+  | 'export-html'
+  | 'export-pdf'
 
 export interface OpenedFileDTO {
   filePath: string
@@ -50,9 +61,33 @@ export interface SaveFileResult {
   error?: string
 }
 
+export type ExportFormat = 'html' | 'pdf'
+
+export interface ExportFileRequest {
+  format: ExportFormat
+  /** Full HTML document (HTML export body or print-ready HTML for PDF) */
+  content: string
+  defaultPath?: string
+  /** Raw binary as base64 — only used when main writes pre-rendered PDF from renderer (unused if main prints) */
+  binaryBase64?: string
+}
+
+export interface ExportFileResult {
+  canceled: boolean
+  filePath?: string
+  error?: string
+}
+
 export interface OpenFileResult {
   canceled: boolean
   files: OpenedFileDTO[]
+  error?: string
+}
+
+export interface SessionLoadResult {
+  session: AppSession | null
+  /** True when stored data existed but was invalid and was cleared */
+  recoveredFromCorruption: boolean
   error?: string
 }
 
@@ -60,4 +95,5 @@ export interface IpcResult<T = void> {
   ok: boolean
   data?: T
   error?: string
+  warning?: string
 }

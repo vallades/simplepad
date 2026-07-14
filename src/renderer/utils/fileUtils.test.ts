@@ -4,6 +4,7 @@ import {
   getFileExtension,
   isMarkdownFile,
   sanitizeFilename,
+  shortenPath,
   titleFromPath
 } from './fileUtils'
 
@@ -32,5 +33,10 @@ describe('fileUtils', () => {
   it('derives title from path', () => {
     expect(titleFromPath('/Users/me/Docs/nota.txt')).toBe('nota.txt')
     expect(titleFromPath('C:\\Users\\me\\nota.txt')).toBe('nota.txt')
+  })
+
+  it('shortens long paths for status bar', () => {
+    expect(shortenPath('/short.txt')).toBe('/short.txt')
+    expect(shortenPath('/Users/me/very/long/nested/path/to/document.txt')).toBe('…/to/document.txt')
   })
 })

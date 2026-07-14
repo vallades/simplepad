@@ -18,6 +18,8 @@ interface TabsState {
   updateTabContent: (id: string, content: string) => void
   updateTabTitle: (id: string, title: string) => void
   markAsSaved: (id: string, filePath?: string) => void
+  setMarkdownMode: (id: string, isMarkdown: boolean) => void
+  toggleMarkdownMode: (id: string) => void
   reorderTabs: (newOrder: Tab[]) => void
   setCursorPosition: (id: string, position: CursorPosition) => void
   setScrollPosition: (id: string, scroll: number) => void
@@ -164,6 +166,20 @@ export const useTabsStore = create<TabsState>()((set, get) => ({
         }
       })
     }))
+  },
+
+  setMarkdownMode: (id, isMarkdown) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, isMarkdown, lastModified: new Date() } : tab
+      )
+    }))
+  },
+
+  toggleMarkdownMode: (id) => {
+    const tab = get().tabs.find((item) => item.id === id)
+    if (!tab) return
+    get().setMarkdownMode(id, !tab.isMarkdown)
   },
 
   reorderTabs: (newOrder) => {

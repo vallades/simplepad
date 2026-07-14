@@ -67,6 +67,15 @@ describe('useTabsStore', () => {
     expect(useTabsStore.getState().hasUnsavedChanges()).toBe(false)
   })
 
+  it('toggleMarkdownMode flips markdown flag', () => {
+    const id = useTabsStore.getState().tabs[0]!.id
+    expect(useTabsStore.getState().tabs[0]?.isMarkdown).toBe(false)
+    useTabsStore.getState().toggleMarkdownMode(id)
+    expect(useTabsStore.getState().tabs[0]?.isMarkdown).toBe(true)
+    useTabsStore.getState().setMarkdownMode(id, false)
+    expect(useTabsStore.getState().tabs[0]?.isMarkdown).toBe(false)
+  })
+
   it('switchTab changes the active tab', () => {
     const secondId = useTabsStore.getState().createNewTab()
     const firstId = useTabsStore.getState().tabs[0]!.id

@@ -39,8 +39,9 @@ describe('monacoUtils', () => {
       expect(options.scrollBeyondLastLine).toBe(false)
     })
 
-    it('allows custom font size', () => {
+    it('allows custom font size and family', () => {
       expect(getDefaultEditorOptions(16).fontSize).toBe(16)
+      expect(getDefaultEditorOptions(14, 'monospace').fontFamily).toBe('monospace')
     })
   })
 })

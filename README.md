@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Stack:** Electron · Vite · React · TypeScript · Monaco Editor · Zustand · Tailwind CSS · electron-store
+**Stack:** Electron · Vite · React · TypeScript · Monaco Editor · Zustand · Tailwind CSS · electron-store · react-markdown
 
 > Simples por design. Poderoso por escolha.
 
@@ -16,15 +16,65 @@ Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco 
 | Qualidade (strict, ESLint, Prettier, Husky, Vitest) | Concluído               |
 | Sistema de abas (Zustand)                           | Concluído               |
 | Monaco Editor (modelo por aba)                      | Concluído               |
-| Persistência de sessão no main (`electron-store`)   | Concluído               |
-| Abrir / Salvar / Salvar como (diálogos nativos)     | Concluído               |
-| Menu nativo + atalhos                               | Concluído               |
-| Confirmação ao fechar aba/app com dirty             | Concluído               |
-| Preview Markdown / split view                       | Pendente (Fase 3)       |
-| Settings (fonte, auto-save, tema forçado)           | Pendente (Fase 2)       |
+| Persistência de sessão + preferências               | Concluído               |
+| Abrir / Salvar / Salvar como                        | Concluído               |
+| Menu nativo + atalhos + recentes                    | Concluído               |
+| Configurações + auto-save + toasts                  | Concluído (Fase 2)      |
+| Split View + Preview Markdown (GFM)                 | Concluído (Fase 3)      |
+| Exportar HTML / PDF                                 | Concluído (Fase 3)      |
 | Auto-update / code signing                          | Pendente (distribuição) |
 
 Documento de produto: [SimplePad_PRD.md](./SimplePad_PRD.md)
+
+---
+
+## Funcionalidades
+
+### Editor e abas
+
+- Múltiplas abas com drag & drop, dirty state (`*`), undo/redo por aba (Monaco)
+- Persistência de sessão (conteúdo, aba ativa, cursor, scroll)
+- Tema claro/escuro (sistema / forçado) + fonte monoespaçada configurável
+
+### Markdown
+
+- **Auto-detect** por extensão (`.md` / `.markdown`) ao abrir/salvar
+- **Toggle manual** na status bar ou **Exibir → Modo Markdown** (`⌘⇧M` / `Ctrl+Shift+M`)
+- **Split View** Editor \| Preview (`⌘⇧P` / botão **Preview** no header)
+  - Preview com GFM: tabelas, listas de tarefas, código, links, etc.
+  - Debounce leve (~120 ms) no preview
+  - Scroll do editor sincroniza o preview (melhor esforço)
+  - Tema do preview acompanha claro/escuro do app
+
+### Exportações
+
+- **Arquivo → Exportar como… → HTML** / **PDF**
+- Atalhos rápidos na status bar: **HTML** · **PDF**
+- HTML: documento standalone com CSS minimalista
+- PDF: `webContents.printToPDF` em janela oculta (main process)
+
+### Outros
+
+- Auto-save configurável (só abas com path no disco)
+- Arquivos recentes (máx. 10)
+- Diálogos nativos de confirmação + toasts de erro
+
+### Screenshots (sugestão de pasta)
+
+Coloque capturas em `docs/screenshots/` (criar se necessário) e referencie aqui:
+
+| Arquivo sugerido                  | Conteúdo                  |
+| --------------------------------- | ------------------------- |
+| `docs/screenshots/editor.png`     | Editor full-width         |
+| `docs/screenshots/split-view.png` | Split Editor \| Preview   |
+| `docs/screenshots/settings.png`   | Modal de configurações    |
+| `docs/screenshots/export.png`     | Diálogo exportar HTML/PDF |
+
+Exemplo Markdown (quando as imagens existirem):
+
+```markdown
+![Split View](docs/screenshots/split-view.png)
+```
 
 ---
 
@@ -36,192 +86,88 @@ Documento de produto: [SimplePad_PRD.md](./SimplePad_PRD.md)
 ## Começando
 
 ```bash
-# Instalar dependências
 npm install
-
-# Desenvolvimento (HMR no renderer; restart do main quando necessário)
 npm run dev
 ```
 
-O app Electron abre automaticamente.
-
 ## Scripts
 
-| Comando                                        | Descrição                              |
-| ---------------------------------------------- | -------------------------------------- |
-| `npm run dev`                                  | App em desenvolvimento                 |
-| `npm run build`                                | Typecheck + build de produção (`out/`) |
-| `npm run preview`                              | Pré-visualiza o build                  |
-| `npm run test`                                 | Testes unitários (Vitest)              |
-| `npm run lint`                                 | ESLint                                 |
-| `npm run format`                               | Prettier                               |
-| `npm run typecheck`                            | TypeScript (main + renderer)           |
-| `npm run dist`                                 | Instaladores (electron-builder)        |
-| `npm run dist:mac` / `dist:win` / `dist:linux` | Build por plataforma                   |
+| Comando                                                 | Descrição                              |
+| ------------------------------------------------------- | -------------------------------------- |
+| `npm run dev`                                           | App em desenvolvimento                 |
+| `npm run build`                                         | Typecheck + build de produção (`out/`) |
+| `npm run test`                                          | Testes unitários (Vitest)              |
+| `npm run lint`                                          | ESLint                                 |
+| `npm run typecheck`                                     | TypeScript (main + renderer)           |
+| `npm run dist` / `dist:mac` / `dist:win` / `dist:linux` | Instaladores                           |
 
 ---
 
-## O que já foi feito
+## Atalhos
 
-### Fase 0 — Base do projeto
-
-- Template **electron-vite** com React + TypeScript
-- TypeScript **strict** (`strict`, `noImplicitAny`, `strictNullChecks`)
-- ESLint (React + TS) + Prettier + integração ESLint/Prettier
-- Husky + lint-staged no pre-commit
-- Tailwind CSS v4
-- Scripts de dev/build/test/dist e `electron-builder.yml`
-- Estrutura main / preload / renderer / shared
-
-### Fase 1 — Abas + editor + arquivos + sessão
-
-**Abas (Zustand)**
-
-- Modelo `Tab`: id, título, conteúdo, dirty, markdown, filePath, cursor, scroll, lastModified
-- Ações: criar, fechar, trocar, reordenar (drag & drop), dirty state
-- Atalhos: `Ctrl/Cmd+N`, `W`, `Tab` / `Shift+Tab`, `O`, `S`, `Shift+S`
-- UI: TabBar, StatusBar, confirmação ao fechar aba dirty
-
-**Monaco Editor**
-
-- Uma instância do editor + um modelo por aba (Undo/Redo por aba)
-- Sync de conteúdo, cursor e scroll com o store
-- Linguagem plaintext / markdown; tema claro/escuro do SO
-- Fallback para textarea se o Monaco falhar
-- Correções de tela branca e loop de updates React
-
-**Persistência (main process)**
-
-- `SessionManager` com **electron-store** em `app.getPath('userData')`
-- Salva/restaura abas + aba ativa + cursor/scroll
-- Sanitização se o arquivo de sessão estiver corrompido
-- Interop ESM/CJS do `electron-store` no build CJS do main
-- Debounce de save no renderer + flush no quit
-
-**Arquivos nativos**
-
-- `FileManager`: open/save dialogs, read/write UTF-8
-- Filtros `.txt`, `.md`, todos os arquivos
-- IPC tipado + `contextBridge` no preload
-- Salvar / Salvar como atualizam `filePath`, título e limpam dirty
-
-**Menu e quit**
-
-- Menu Arquivo/Editar/Exibir ligado às ações
-- Confirmação ao sair com alterações não salvas
-- Sessão gravada antes de encerrar
-
-**Qualidade**
-
-- Testes Vitest (store, sessão, utils, bridge)
-- `electron-log` no main
-- Segurança: `contextIsolation`, sem `nodeIntegration`, API só via preload
+| Atalho                   | Ação                   |
+| ------------------------ | ---------------------- |
+| `Ctrl/Cmd+N`             | Nova aba               |
+| `Ctrl/Cmd+O`             | Abrir                  |
+| `Ctrl/Cmd+S` / `Shift+S` | Salvar / Salvar como   |
+| `Ctrl/Cmd+W`             | Fechar aba             |
+| `Ctrl/Cmd+,`             | Configurações          |
+| `Ctrl/Cmd+Shift+P`       | Toggle Split / Preview |
+| `Ctrl/Cmd+Shift+M`       | Toggle modo Markdown   |
+| `Ctrl/Cmd+Tab`           | Alternar abas          |
 
 ---
 
-## O que ainda precisa fazer
-
-### Curto prazo (polimento da Fase 1)
-
-- [ ] Diálogo nativo do Electron no lugar de `window.confirm` (UX mais nativa)
-- [ ] Lista de arquivos recentes
-- [ ] Tratamento visual de erros de I/O na UI (toast/banner)
-- [ ] Garantir `sandbox: true` com Monaco estável (hoje `sandbox: false` por workers)
-
-### Fase 2 — Experiência
-
-- [ ] Auto-save configurável (intervalo + ao trocar de aba)
-- [ ] Janela de Configurações (fonte, tamanho, tema)
-- [ ] Tema claro/escuro forçado (além do “seguir o sistema”)
-- [ ] Status bar completa (encoding, tipo de arquivo mais rico)
-- [ ] Logging/erros centralizados no renderer
-
-### Fase 3 — v1.0
-
-- [ ] Split view Editor | Preview Markdown
-- [ ] Exportar para PDF/HTML
-- [ ] Otimizar tamanho do instalador (Monaco tree-shaking / lazy chunks)
-- [ ] Auto-update (`electron-updater`)
-- [ ] Code signing / notarization (macOS) documentados e aplicados
-
-### Distribuição
-
-- [ ] CI (build + test + artefatos por SO)
-- [ ] Página de releases / changelog
-
----
-
-## Estrutura de pastas
+## Arquitetura (Fase 3)
 
 ```
-simplepad/
-├── src/
-│   ├── main/                    # Processo principal Electron
-│   │   ├── index.ts
-│   │   ├── menu.ts
-│   │   ├── ipc.ts
-│   │   ├── quitController.ts
-│   │   ├── sessionManager.ts    # electron-store
-│   │   └── fileManager.ts       # diálogos + fs
-│   ├── preload/
-│   │   ├── index.ts             # contextBridge
-│   │   └── index.d.ts
-│   ├── shared/                  # Contratos IPC / sessão
-│   │   ├── session.ts
-│   │   └── sessionSanitize.ts
-│   └── renderer/
-│       ├── components/          # TabBar, Editor, StatusBar, …
-│       ├── store/useTabsStore.ts
-│       ├── services/            # sessionBridge, fileActions
-│       ├── monaco/              # setup + model registry
-│       ├── utils/
-│       ├── App.tsx
-│       └── main.tsx
-├── build/                       # Ícones do instalador
-├── resources/                   # Ícone do app
-├── electron.vite.config.ts
-├── electron-builder.yml
-├── package.json
-├── SimplePad_PRD.md
-└── README.md
+src/
+├── main/
+│   ├── exportManager.ts     # HTML write + PDF printToPDF
+│   ├── menu.ts              # Exportar + Exibir Preview/Markdown
+│   └── …
+├── renderer/
+│   ├── components/
+│   │   ├── EditorWorkspace.tsx  # split container
+│   │   ├── PreviewPanel.tsx     # react-markdown + GFM
+│   │   ├── Editor.tsx           # Monaco (lazy)
+│   │   └── StatusBar.tsx
+│   ├── services/exportActions.ts
+│   ├── store/useUiStore.ts      # splitPreview + scroll ratio
+│   └── utils/markdownExport.ts  # HTML document builder
 ```
 
----
+### Bundle / performance
 
-## Persistência e dados locais
+- Monaco e `react-markdown` em **chunks separados** (`monaco-editor`, `markdown`) via `manualChunks`
+- Editor e Preview carregados com `React.lazy` — preview só monta com split ativo
+- Monaco só inicializa quando o Editor monta
 
-A sessão **não** fica no repositório. O main grava em:
+Para medir o impacto no instalador:
 
-| SO      | Caminho típico                                         |
-| ------- | ------------------------------------------------------ |
-| macOS   | `~/Library/Application Support/simplepad/session.json` |
-| Windows | `%APPDATA%/simplepad/session.json`                     |
-| Linux   | `~/.config/simplepad/session.json`                     |
+```bash
+npm run build
+du -sh out/renderer/assets/*
+npm run dist:mac   # ou dist da plataforma atual
+du -sh dist/*
+```
 
-Logs do main (electron-log) também ficam sob o diretório de dados do app.
-
----
-
-## Atalhos principais
-
-| Atalho                       | Ação                 |
-| ---------------------------- | -------------------- |
-| `Ctrl/Cmd+N`                 | Nova aba             |
-| `Ctrl/Cmd+O`                 | Abrir arquivo(s)     |
-| `Ctrl/Cmd+S`                 | Salvar               |
-| `Ctrl/Cmd+Shift+S`           | Salvar como          |
-| `Ctrl/Cmd+W`                 | Fechar aba           |
-| `Ctrl/Cmd+Tab` / `Shift+Tab` | Alternar abas        |
-| `Ctrl/Cmd+Z` / `Y`           | Undo / Redo (Monaco) |
+Meta do PRD: instalador &lt; ~80 MB após otimizações (Monaco ainda domina o peso).
 
 ---
 
-## Qualidade de código
+## Persistência
 
-- TypeScript strict
-- ESLint + Prettier
-- Husky + lint-staged
-- Vitest
+| Dado                | Arquivo            |
+| ------------------- | ------------------ |
+| Sessão de abas      | `session.json`     |
+| Settings + recentes | `preferences.json` |
+
+macOS: `~/Library/Application Support/simplepad/`
+
+---
+
+## Qualidade
 
 ```bash
 npm test
@@ -229,24 +175,21 @@ npm run typecheck
 npm run lint
 ```
 
-## Segurança (Electron)
+## Segurança
 
-- `contextIsolation: true`
-- `nodeIntegration: false`
-- Superfície IPC mínima e tipada no preload
-- (Nota) `sandbox` está `false` temporariamente por compatibilidade com workers do Monaco
+- `contextIsolation: true`, `nodeIntegration: false`
+- **`sandbox: false` no renderer** — necessário para workers do Monaco (documentado em `src/main/index.ts`)
+- Export PDF usa janela oculta **com sandbox: true**
 
-## Build e distribuição
+---
 
-```bash
-npm run build
-npm run dist          # plataforma atual
-npm run dist:mac      # .dmg
-npm run dist:win      # .exe
-npm run dist:linux    # AppImage + .deb
-```
+## Próximos passos (distribuição)
 
-Artefatos em `dist/`. Ícones em `build/` e `resources/`.
+1. CI: test + build + artefatos mac/win/linux
+2. Code signing + notarization (macOS)
+3. `electron-updater` + canal de releases
+4. Opcional: layout de preview horizontal, tree-shake mais agressivo do Monaco
+5. Screenshots reais em `docs/screenshots/`
 
 ---
 

@@ -8,7 +8,7 @@ export type EditorLanguage = 'plaintext' | 'markdown'
 
 export const DEFAULT_FONT_SIZE = 14
 
-export const EDITOR_FONT_FAMILY = 'Consolas, Menlo, monospace'
+export const EDITOR_FONT_FAMILY = 'Menlo, Monaco, Consolas, monospace'
 
 export function resolveLanguage(fileNameOrFlag: string | boolean): EditorLanguage {
   if (typeof fileNameOrFlag === 'boolean') {
@@ -24,11 +24,12 @@ export function resolveLanguage(fileNameOrFlag: string | boolean): EditorLanguag
 
 /** Minimalist Notepad-like Monaco options (single shared editor instance). */
 export function getDefaultEditorOptions(
-  fontSize = DEFAULT_FONT_SIZE
+  fontSize = DEFAULT_FONT_SIZE,
+  fontFamily = EDITOR_FONT_FAMILY
 ): editor.IStandaloneEditorConstructionOptions {
   return {
     fontSize,
-    fontFamily: EDITOR_FONT_FAMILY,
+    fontFamily,
     fontLigatures: false,
     lineNumbers: 'on',
     lineNumbersMinChars: 3,

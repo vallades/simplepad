@@ -1,7 +1,12 @@
 import { app } from 'electron'
 import ElectronStore from 'electron-store'
 import log from 'electron-log/main'
-import { SESSION_VERSION, type AppSession, type TabDTO } from '../shared/session'
+import {
+  SESSION_VERSION,
+  type AppSession,
+  type SessionLoadResult,
+  type TabDTO
+} from '../shared/session'
 import { sanitizeSession } from '../shared/sessionSanitize'
 
 export { createEmptySession, sanitizeSession } from '../shared/sessionSanitize'
@@ -100,10 +105,10 @@ export class SessionManager {
   }
 
   /**
-   * Loads the last session. Returns null when missing or corrupted
+   * Loads the last session. Returns null session when missing or corrupted
    * (caller should open a fresh empty tab).
    */
-  loadSession(): AppSession | null {
+  loadSessionDetailed(): SessionLoadResult {
     try {
       const raw = this.store.get('session', null)
       const session = sanitizeSession(raw)
@@ -111,11 +116,12 @@ export class SessionManager {
         if (raw != null) {
           log.warn('[SessionManager] corrupted session — clearing and returning null')
           this.clearSession()
+          return { session: null, recoveredFromCorruption: true }
         }
-        return null
+        return { session: null, recoveredFromCorruption: false }
       }
       log.info(`[SessionManager] loaded ${session.tabs.length} tab(s)`)
-      return session
+      return { session, recoveredFromCorruption: false }
     } catch (error) {
       log.error('[SessionManager] loadSession failed — treating as empty:', error)
       try {
@@ -123,14 +129,22 @@ export class SessionManager {
       } catch {
         // ignore secondary failure
       }
-      return null
+      return {
+        session: null,
+        recoveredFromCorruption: true,
+        error: error instanceof Error ? error.message : String(error)
+      }
     }
+  }
+
+  /** Convenience: session only (or null). */
+  loadSession(): AppSession | null {
+    return this.loadSessionDetailed().session
   }
 
   /** Convenience: returns only tabs or null */
   loadTabs(): TabDTO[] | null {
-    const session = this.loadSession()
-    return session?.tabs ?? null
+    return this.loadSession()?.tabs ?? null
   }
 
   clearSession(): void {

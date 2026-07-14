@@ -34,3 +34,11 @@ export function titleFromPath(filePath: string): string {
   const segments = filePath.split(/[/\\]/)
   return segments[segments.length - 1] || 'Sem título'
 }
+
+/** Compact path for status bar (keeps last two segments when long). */
+export function shortenPath(filePath: string): string {
+  if (filePath.length <= 40) return filePath
+  const parts = filePath.split(/[/\\]/)
+  if (parts.length <= 2) return filePath
+  return `…/${parts.slice(-2).join('/')}`
+}
