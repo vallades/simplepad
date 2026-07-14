@@ -2,14 +2,28 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** 1.0.0 · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.0.0](https://github.com/vallades/simplepad/releases/tag/v1.0.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · electron-updater
 
 [![CI](https://github.com/vallades/simplepad/actions/workflows/ci.yml/badge.svg)](https://github.com/vallades/simplepad/actions/workflows/ci.yml)
 [![Release](https://github.com/vallades/simplepad/actions/workflows/release.yml/badge.svg)](https://github.com/vallades/simplepad/actions/workflows/release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/vallades/simplepad?label=download)](https://github.com/vallades/simplepad/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 > Simples por design. Poderoso por escolha.
+
+### Download
+
+Instaladores oficiais da **[v1.0.0](https://github.com/vallades/simplepad/releases/tag/v1.0.0)**:
+
+| Plataforma | Arquivo típico                        |
+| ---------- | ------------------------------------- |
+| macOS      | `.dmg` / `.zip`                       |
+| Windows    | `-setup.exe` (NSIS) / `-portable.exe` |
+| Linux      | `.AppImage` / `.deb`                  |
+
+→ [Todas as releases](https://github.com/vallades/simplepad/releases)
 
 ---
 

@@ -8,7 +8,17 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## [1.0.0] — 2026-07-14
 
-Release oficial do MVP completo — editor multiplataforma pronto para distribuição.
+**SimplePad v1.0.0** — primeiro release estável. Editor multiplataforma minimalista com abas, pronto para download.
+
+### Highlights
+
+- Editor multi-aba com Monaco (undo/redo por aba)
+- Preview Markdown em Split View (GFM)
+- Exportação HTML e PDF
+- Configurações, auto-save e arquivos recentes
+- Auto-update via GitHub Releases
+- Instaladores Windows, macOS e Linux
+- CI/CD com GitHub Actions
 
 ### Added
 
@@ -35,15 +45,15 @@ Release oficial do MVP completo — editor multiplataforma pronto para distribui
 - Toggle modo Markdown (extensão + manual)
 - Exportar **HTML** e **PDF**
 
-#### Distribuição & polish
+#### Distribuição, polish e CI
 
 - **Modo Distração Zero** (F11 / Esc)
 - **electron-updater** (GitHub Releases) + menu Ajuda
 - electron-builder: Windows (NSIS + portable), macOS (DMG + ZIP), Linux (AppImage + deb)
-- Nome do app **SimplePad** na barra de menu macOS (`app.setName` + `productName`)
-- Padding correto para traffic lights com `hiddenInset`
+- Nome do app **SimplePad** na barra de menu macOS
+- Padding correto para traffic lights (`hiddenInset`)
+- **GitHub Actions**: CI multi-OS + workflow de Release
 - Documentação: README, CHANGELOG, LICENSE (MIT), `docs/DISTRIBUTION.md`
-- Scripts: `dist`, `dist:mac|win|linux`, `dist:all`, `release`
 
 ### Changed
 
@@ -60,7 +70,7 @@ Release oficial do MVP completo — editor multiplataforma pronto para distribui
 ### Known limitations
 
 - Instalador tipicamente **> 70 MB** (Electron + Monaco)
-- Auto-update exige releases publicados no GitHub com artefatos do builder
+- Auto-update exige releases publicados com artefatos do electron-builder
 - Notarization macOS desligada por padrão (`notarize: false`)
 
 ## [0.1.0] — 2026-07-13
