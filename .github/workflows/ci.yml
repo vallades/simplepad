@@ -15,8 +15,11 @@ permissions:
   contents: read
 
 concurrency:
+  # One active CI per branch/PR. Only cancel outdated PR runs — on `main`, let
+  # long electron-builder jobs (esp. macOS DMG) finish. Otherwise Actions reports
+  # "Error: The operation was canceled." right after a successful package step.
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_VERSION: '22'
@@ -166,15 +169,21 @@ jobs:
         run: npx electron-vite build
 
       - name: Package with electron-builder (${{ matrix.platform }})
-        run: npx electron-builder ${{ matrix.builder_args }} --publish never
+        run: |
+          set -euo pipefail
+          echo "Packaging platform=${{ matrix.platform }} args=${{ matrix.builder_args }}"
+          npx electron-builder ${{ matrix.builder_args }} --publish never
+          echo "Package complete. Artifacts in dist/:"
+          ls -lah dist/ || true
 
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
+          name: ${{ matrix.artifact_name }}-${{ github.run_id }}
           path: ${{ matrix.artifact_glob }}
           if-no-files-found: error
           retention-days: 14
+          compression-level: 0
 
   # ---------------------------------------------------------------------------
   # Aggregate status (useful for branch protection: require this single job)
