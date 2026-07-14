@@ -1,0 +1,199 @@
+# =============================================================================
+# SimplePad — Continuous Integration
+# Runs on every push/PR to main: lint, typecheck, tests, multi-OS installers.
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Least privilege for CI (release workflow uses contents: write)
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  # Skip husky hooks in CI
+  HUSKY: '0'
+  # Do not attempt code signing in PR/CI builds
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  # Electron download cache (used by setup-node cache keys below)
+  ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+  ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1 — Lint & Type Check (Ubuntu, fast feedback)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript (strict)
+        run: npm run typecheck
+
+  # ---------------------------------------------------------------------------
+  # Job 2 — Unit tests + coverage (parallel with lint)
+  # ---------------------------------------------------------------------------
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Vitest with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/lcov.info
+            coverage/coverage-summary.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # Job 3 — Production build + platform installers (matrix)
+  # Waits for lint + test so we do not waste builder minutes on broken code.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build (${{ matrix.platform }})
+    needs: [lint, test]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            builder_args: --linux
+            artifact_name: simplepad-linux
+            artifact_glob: |
+              dist/*.AppImage
+              dist/*.deb
+              dist/*.yml
+              dist/*.yaml
+              dist/*.blockmap
+          - os: windows-latest
+            platform: win
+            builder_args: --win
+            artifact_name: simplepad-windows
+            artifact_glob: |
+              dist/*.exe
+              dist/*.yml
+              dist/*.yaml
+              dist/*.blockmap
+          - os: macos-latest
+            platform: mac
+            builder_args: --mac
+            artifact_name: simplepad-macos
+            artifact_glob: |
+              dist/*.dmg
+              dist/*.zip
+              dist/*.yml
+              dist/*.yaml
+              dist/*.blockmap
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Cache Electron & electron-builder
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ELECTRON_CACHE }}
+            ${{ env.ELECTRON_BUILDER_CACHE }}
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      # electron-vite build (typecheck already ran in lint job — still safe via npm run build)
+      - name: Build app (main / preload / renderer)
+        run: npx electron-vite build
+
+      - name: Package with electron-builder (${{ matrix.platform }})
+        run: npx electron-builder ${{ matrix.builder_args }} --publish never
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # Aggregate status (useful for branch protection: require this single job)
+  # ---------------------------------------------------------------------------
+  ci-success:
+    name: CI Success
+    if: always()
+    needs: [lint, test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required jobs
+        run: |
+          echo "lint=${{ needs.lint.result }}"
+          echo "test=${{ needs.test.result }}"
+          echo "build=${{ needs.build.result }}"
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "::error::One or more CI jobs failed"
+            exit 1
+          fi
+          echo "All CI jobs passed."

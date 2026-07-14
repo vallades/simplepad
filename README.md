@@ -6,6 +6,9 @@ Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco 
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · electron-updater
 
+[![CI](https://github.com/vallades/simplepad/actions/workflows/ci.yml/badge.svg)](https://github.com/vallades/simplepad/actions/workflows/ci.yml)
+[![Release](https://github.com/vallades/simplepad/actions/workflows/release.yml/badge.svg)](https://github.com/vallades/simplepad/actions/workflows/release.yml)
+
 > Simples por design. Poderoso por escolha.
 
 ---
@@ -19,6 +22,7 @@ Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco 
 | Preview Markdown + export      | Concluído |
 | Distração zero + auto-update   | Concluído |
 | Distribuição (builder + docs)  | Concluído |
+| CI/CD (GitHub Actions)         | Concluído |
 
 ---
 
@@ -61,21 +65,68 @@ npm run dev
 
 ### Scripts
 
-| Comando              | Descrição                         |
-| -------------------- | --------------------------------- |
-| `npm run dev`        | Desenvolvimento                   |
-| `npm test`           | Testes unitários                  |
-| `npm run typecheck`  | TypeScript strict                 |
-| `npm run lint`       | ESLint                            |
-| `npm run build`      | Build de produção (`out/`)        |
-| `npm run dist`       | Instalador da plataforma atual    |
-| `npm run dist:mac`   | DMG + ZIP                         |
-| `npm run dist:win`   | NSIS + portable                   |
-| `npm run dist:linux` | AppImage + deb                    |
-| `npm run dist:all`   | mac + win + linux                 |
-| `npm run release`    | Build + publish (GitHub Releases) |
+| Comando                 | Descrição                         |
+| ----------------------- | --------------------------------- |
+| `npm run dev`           | Desenvolvimento                   |
+| `npm test`              | Testes unitários                  |
+| `npm run test:coverage` | Testes + coverage (Vitest/v8)     |
+| `npm run typecheck`     | TypeScript strict                 |
+| `npm run lint`          | ESLint                            |
+| `npm run build`         | Build de produção (`out/`)        |
+| `npm run dist`          | Instalador da plataforma atual    |
+| `npm run dist:mac`      | DMG + ZIP                         |
+| `npm run dist:win`      | NSIS + portable                   |
+| `npm run dist:linux`    | AppImage + deb                    |
+| `npm run dist:all`      | mac + win + linux                 |
+| `npm run release`       | Build + publish (GitHub Releases) |
 
 Guia completo: [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)
+
+---
+
+## CI/CD
+
+Workflows em [`.github/workflows/`](./.github/workflows/):
+
+| Workflow    | Arquivo                                          | Quando                     | O que faz                                                                                  |
+| ----------- | ------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------ |
+| **CI**      | [`ci.yml`](./.github/workflows/ci.yml)           | Push/PR em `main`          | Lint, typecheck, testes + coverage, instaladores (Ubuntu/Windows/macOS) como **Artifacts** |
+| **Release** | [`release.yml`](./.github/workflows/release.yml) | Tag `v*` ou _Run workflow_ | Instaladores oficiais + **GitHub Release** (`softprops/action-gh-release`)                 |
+
+### Jobs do CI
+
+1. **Lint & Type Check** — `npm run lint` + `npm run typecheck`
+2. **Tests** — `npm run test:coverage` (artifact `coverage-report`)
+3. **Build (matrix)** — `electron-vite build` + `electron-builder` por SO
+4. **CI Success** — agregador para _branch protection_
+
+### Secrets (code signing, opcional)
+
+| Secret                        | Uso                    |
+| ----------------------------- | ---------------------- |
+| `CSC_LINK`                    | Certificado (Win/mac)  |
+| `CSC_KEY_PASSWORD`            | Senha do certificado   |
+| `APPLE_ID`                    | Conta Apple (notarize) |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password  |
+| `APPLE_TEAM_ID`               | Team ID                |
+
+### Como validar
+
+```bash
+# Espelha jobs 1–2 localmente
+npm ci
+npm run lint && npm run typecheck && npm run test:coverage
+
+# Dispara CI no GitHub
+git push origin main   # ou abra um PR
+
+# Dispara Release
+git tag -a v1.0.1 -m "SimplePad v1.0.1"
+git push origin v1.0.1
+# ou Actions → Release → Run workflow
+```
+
+Artifacts: **Actions → run → Artifacts** (`simplepad-linux`, `simplepad-windows`, `simplepad-macos`, `coverage-report`).
 
 ---
 

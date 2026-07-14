@@ -19,6 +19,18 @@ export default defineConfig({
       deps: {
         inline: ['electron-store']
       }
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'src/renderer/test/**',
+        'src/main/**',
+        'src/preload/**'
+      ]
     }
   }
 })

@@ -30,6 +30,15 @@ npm run dist:all
 
 Artefatos em `dist/`.
 
+### CI/CD (GitHub Actions)
+
+| Workflow                        | Trigger            | Saída                                                |
+| ------------------------------- | ------------------ | ---------------------------------------------------- |
+| `.github/workflows/ci.yml`      | push/PR `main`     | Lint, testes, instaladores como **Artifacts**        |
+| `.github/workflows/release.yml` | tag `v*` ou manual | **GitHub Release** com `.dmg` / `.exe` / `.AppImage` |
+
+Secrets de assinatura (opcional): `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`.
+
 | SO      | Targets               | Exemplos de artefato                          |
 | ------- | --------------------- | --------------------------------------------- |
 | Windows | NSIS + portable       | `simplepad-1.0.0-setup.exe`, `…-portable.exe` |

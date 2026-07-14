@@ -1,0 +1,193 @@
+# =============================================================================
+# SimplePad — Release
+# Triggers on version tags (v1.0.0) or manual workflow_dispatch.
+# Builds installers on 3 OSes and attaches them to a GitHub Release.
+# =============================================================================
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.1). Leave empty to use package.json version.'
+        required: false
+        type: string
+
+permissions:
+  contents: write # create/update GitHub Release + upload assets
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+  HUSKY: '0'
+  # Signing: set repository secrets when ready (see docs/DISTRIBUTION.md)
+  # CSC_LINK, CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
+  # Leave auto-discovery off unless CSC_LINK is configured in the Package step env.
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+  ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build platform installers (parallel matrix)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Package (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            builder_args: --linux
+            artifact_name: release-linux
+            artifact_glob: |
+              dist/*.AppImage
+              dist/*.deb
+              dist/*-linux*.yml
+              dist/*-linux*.yaml
+              dist/*.blockmap
+          - os: windows-latest
+            platform: win
+            builder_args: --win
+            artifact_name: release-windows
+            artifact_glob: |
+              dist/*.exe
+              dist/latest.yml
+              dist/*.blockmap
+          - os: macos-latest
+            platform: mac
+            builder_args: --mac
+            artifact_name: release-macos
+            artifact_glob: |
+              dist/*.dmg
+              dist/*.zip
+              dist/latest-mac.yml
+              dist/*.blockmap
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Cache Electron & electron-builder
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ELECTRON_CACHE }}
+            ${{ env.ELECTRON_BUILDER_CACHE }}
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-release-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-release-${{ runner.os }}-
+            electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npx electron-vite build
+
+      - name: Package installers
+        env:
+          # Optional code-signing secrets (no-op if unset)
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npx electron-builder ${{ matrix.builder_args }} --publish never
+
+      - name: Upload platform artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Create / update GitHub Release with all assets
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish GitHub Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout (for CHANGELOG)
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: release-*
+          merge-multiple: true
+
+      - name: List release assets
+        run: |
+          echo "Assets to publish:"
+          find release-assets -type f | sort
+          # Flatten into a single directory for the release action
+          mkdir -p dist-upload
+          find release-assets -type f -exec cp -v {} dist-upload/ \;
+          ls -lah dist-upload
+
+      - name: Resolve tag name
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
+            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            # Manual run without tag input — use package version
+            VER=$(node -p "require('./package.json').version")
+            echo "name=v${VER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: SimplePad ${{ steps.tag.outputs.name }}
+          draft: false
+          prerelease: ${{ contains(steps.tag.outputs.name, '-') }}
+          generate_release_notes: true
+          body: |
+            ## SimplePad ${{ steps.tag.outputs.name }}
+
+            Instaladores multiplataforma gerados automaticamente pelo workflow **Release**.
+
+            Veja o [CHANGELOG](https://github.com/vallades/simplepad/blob/main/CHANGELOG.md) para detalhes.
+
+            ### Instalação rápida
+            - **macOS:** `.dmg` ou `.zip`
+            - **Windows:** `-setup.exe` (NSIS) ou `-portable.exe`
+            - **Linux:** `.AppImage` ou `.deb`
+
+            Os arquivos `latest*.yml` são usados pelo **electron-updater**.
+          files: |
+            dist-upload/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
