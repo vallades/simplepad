@@ -3,8 +3,10 @@ import { Columns2, Maximize2, Minimize2, Settings } from 'lucide-react'
 import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import SettingsModal from './components/SettingsModal'
+import SearchAllTabsModal from './components/SearchAllTabsModal'
 import ToastStack from './components/ToastStack'
 import EditorWorkspace from './components/EditorWorkspace'
+import { dispatchEditorCommand } from './services/editorCommands'
 import { useTabsStore } from './store/useTabsStore'
 import { useSettingsStore } from './store/useSettingsStore'
 import { useUiStore } from './store/useUiStore'
@@ -51,6 +53,8 @@ function App(): React.JSX.Element {
   const themePreference = useSettingsStore((state) => state.theme)
   const autoSaveEnabled = useSettingsStore((state) => state.autoSaveEnabled)
   const autoSaveIntervalSeconds = useSettingsStore((state) => state.autoSaveIntervalSeconds)
+  const splitOrientation = useSettingsStore((state) => state.splitOrientation)
+  const updateSettings = useSettingsStore((state) => state.updateSettings)
 
   const splitPreview = useUiStore((state) => state.splitPreview)
   const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
@@ -58,6 +62,7 @@ function App(): React.JSX.Element {
   const setFocusMode = useUiStore((state) => state.setFocusMode)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [searchTabsOpen, setSearchTabsOpen] = useState(false)
   const [appVersion, setAppVersion] = useState<string>('')
   /** Detect macOS once — traffic-light left padding for hiddenInset */
   const [isMac] = useState(() => {
@@ -157,6 +162,23 @@ function App(): React.JSX.Element {
         case 'check-updates':
           void requestCheckForUpdates()
           break
+        case 'find':
+          dispatchEditorCommand('find')
+          break
+        case 'replace':
+          dispatchEditorCommand('replace')
+          break
+        case 'go-to-line':
+          dispatchEditorCommand('go-to-line')
+          break
+        case 'find-in-tabs':
+          setSearchTabsOpen(true)
+          break
+        case 'toggle-split-orientation':
+          void updateSettings({
+            splitOrientation: splitOrientation === 'horizontal' ? 'vertical' : 'horizontal'
+          })
+          break
         case 'quit':
           break
         default:
@@ -168,8 +190,10 @@ function App(): React.JSX.Element {
       createNewTab,
       requestCloseActiveTab,
       requestToggleFocusMode,
+      splitOrientation,
       toggleActiveMarkdown,
-      toggleSplitPreview
+      toggleSplitPreview,
+      updateSettings
     ]
   )
 
@@ -346,6 +370,18 @@ function App(): React.JSX.Element {
         return
       }
 
+      if (key === 'f' && event.shiftKey) {
+        event.preventDefault()
+        setSearchTabsOpen(true)
+        return
+      }
+
+      if (key === 'g' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        dispatchEditorCommand('go-to-line')
+        return
+      }
+
       if (key === 'm' && event.shiftKey) {
         event.preventDefault()
         toggleActiveMarkdown()
@@ -504,8 +540,9 @@ function App(): React.JSX.Element {
         <EditorWorkspace />
       </main>
 
-      {!focusMode ? <StatusBar /> : null}
+      {!focusMode ? <StatusBar onOpenSearchTabs={() => setSearchTabsOpen(true)} /> : null}
       {settingsOpen ? <SettingsModal open onClose={() => setSettingsOpen(false)} /> : null}
+      <SearchAllTabsModal open={searchTabsOpen} onClose={() => setSearchTabsOpen(false)} />
       <ToastStack />
     </div>
   )

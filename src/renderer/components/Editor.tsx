@@ -15,6 +15,7 @@ import {
 } from '../monaco/modelRegistry'
 import { getDefaultEditorOptions, type MonacoThemeId } from '../utils/monacoUtils'
 import { isResolvedDark } from '../utils/theme'
+import { registerEditorCommandHandler } from '../services/editorCommands'
 import PlainEditor from './PlainEditor'
 
 type BootState = 'loading' | 'ready' | 'fallback'
@@ -90,8 +91,39 @@ function Editor(): React.JSX.Element {
         d.dispose()
       }
       disposablesRef.current = []
+      registerEditorCommandHandler(null)
     }
   }, [])
+
+  // Wire Find / Replace / Go to line / reveal from menu, status bar, search
+  useEffect(() => {
+    if (boot !== 'ready') return
+    registerEditorCommandHandler((command) => {
+      const editor = editorRef.current
+      if (!editor) return
+      if (typeof command === 'object' && command.type === 'reveal') {
+        editor.setPosition({ lineNumber: command.lineNumber, column: command.column })
+        editor.revealPositionInCenter({
+          lineNumber: command.lineNumber,
+          column: command.column
+        })
+        editor.focus()
+        return
+      }
+      const actionId =
+        command === 'find'
+          ? 'actions.find'
+          : command === 'replace'
+            ? 'editor.action.startFindReplaceAction'
+            : 'editor.action.gotoLine'
+      const action = editor.getAction(actionId)
+      if (action) {
+        void action.run()
+        editor.focus()
+      }
+    })
+    return () => registerEditorCommandHandler(null)
+  }, [boot])
 
   useEffect(() => {
     let cancelled = false

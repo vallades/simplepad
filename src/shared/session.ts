@@ -45,6 +45,11 @@ export type MenuCommand =
   | 'toggle-focus-mode'
   | 'exit-focus-mode'
   | 'check-updates'
+  | 'find'
+  | 'replace'
+  | 'go-to-line'
+  | 'find-in-tabs'
+  | 'toggle-split-orientation'
 
 /** Events pushed from main (auto-updater) to the renderer. */
 export type UpdateEventType =

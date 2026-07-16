@@ -3,11 +3,16 @@ import { useSettingsStore } from '../store/useSettingsStore'
 import { useUiStore } from '../store/useUiStore'
 import { countWords, shortenPath } from '../utils/fileUtils'
 import { exportActiveAsHtml, exportActiveAsPdf } from '../services/exportActions'
+import { dispatchEditorCommand } from '../services/editorCommands'
+
+interface StatusBarProps {
+  onOpenSearchTabs?: () => void
+}
 
 /**
  * Minimal status bar: cursor, counts, dirty, path, preview, export, encoding.
  */
-function StatusBar(): React.JSX.Element {
+function StatusBar({ onOpenSearchTabs }: StatusBarProps): React.JSX.Element {
   const title = useTabsStore((state) => {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.title
@@ -88,6 +93,30 @@ function StatusBar(): React.JSX.Element {
         ) : null}
       </div>
       <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          className="rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          title="Localizar (Ctrl/Cmd+F)"
+          onClick={() => dispatchEditorCommand('find')}
+        >
+          Localizar
+        </button>
+        <button
+          type="button"
+          className="rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          title="Ir para linha (Ctrl/Cmd+G)"
+          onClick={() => dispatchEditorCommand('go-to-line')}
+        >
+          Linha
+        </button>
+        <button
+          type="button"
+          className="rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          title="Buscar em todas as abas (Ctrl/Cmd+Shift+F)"
+          onClick={() => onOpenSearchTabs?.()}
+        >
+          Abas
+        </button>
         <button
           type="button"
           className={[
