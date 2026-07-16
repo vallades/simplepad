@@ -4,6 +4,9 @@
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
+/** horizontal = side-by-side (Editor | Preview); vertical = stacked (Editor / Preview) */
+export type SplitOrientation = 'horizontal' | 'vertical'
+
 export interface AppSettings {
   fontFamily: string
   fontSize: number
@@ -11,6 +14,9 @@ export interface AppSettings {
   autoSaveEnabled: boolean
   /** Interval in seconds (clamped 5–600) */
   autoSaveIntervalSeconds: number
+  /** Fraction of workspace for the editor pane when split is on (0.2–0.8) */
+  splitRatio: number
+  splitOrientation: SplitOrientation
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -18,8 +24,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 14,
   theme: 'system',
   autoSaveEnabled: true,
-  autoSaveIntervalSeconds: 30
+  autoSaveIntervalSeconds: 30,
+  splitRatio: 0.5,
+  splitOrientation: 'horizontal'
 }
+
+export const MIN_SPLIT_RATIO = 0.2
+export const MAX_SPLIT_RATIO = 0.8
 
 /** Common monospaced faces for the settings picker */
 export const MONOSPACE_FONT_OPTIONS: readonly string[] = [
