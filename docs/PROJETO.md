@@ -5,14 +5,14 @@ Documento de contexto: o que foi construído, decisões técnicas, limitações,
 | Campo            | Valor                                                                                                                      |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | **Produto**      | SimplePad — editor de texto multiplataforma minimalista com abas                                                           |
-| **Versão atual** | **1.0.0** (release estável)                                                                                                |
+| **Versão atual** | **1.0.1** (patch: auto-update UX + CI)                                                                                     |
 | **Licença**      | MIT                                                                                                                        |
 | **Repositório**  | https://github.com/vallades/simplepad                                                                                      |
-| **Release**      | https://github.com/vallades/simplepad/releases/tag/v1.0.0                                                                  |
+| **Release**      | https://github.com/vallades/simplepad/releases/tag/v1.0.1                                                                  |
 | **Stack**        | Electron · Vite · React 19 · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · electron-updater |
 | **Inspiração**   | Bloco de Notas / TextEdit — simples por design                                                                             |
 
-Documentos relacionados: [README](../README.md) · [CHANGELOG](../CHANGELOG.md) · [DISTRIBUTION](./DISTRIBUTION.md) · [PRD original](../SimplePad_PRD.md) · [Notas v1.0.0](./RELEASE_NOTES_v1.0.0.md)
+Documentos relacionados: [README](../README.md) · [CHANGELOG](../CHANGELOG.md) · [DISTRIBUTION](./DISTRIBUTION.md) · [AUTO_UPDATE](./AUTO_UPDATE.md) · [PRD original](../SimplePad_PRD.md) · [Notas v1.0.0](./RELEASE_NOTES_v1.0.0.md) · [Notas v1.0.1](./RELEASE_NOTES_v1.0.1.md)
 
 ---
 

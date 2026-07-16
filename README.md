@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.0.0](https://github.com/vallades/simplepad/releases/tag/v1.0.0) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.0.1](https://github.com/vallades/simplepad/releases/tag/v1.0.1) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · electron-updater
 
@@ -15,7 +15,7 @@ Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco 
 
 ### Download
 
-Instaladores oficiais da **[v1.0.0](https://github.com/vallades/simplepad/releases/tag/v1.0.0)**:
+Instaladores oficiais da **[v1.0.1](https://github.com/vallades/simplepad/releases/tag/v1.0.1)** (ou [v1.0.0](https://github.com/vallades/simplepad/releases/tag/v1.0.0)):
 
 | Plataforma | Arquivo típico                        |
 | ---------- | ------------------------------------- |
@@ -96,7 +96,8 @@ npm run dev
 
 Guia completo: [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)
 
-**Documentação do projeto:** [docs/PROJETO.md](./docs/PROJETO.md) — o que foi feito, decisões, melhorias e roadmap.
+**Documentação do projeto:** [docs/PROJETO.md](./docs/PROJETO.md) — o que foi feito, decisões, melhorias e roadmap.  
+**Auto-update (novas versões para o usuário):** [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)
 
 ---
 

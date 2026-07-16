@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.0.1] — 2026-07-16
+
+Patch de auto-update, CI Windows e documentação.
+
+### Added
+
+- Documentação **[docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)** — fluxo de publicação de versões
+- Diálogo nativo ao terminar download da atualização (**Reiniciar agora** / **Depois**)
+- Re-check de updates diário com o app aberto
+- Flag `silent` nos eventos de update (check em background sem spam de toasts)
+
+### Fixed
+
+- CI Windows: falha após build bem-sucedido por `2>/dev/null` no PowerShell (`D:\dev\null`)
+- CI: builds longos em `main` não são mais cancelados por concurrency
+- CI/Release: secrets `CSC_*` vazios não quebram o packaging macOS
+
+### Changed
+
+- Toasts de update mais claros (“Nova versão — baixando…”)
+- Versão do pacote **1.0.0 → 1.0.1**
+
 ## [1.0.0] — 2026-07-14
 
 **SimplePad v1.0.0** — primeiro release estável. Editor multiplataforma minimalista com abas, pronto para download.
@@ -79,5 +101,6 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 - Fundação do MVP: abas, Monaco, sessão, abrir/salvar, menu nativo
 
+[1.0.1]: https://github.com/vallades/simplepad/releases/tag/v1.0.1
 [1.0.0]: https://github.com/vallades/simplepad/releases/tag/v1.0.0
 [0.1.0]: https://github.com/vallades/simplepad/releases/tag/v0.1.0

@@ -6,25 +6,31 @@ import type { UpdateEventPayload } from '../../shared/session'
  * Handles auto-updater events from main → user-facing toasts.
  */
 export function handleUpdateEvent(payload: UpdateEventPayload): void {
+  const quiet = Boolean(payload.silent)
+
   switch (payload.type) {
     case 'checking':
-      showToast('Verificando atualizações…', 'info')
+      // Background launch check stays silent
+      if (!quiet) showToast('Verificando atualizações…', 'info')
       break
     case 'available':
+      // Always show — user should know a download started
       showToast(
         payload.version
-          ? `Atualização ${payload.version} disponível — baixando…`
-          : 'Atualização disponível — baixando…',
+          ? `Nova versão ${payload.version} disponível — baixando…`
+          : 'Nova versão disponível — baixando…',
         'info'
       )
       break
     case 'not-available':
-      showToast(
-        payload.version
-          ? `Você já está na versão mais recente (${payload.version}).`
-          : 'Nenhuma atualização disponível.',
-        'success'
-      )
+      if (!quiet) {
+        showToast(
+          payload.version
+            ? `Você já está na versão mais recente (${payload.version}).`
+            : 'Nenhuma atualização disponível.',
+          'success'
+        )
+      }
       break
     case 'progress':
       // Avoid toast spam — only announce milestones
@@ -35,18 +41,20 @@ export function handleUpdateEvent(payload: UpdateEventPayload): void {
     case 'downloaded':
       showToast(
         payload.version
-          ? `Atualização ${payload.version} pronta. Reinicie para instalar (Ajuda → ou ao sair).`
-          : 'Atualização baixada. Reinicie o app para instalar.',
+          ? `Versão ${payload.version} baixada. Use o diálogo para reiniciar ou saia do app para instalar.`
+          : 'Atualização baixada. Reinicie o SimplePad para instalar.',
         'success'
       )
       break
     case 'error':
-      showToast(
-        payload.message
-          ? `Atualização: ${payload.message}`
-          : 'Falha ao verificar atualizações. Veja o log do app.',
-        'error'
-      )
+      if (!quiet) {
+        showToast(
+          payload.message
+            ? `Atualização: ${payload.message}`
+            : 'Falha ao verificar atualizações. Veja o log do app.',
+          'error'
+        )
+      }
       break
     default:
       break

@@ -39,11 +39,11 @@ Artefatos em `dist/`.
 
 Secrets de assinatura (opcional): `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`.
 
-| SO      | Targets               | Exemplos de artefato                          |
-| ------- | --------------------- | --------------------------------------------- |
-| Windows | NSIS + portable       | `simplepad-1.0.0-setup.exe`, `…-portable.exe` |
-| macOS   | DMG + ZIP (universal) | `simplepad-1.0.0-mac.dmg`                     |
-| Linux   | AppImage + deb        | `simplepad-1.0.0-linux.AppImage`              |
+| SO      | Targets         | Exemplos de artefato                          |
+| ------- | --------------- | --------------------------------------------- |
+| Windows | NSIS + portable | `simplepad-1.0.1-setup.exe`, `…-portable.exe` |
+| macOS   | DMG + ZIP       | `simplepad-1.0.1-mac.dmg`                     |
+| Linux   | AppImage + deb  | `simplepad-1.0.1-linux.AppImage`              |
 
 > **Nota de tamanho:** Electron + Monaco fazem o instalador tipicamente **> 70 MB**. A meta de 70 MB é difícil de atingir sem remover Monaco ou usar runtime compartilhável. Otimizações já aplicadas: `compression: maximum`, chunks lazy, exclusão de testes/docs do asar.
 

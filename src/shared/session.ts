@@ -55,6 +55,8 @@ export interface UpdateEventPayload {
   version?: string
   percent?: number
   message?: string
+  /** When true, UI should stay quiet (background check on launch). */
+  silent?: boolean
 }
 
 export interface OpenedFileDTO {
