@@ -2,6 +2,9 @@ import { showToast } from '../store/useToastStore'
 import { isElectronApiAvailable } from './sessionBridge'
 import type { UpdateEventPayload } from '../../shared/session'
 
+/** Last progress milestone toasted (0–100), avoids spam during download. */
+let lastProgressMilestone = -1
+
 /**
  * Handles auto-updater events from main → user-facing toasts.
  */
@@ -14,6 +17,7 @@ export function handleUpdateEvent(payload: UpdateEventPayload): void {
       if (!quiet) showToast('Verificando atualizações…', 'info')
       break
     case 'available':
+      lastProgressMilestone = -1
       // Always show — user should know a download started
       showToast(
         payload.version
@@ -32,13 +36,18 @@ export function handleUpdateEvent(payload: UpdateEventPayload): void {
         )
       }
       break
-    case 'progress':
-      // Avoid toast spam — only announce milestones
-      if (payload.percent === 50 || payload.percent === 100) {
-        showToast(`Download da atualização: ${payload.percent}%`, 'info')
+    case 'progress': {
+      // Milestones ~25% (rounded percent can skip exact 25/50/75)
+      const p = payload.percent ?? 0
+      const milestone = p >= 100 ? 100 : p >= 75 ? 75 : p >= 50 ? 50 : p >= 25 ? 25 : 0
+      if (milestone > 0 && milestone > lastProgressMilestone) {
+        lastProgressMilestone = milestone
+        showToast(`Baixando atualização: ${milestone}%`, 'info')
       }
       break
+    }
     case 'downloaded':
+      lastProgressMilestone = 100
       showToast(
         payload.version
           ? `Versão ${payload.version} baixada. Use o diálogo para reiniciar ou saia do app para instalar.`

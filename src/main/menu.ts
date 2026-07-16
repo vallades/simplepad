@@ -228,7 +228,9 @@ export function createAppMenu(recentFiles?: string[]): void {
       submenu: [
         {
           label: 'Verificar atualizações…',
+          accelerator: 'CmdOrCtrl+Shift+U',
           click: () => {
+            log.info('[menu] manual check for updates')
             void checkForUpdates({ silent: false })
           }
         },
@@ -243,6 +245,12 @@ export function createAppMenu(recentFiles?: string[]): void {
           label: 'Reportar problema',
           click: () => {
             void shell.openExternal('https://github.com/vallades/simplepad/issues')
+          }
+        },
+        {
+          label: 'Releases e downloads',
+          click: () => {
+            void shell.openExternal('https://github.com/vallades/simplepad/releases')
           }
         },
         { type: 'separator' },

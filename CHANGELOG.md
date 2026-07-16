@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.2.0] — 2026-07-16
+
+**Auto-update confiável** — feed GitHub explícito, logs e release com `latest*.yml`.
+
+### Fixed
+
+- Auto-update não detectava versões novas: `setFeedURL` GitHub + `channel: latest` no main process
+- Logs completos do updater via **electron-log** (`[updater] event:…`)
+- `dev-app-update.yml` alinhado ao provider GitHub de produção
+
+### Added
+
+- Atalho **Cmd/Ctrl+Shift+U** → Verificar atualizações
+- Link **Releases e downloads** no menu Ajuda
+- Toasts de progresso de download em marcos (~25/50/75/100%)
+- Documentação de diagnóstico e teste em **docs/AUTO_UPDATE.md**
+
+### Changed
+
+- `electron-builder.yml`: `publishAutoUpdate: true`, zip mac documentado para updater
+- Versão **1.1.0 → 1.2.0**
+
 ## [1.1.0] — 2026-07-16
 
 **Polimento e Confiança** — split redimensionável, busca, docs de assinatura e contribuição.

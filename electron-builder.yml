@@ -1,12 +1,21 @@
 appId: com.simplepad.app
 productName: SimplePad
 copyright: Copyright © SimplePad contributors
-# electron-updater reads this for GitHub Releases
+
+# electron-updater feed — generates app-update.yml inside the packaged app
+# and latest.yml / latest-mac.yml / latest-linux.yml on publish.
+# Channel "latest" → files named latest*.yml (not beta.yml / alpha.yml).
 publish:
   provider: github
   owner: vallades
   repo: simplepad
   releaseType: release
+  # Ensure auto-update metadata is always produced with the installers
+  publishAutoUpdate: true
+  # Explicit channel (default is already "latest")
+  # For beta channel testing you would use channel: beta + allowPrerelease
+  # channel is consumed by electron-builder when publishing generic feeds;
+  # GitHub still attaches latest.yml / latest-mac.yml / latest-linux.yml.
 
 directories:
   buildResources: build
@@ -76,9 +85,12 @@ mac:
   # Set to true only when Apple credentials + notarize tooling are configured
   notarize: false
   # Default: current host arch. For universal: --x64 --arm64 or arch: [universal]
+  # zip is REQUIRED for electron-updater on macOS (dmg alone is not enough)
   target:
     - dmg
     - zip
+  # Artifact names must stay stable so latest-mac.yml URLs resolve
+  artifactName: ${productName}-${version}-${arch}-mac.${ext}
   extendInfo:
     NSDocumentsFolderUsageDescription: SimplePad needs access to your Documents folder to open and save notes.
     NSDownloadsFolderUsageDescription: SimplePad needs access to your Downloads folder to open and save notes.
