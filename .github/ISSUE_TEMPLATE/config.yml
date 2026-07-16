@@ -1,0 +1,18 @@
+# Configuração dos formulários de issue do SimplePad
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: Documentação do projeto
+    url: https://github.com/vallades/simplepad/blob/main/docs/PROJETO.md
+    about: Visão geral, arquitetura, limitações e roadmap
+  - name: Auto-update e releases
+    url: https://github.com/vallades/simplepad/blob/main/docs/AUTO_UPDATE.md
+    about: Como publicamos versões e como o app atualiza
+  - name: Distribuição e macOS (Gatekeeper)
+    url: https://github.com/vallades/simplepad/blob/main/docs/DISTRIBUTION.md
+    about: Builds, assinatura e “app is damaged” no Mac
+  - name: Discussions / dúvidas gerais
+    url: https://github.com/vallades/simplepad/issues
+    about: Prefira uma issue de bug ou feature quando possível
