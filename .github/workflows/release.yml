@@ -167,10 +167,16 @@ jobs:
     name: Publish GitHub Release
     needs: [build]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Large multi-OS assets (~700MB+) — softprops often hits GitHub "Unicorn" HTML
+    # errors when streaming many big files; gh CLI + longer timeout is more reliable.
+    timeout-minutes: 60
+    permissions:
+      contents: write
     steps:
       - name: Checkout (for CHANGELOG)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
@@ -181,49 +187,113 @@ jobs:
 
       - name: List release assets
         run: |
+          set -euo pipefail
           echo "Assets to publish:"
           find release-assets -type f | sort
-          # Flatten into a single directory for the release action
           mkdir -p dist-upload
-          find release-assets -type f -exec cp -v {} dist-upload/ \;
+          # Flatten; skip nested dirs / weird paths
+          find release-assets -type f -print0 | while IFS= read -r -d '' f; do
+            cp -v "$f" "dist-upload/$(basename "$f")"
+          done
           ls -lah dist-upload
+          echo "--- counts ---"
+          ls dist-upload | wc -l
+          du -sh dist-upload
 
       - name: Resolve tag name
         id: tag
         shell: bash
         run: |
+          set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
             echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           else
-            # Manual run without tag input — use package version
             VER=$(node -p "require('./package.json').version")
             echo "name=v${VER}" >> "$GITHUB_OUTPUT"
           fi
+          echo "Resolved tag: $(grep name= "$GITHUB_OUTPUT" | tail -1)"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag.outputs.name }}
-          name: SimplePad ${{ steps.tag.outputs.name }}
-          draft: false
-          prerelease: ${{ contains(steps.tag.outputs.name, '-') }}
-          generate_release_notes: true
-          body: |
-            ## SimplePad ${{ steps.tag.outputs.name }}
-
-            Instaladores multiplataforma gerados automaticamente pelo workflow **Release**.
-
-            Veja o [CHANGELOG](https://github.com/vallades/simplepad/blob/main/CHANGELOG.md) para detalhes.
-
-            ### Instalação rápida
-            - **macOS:** `.dmg` ou `.zip`
-            - **Windows:** `-setup.exe` (NSIS) ou `-portable.exe`
-            - **Linux:** `.AppImage` ou `.deb`
-
-            Os arquivos `latest*.yml` são usados pelo **electron-updater**.
-          files: |
-            dist-upload/*
+      - name: Create GitHub Release (gh CLI)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          ASSETS=(dist-upload/*)
+          if [ ${#ASSETS[@]} -eq 0 ]; then
+            echo "::error::No files in dist-upload/ — nothing to publish"
+            exit 1
+          fi
+
+          echo "Tag: $TAG"
+          echo "Assets (${#ASSETS[@]}):"
+          ls -lah "${ASSETS[@]}"
+
+          # Prerelease if semver has a hyphen (e.g. v1.2.0-beta.1)
+          PRE_ARGS=()
+          if [[ "$TAG" == *-* ]]; then
+            PRE_ARGS+=(--prerelease)
+          fi
+
+          # Write notes to a file (keeps YAML/run block indentation valid)
+          NOTES_FILE="$(mktemp)"
+          {
+            echo "## SimplePad ${TAG}"
+            echo ""
+            echo "Instaladores multiplataforma gerados automaticamente pelo workflow **Release**."
+            echo ""
+            echo "Veja o [CHANGELOG](https://github.com/vallades/simplepad/blob/main/CHANGELOG.md) para detalhes."
+            echo ""
+            echo "### Instalação rápida"
+            echo "- **macOS:** \`.dmg\` ou \`.zip\`"
+            echo "- **Windows:** \`-setup.exe\` (NSIS) ou \`-portable.exe\`"
+            echo "- **Linux:** \`.AppImage\` ou \`.deb\`"
+            echo ""
+            echo "Os arquivos \`latest*.yml\` são usados pelo **electron-updater**."
+          } >"$NOTES_FILE"
+
+          create_or_upload() {
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "Release $TAG already exists — uploading assets with --clobber"
+              gh release upload "$TAG" "${ASSETS[@]}" \
+                --repo "$GITHUB_REPOSITORY" \
+                --clobber
+            else
+              echo "Creating release $TAG"
+              # --verify-tag ensures the tag exists on the remote (annotated or lightweight)
+              gh release create "$TAG" \
+                --repo "$GITHUB_REPOSITORY" \
+                --title "SimplePad ${TAG}" \
+                --notes-file "$NOTES_FILE" \
+                --generate-notes \
+                --verify-tag \
+                "${PRE_ARGS[@]}" \
+                "${ASSETS[@]}"
+            fi
+          }
+
+          # GitHub occasionally returns Unicorn/5xx during multi-asset upload — retry
+          ATTEMPTS=3
+          for attempt in $(seq 1 "$ATTEMPTS"); do
+            echo "::group::Publish attempt ${attempt}/${ATTEMPTS}"
+            if create_or_upload; then
+              echo "::endgroup::"
+              echo "Release published successfully"
+              gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,tagName,assets \
+                --jq '{url, tagName, assetCount: (.assets|length), assets: [.assets[].name]}'
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::Publish attempt ${attempt} failed"
+            if [ "$attempt" -lt "$ATTEMPTS" ]; then
+              sleep $((attempt * 20))
+            fi
+          done
+
+          echo "::error::Failed to publish GitHub Release after ${ATTEMPTS} attempts"
+          exit 1
