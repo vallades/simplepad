@@ -233,23 +233,67 @@ Eventos e toasts:
 
 Sem assinatura:
 
-- **macOS:** Gatekeeper pode bloquear update/instalador
+- **macOS:** Gatekeeper pode bloquear update/instalador; Squirrel.Mac falha com **signature**
 - **Windows:** SmartScreen pode assustar o usuário
 
 Ver [DISTRIBUTION.md](./DISTRIBUTION.md).
 
 ---
 
+## macOS: “signature” / baixa mas não instala
+
+### Por que acontece
+
+No Mac o `electron-updater` usa **Squirrel.Mac**, que exige que o app **e** o ZIP de update estejam assinados com o **mesmo certificado Apple Developer ID**.
+
+Builds do CI **sem** Developer ID usam assinatura **ad-hoc** (diferente a cada build). Resultado típico:
+
+1. Download **ok** (`update-downloaded`)
+2. Ao reiniciar / instalar → erro de **code signature**
+3. App antigo continua instalado
+
+Isso **não** se resolve só com `xattr` no caminho nativo do Squirrel.
+
+### Contorno no SimplePad (já no código)
+
+Se o app **não** tem Developer ID, o SimplePad:
+
+1. Detecta com `codesign`
+2. Diálogo **Instalar agora** → aplica o ZIP com `ditto` + `xattr -cr` e reabre (sem Squirrel)
+3. Se o nativo falhar com signature → opções **Instalar via ZIP** / **Abrir Releases**
+
+Log do instalador customizado:
+
+```bash
+open ~/Library/Logs/simplepad/update-install.log
+```
+
+### Contorno manual (usuário)
+
+```bash
+# Baixe .dmg/.zip da Release, substitua em /Applications, depois:
+xattr -cr /Applications/SimplePad.app
+open /Applications/SimplePad.app
+```
+
+### Correção definitiva
+
+Apple Developer Program (~US$ 99/ano) + secrets `CSC_*` / `APPLE_*` no CI + notarização.  
+Com Developer ID, o `quitAndInstall` nativo passa a funcionar. Ver [DISTRIBUTION.md](./DISTRIBUTION.md).
+
+---
+
 ## Troubleshooting
 
-| Sintoma                                | Causa / ação                                                 |
-| -------------------------------------- | ------------------------------------------------------------ |
-| Nunca avisa                            | App via `npm run dev` ou versão do feed ≤ instalada          |
-| Erro ao verificar                      | Release sem `latest*.yml`, rede, ou rate limit da API GitHub |
-| “Já está na mais recente” com tag nova | Tag **sem** Release publicada, ou Release draft/prerelease   |
-| Mac baixa e falha                      | Falta o `.zip` na Release; só `.dmg` não serve para updater  |
-| Update baixa mas não instala           | Usuário clicou “Depois” — instala no próximo quit            |
-| Logs vazios                            | Confirme `electron-log` em `userData/logs` / `Library/Logs`  |
+| Sintoma                                | Causa / ação                                                         |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| Nunca avisa                            | App via `npm run dev` ou versão do feed ≤ instalada                  |
+| Erro ao verificar                      | Release sem `latest*.yml`, rede, ou rate limit da API GitHub         |
+| “Já está na mais recente” com tag nova | Tag **sem** Release publicada, ou Release draft/prerelease           |
+| Mac baixa e falha                      | Falta o `.zip` na Release; só `.dmg` não serve para updater          |
+| Mac: erro de **signature** ao instalar | Sem Developer ID — use “Instalar agora” / ZIP custom ou assine o app |
+| Update baixa mas não instala           | “Depois” clicado, ou signature no Mac (acima)                        |
+| Logs vazios                            | Confirme `electron-log` em `userData/logs` / `Library/Logs`          |
 
 ---
 

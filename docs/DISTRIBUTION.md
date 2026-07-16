@@ -115,6 +115,18 @@ Ou botão direito → **Abrir**. Ou Privacidade e Segurança → permitir o app.
 
 **Correção real (publicador):** assinar com **Developer ID Application** e **notarizar** (abaixo). Enquanto `notarize: false` e não houver secrets no CI, esse aviso continua esperado.
 
+### macOS — auto-update falha com “signature”
+
+Sintoma: update **baixa**, ao instalar/reiniciar aparece erro de **code signature** / o app não troca de versão.
+
+**Causa:** Squirrel.Mac (usado pelo `electron-updater` no Mac) exige o **mesmo Developer ID** no app instalado e no ZIP da Release. Builds ad-hoc do CI **não** satisfazem isso.
+
+**Contorno no app (sem pagar a Apple):** o SimplePad detecta ausência de Developer ID e oferece **instalação via ZIP** (`ditto` + `xattr -cr` + reabrir). Ver [AUTO_UPDATE.md](./AUTO_UPDATE.md).
+
+**Contorno manual:** baixar o `.dmg` da Release, substituir em `/Applications`, rodar `xattr -cr`.
+
+**Correção real:** Developer ID + notarização no CI (tabela de secrets abaixo).
+
 ### macOS — signing + notarization
 
 1. Conta Apple Developer, certificado **Developer ID Application**.
