@@ -62,6 +62,25 @@ npm run dist:win
 
 Ou via Azure Trusted Signing / CI secrets.
 
+### macOS — “app is damaged” (usuários finais)
+
+Mensagem típica após baixar o `.dmg` / `.zip` da GitHub Release:
+
+> “SimplePad.app” is damaged and can’t be opened. You should move it to the Trash.
+
+**Causa:** atributo de quarentena (`com.apple.quarantine`) + app **não notarizado**. O macOS rotula como “danificado” mesmo com o binário íntegro.
+
+**Contorno (usuário):**
+
+```bash
+xattr -cr /Applications/SimplePad.app
+open /Applications/SimplePad.app
+```
+
+Ou botão direito → **Abrir**. Ou Privacidade e Segurança → permitir o app.
+
+**Correção real (publicador):** assinar com **Developer ID Application** e **notarizar** (abaixo). Enquanto `notarize: false` e não houver secrets no CI, esse aviso continua esperado.
+
 ### macOS — signing + notarization
 
 1. Conta Apple Developer, certificado **Developer ID Application**.
