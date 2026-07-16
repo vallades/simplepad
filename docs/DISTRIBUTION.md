@@ -1,6 +1,6 @@
 # Distribuição, code signing e auto-update
 
-Guia operacional para publicar o **SimplePad v1.0**.
+Guia operacional para publicar o **SimplePad** (v1.1+).
 
 ## Builds
 
@@ -47,20 +47,54 @@ Secrets de assinatura (opcional): `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `A
 
 > **Nota de tamanho:** Electron + Monaco fazem o instalador tipicamente **> 70 MB**. A meta de 70 MB é difícil de atingir sem remover Monaco ou usar runtime compartilhável. Otimizações já aplicadas: `compression: maximum`, chunks lazy, exclusão de testes/docs do asar.
 
-## Code signing
+## Code signing (guia completo)
 
-### Windows
+**Estado atual do CI:** builds **não assinados** por padrão. O workflow de Release **aceita** secrets se configurados, mas **não exige** assinatura para publicar.
 
-1. Obter certificado Authenticode (EV recomendado para SmartScreen).
-2. Exportar `.pfx` e definir:
+### Secrets no GitHub Actions (Release)
+
+Em **Settings → Secrets and variables → Actions**, crie (quando tiver certificados):
+
+| Secret                        | Plataforma | Descrição                                                                 |
+| ----------------------------- | ---------- | ------------------------------------------------------------------------- |
+| `CSC_LINK`                    | Win + mac  | Caminho local **ou** base64 do `.p12` / `.pfx` (muitos usam base64 no CI) |
+| `CSC_KEY_PASSWORD`            | Win + mac  | Senha do certificado                                                      |
+| `APPLE_ID`                    | macOS      | E-mail da conta Apple Developer                                           |
+| `APPLE_APP_SPECIFIC_PASSWORD` | macOS      | Senha de app (appleid.apple.com)                                          |
+| `APPLE_TEAM_ID`               | macOS      | Team ID (developer.apple.com → Membership)                                |
+
+O job de package em `.github/workflows/release.yml` só exporta essas variáveis **se não estiverem vazias** (evita o erro `simplepad not a file` no macOS).
+
+**Ainda não ativamos** `notarize: true` nem forçamos assinatura no pipeline — apenas deixamos o caminho pronto. Quando for assinar de verdade:
+
+1. Preencha os secrets acima.
+2. Em `electron-builder.yml`, sob `mac:`, use `notarize: true` (requer Apple IDs válidos).
+3. Re-rode o workflow **Release** com uma tag nova.
+
+### Windows (Authenticode)
+
+1. Comprar/obter certificado **Code Signing** (OV ou EV; EV reduz atrito SmartScreen).
+2. Exportar `.pfx` com chave privada.
+3. Local:
 
 ```bash
-export CSC_LINK=/caminho/cert.pfx
-export CSC_KEY_PASSWORD=********
+export CSC_LINK=/caminho/cert.pfx          # ou file://...
+export CSC_KEY_PASSWORD='********'
 npm run dist:win
 ```
 
-Ou via Azure Trusted Signing / CI secrets.
+4. **CI:** codifique o `.pfx` em base64 e coloque em `CSC_LINK` (documentação electron-builder: base64 é suportado).
+5. Alternativa moderna: **Azure Trusted Signing** (config específica; ver docs electron-builder).
+
+Sem certificado, o instalador funciona, mas o Windows pode mostrar “Windows protegeu o PC”.
+
+### Custo Apple (resumo)
+
+| Item                          | Precisa pagar?                                |
+| ----------------------------- | --------------------------------------------- |
+| Desenvolver / `npm run dev`   | Não                                           |
+| Distribuir DMG sem assinatura | Não (Gatekeeper pede `xattr` / “Abrir”)       |
+| **Developer ID + notarizar**  | **Sim — Apple Developer Program ~US$ 99/ano** |
 
 ### macOS — “app is damaged” (usuários finais)
 

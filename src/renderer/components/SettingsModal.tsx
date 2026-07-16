@@ -30,6 +30,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const theme = useSettingsStore((s) => s.theme)
   const autoSaveEnabled = useSettingsStore((s) => s.autoSaveEnabled)
   const autoSaveIntervalSeconds = useSettingsStore((s) => s.autoSaveIntervalSeconds)
+  const splitOrientation = useSettingsStore((s) => s.splitOrientation)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
 
   const knownFont = MONOSPACE_FONT_OPTIONS.includes(fontFamily)
@@ -155,6 +156,42 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                 </label>
               ))}
             </div>
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-1">
+            <legend className="text-xs font-medium text-zinc-500">Layout do Preview</legend>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { value: 'horizontal' as const, label: 'Lado a lado' },
+                  { value: 'vertical' as const, label: 'Empilhado' }
+                ] as const
+              ).map((option) => (
+                <label
+                  key={option.value}
+                  className={[
+                    'cursor-pointer rounded-md border px-2.5 py-1 text-xs',
+                    splitOrientation === option.value
+                      ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
+                      : 'border-zinc-200 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                  ].join(' ')}
+                >
+                  <input
+                    type="radio"
+                    name="split-orientation"
+                    className="sr-only"
+                    checked={splitOrientation === option.value}
+                    onChange={() => {
+                      void updateSettings({ splitOrientation: option.value })
+                    }}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+            <span className="text-[11px] text-zinc-400">
+              Com o Preview ativo, arraste a barra entre os painéis para redimensionar.
+            </span>
           </fieldset>
 
           <div className="flex flex-col gap-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">

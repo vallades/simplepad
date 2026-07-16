@@ -3,9 +3,12 @@ import {
   MAX_AUTO_SAVE_SECONDS,
   MAX_FONT_SIZE,
   MAX_RECENT_FILES,
+  MAX_SPLIT_RATIO,
   MIN_AUTO_SAVE_SECONDS,
   MIN_FONT_SIZE,
+  MIN_SPLIT_RATIO,
   type AppSettings,
+  type SplitOrientation,
   type ThemePreference
 } from './settings'
 
@@ -16,6 +19,10 @@ function clamp(value: number, min: number, max: number): number {
 
 function isThemePreference(value: unknown): value is ThemePreference {
   return value === 'system' || value === 'light' || value === 'dark'
+}
+
+function isSplitOrientation(value: unknown): value is SplitOrientation {
+  return value === 'horizontal' || value === 'vertical'
 }
 
 /**
@@ -53,12 +60,24 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     MAX_AUTO_SAVE_SECONDS
   )
 
+  const splitRatio = clamp(
+    typeof candidate.splitRatio === 'number' ? candidate.splitRatio : DEFAULT_SETTINGS.splitRatio,
+    MIN_SPLIT_RATIO,
+    MAX_SPLIT_RATIO
+  )
+
+  const splitOrientation = isSplitOrientation(candidate.splitOrientation)
+    ? candidate.splitOrientation
+    : DEFAULT_SETTINGS.splitOrientation
+
   return {
     fontFamily,
     fontSize,
     theme,
     autoSaveEnabled,
-    autoSaveIntervalSeconds
+    autoSaveIntervalSeconds,
+    splitRatio,
+    splitOrientation
   }
 }
 

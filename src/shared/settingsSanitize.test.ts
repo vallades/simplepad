@@ -26,6 +26,18 @@ describe('sanitizeSettings', () => {
   it('falls back invalid theme', () => {
     expect(sanitizeSettings({ theme: 'neon' as 'system' }).theme).toBe('system')
   })
+
+  it('clamps split ratio and validates orientation', () => {
+    const result = sanitizeSettings({
+      splitRatio: 0.05,
+      splitOrientation: 'vertical'
+    })
+    expect(result.splitRatio).toBe(0.2)
+    expect(result.splitOrientation).toBe('vertical')
+    expect(
+      sanitizeSettings({ splitOrientation: 'diagonal' as 'horizontal' }).splitOrientation
+    ).toBe('horizontal')
+  })
 })
 
 describe('sanitizeRecentFiles / pushRecentFile', () => {

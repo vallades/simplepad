@@ -165,7 +165,28 @@ export function createAppMenu(recentFiles?: string[]): void {
         { role: 'cut' },
         { role: 'copy' },
         { role: 'paste' },
-        { role: 'selectAll' }
+        { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Localizar…',
+          accelerator: 'CmdOrCtrl+F',
+          click: () => sendMenuCommand('find')
+        },
+        {
+          label: 'Substituir…',
+          accelerator: 'CmdOrCtrl+Alt+F',
+          click: () => sendMenuCommand('replace')
+        },
+        {
+          label: 'Ir para linha…',
+          accelerator: 'CmdOrCtrl+G',
+          click: () => sendMenuCommand('go-to-line')
+        },
+        {
+          label: 'Buscar em todas as abas…',
+          accelerator: 'CmdOrCtrl+Shift+F',
+          click: () => sendMenuCommand('find-in-tabs')
+        }
       ]
     },
     {
@@ -175,6 +196,10 @@ export function createAppMenu(recentFiles?: string[]): void {
           label: 'Split View (Preview)',
           accelerator: 'CmdOrCtrl+Shift+P',
           click: () => sendMenuCommand('toggle-preview')
+        },
+        {
+          label: 'Orientação do split (lado a lado / empilhado)',
+          click: () => sendMenuCommand('toggle-split-orientation')
         },
         {
           label: 'Modo Markdown',

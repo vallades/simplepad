@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.0.1](https://github.com/vallades/simplepad/releases/tag/v1.0.1) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.1.0](https://github.com/vallades/simplepad/releases/tag/v1.1.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · electron-updater
 
@@ -59,15 +59,17 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.0**            | Modo distração zero, electron-updater, electron-builder 3 SOs, docs, release                       |
 | **CI/CD**           | GitHub Actions (lint, test, matrix build, release em tags)                                         |
 | **v1.0.1**          | UX de auto-update (toast + diálogo reiniciar), fixes de CI Windows/mac, docs                       |
+| **v1.1**            | Split redimensionável, Find/Replace/Ir à linha, busca multi-aba, CONTRIBUTING, signing docs        |
 
 ### Funcionalidades
 
 - **Abas** com drag & drop, indicador dirty (`*`), undo/redo isolado por aba (Monaco)
 - **Persistência de sessão** — restaura abas, conteúdo, cursor e scroll (`session.json`)
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
-- **Configurações** — fonte monoespaçada, tamanho, tema (sistema/claro/escuro), auto-save
+- **Configurações** — fonte monoespaçada, tamanho, tema (sistema/claro/escuro), auto-save, layout do preview
 - **Auto-save** — intervalo, troca de aba e blur (só abas com arquivo no disco)
-- **Preview Markdown** — GFM (tabelas, listas, código, links…), debounce, sync de scroll
+- **Preview Markdown** — GFM, split redimensionável (lado a lado ou empilhado)
+- **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
 - **Exportar** HTML e PDF
 - **Modo Distração Zero** (F11 / Esc)
 - **Auto-update** — verifica no launch (app instalado), baixa e pede reinício
@@ -75,17 +77,34 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 
 ### Documentação no repositório
 
-| Documento                                      | Conteúdo                                             |
-| ---------------------------------------------- | ---------------------------------------------------- |
-| [docs/PROJETO.md](./docs/PROJETO.md)           | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)   | Como publicar versão e o que o usuário recebe        |
-| [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md) | Build, signing, notarização, CI                      |
-| [CHANGELOG.md](./CHANGELOG.md)                 | Histórico de versões                                 |
-| [SimplePad_PRD.md](./SimplePad_PRD.md)         | PRD original                                         |
+| Documento                                              | Conteúdo                                             |
+| ------------------------------------------------------ | ---------------------------------------------------- |
+| [docs/PROJETO.md](./docs/PROJETO.md)                   | Histórico completo, arquitetura, melhorias e roadmap |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.1                                     |
+| [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)           | Como publicar versão e o que o usuário recebe        |
+| [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)         | Build, signing, notarização, CI                      |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)                   | Como contribuir                                      |
+| [CHANGELOG.md](./CHANGELOG.md)                         | Histórico de versões                                 |
+| [SimplePad_PRD.md](./SimplePad_PRD.md)                 | PRD original                                         |
 
 ---
 
-## Começando (desenvolvimento)
+## Getting Started
+
+### Usuários
+
+1. Baixe o instalador da [Release](https://github.com/vallades/simplepad/releases/latest)
+2. **macOS:** se aparecer “app damaged”, rode `xattr -cr /Applications/SimplePad.app` (ver acima)
+3. Abra o SimplePad, digite, salve; use **Preview** para Markdown
+
+Capturas de referência (placeholders — substitua por PNGs reais em `docs/screenshots/`):
+
+| Preview                                          | Descrição                       |
+| ------------------------------------------------ | ------------------------------- |
+| ![Abas](docs/screenshots/placeholder-main.svg)   | Interface com abas e status bar |
+| ![Split](docs/screenshots/placeholder-split.svg) | Split View redimensionável      |
+
+### Desenvolvedores
 
 **Requisitos:** Node.js 20+ (recomendado **22**), npm 10+
 
@@ -93,6 +112,8 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 npm install
 npm run dev
 ```
+
+Veja também [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Scripts
 
@@ -123,6 +144,10 @@ npm run dev
 | `Ctrl/Cmd+,`                 | Configurações               |
 | `Ctrl/Cmd+Shift+P`           | Toggle Preview / Split View |
 | `Ctrl/Cmd+Shift+M`           | Toggle modo Markdown        |
+| `Ctrl/Cmd+F`                 | Localizar (Monaco)          |
+| `Ctrl/Cmd+Alt+F`             | Substituir (Monaco)         |
+| `Ctrl/Cmd+G`                 | Ir para linha               |
+| `Ctrl/Cmd+Shift+F`           | Buscar em todas as abas     |
 | `Ctrl/Cmd+Tab` / `Shift+Tab` | Alternar abas               |
 | `F11`                        | Modo Distração Zero         |
 | `Esc`                        | Sair do modo foco           |
