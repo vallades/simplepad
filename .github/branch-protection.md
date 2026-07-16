@@ -191,3 +191,5 @@ feature branch → PR para main → CI Success verde → review → merge
 ---
 
 _Documento alinhado ao workflow CI do SimplePad. Atualize o nome do check se o job em `ci.yml` for renomeado._
+
+<!-- Test PR for branch protection validation — safe to close after CI. -->
