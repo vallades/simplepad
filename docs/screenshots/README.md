@@ -1,18 +1,35 @@
-# Screenshots
+# Screenshots (v1.1)
 
-Coloque capturas aqui e referencie no `README.md` raiz.
+Coloque capturas reais do app instalado/desenvolvido nesta pasta e referencie no README.
 
-| Arquivo sugerido    | Conteúdo                        |
-| ------------------- | ------------------------------- |
-| `tabbar.png`        | Barra de abas com dirty / drag  |
-| `split-view.png`    | Editor \| Preview Markdown      |
-| `settings.png`      | Modal de configurações          |
-| `preview-badge.png` | Badge “Preview ativo” no header |
-| `focus-mode.png`    | Modo Distração Zero (só editor) |
-| `export.png`        | Diálogo de exportação HTML/PDF  |
+## Lista principal (v1.1)
+
+| Arquivo                | Conteúdo sugerido                                       |
+| ---------------------- | ------------------------------------------------------- |
+| `main-tabs.png`        | Interface principal com 2–3 abas e status bar           |
+| `split-view.png`       | Split View redimensionável (editor + preview Markdown)  |
+| `settings.png`         | Modal de Configurações (fonte, tema, layout do preview) |
+| `preview-markdown.png` | Preview com headings, lista e código                    |
+| `search-tabs.png`      | Modal “Buscar em todas as abas” (opcional)              |
+
+## Como capturar
+
+```bash
+npm run dev
+# ou abra o app da Release
+```
+
+1. Use tema claro **e** escuro se possível.
+2. Resolução ~1280×800 ou retina.
+3. PNG ou WebP, peso razoável (&lt; 500 KB se der).
+
+## Placeholders
+
+Enquanto não houver PNGs reais, o README descreve a seção Getting Started com caminhos esperados.  
+Arquivos SVG mínimos de referência (opcional) podem ser gerados depois.
 
 Exemplo no README:
 
 ```markdown
-![Split View](docs/screenshots/split-view.png)
+![Interface principal](docs/screenshots/main-tabs.png)
 ```
