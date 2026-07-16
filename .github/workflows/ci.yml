@@ -191,27 +191,44 @@ jobs:
             electron-${{ runner.os }}-
 
       - name: Install dependencies
+        shell: bash
         run: |
           echo "::group::npm ci (platform=${{ matrix.platform }})"
           npm ci
           echo "::endgroup::"
           echo "node=$(node -v) npm=$(npm -v) os=${{ runner.os }}"
 
+      # No bash redirects (2>/dev/null) and no PowerShell — pure node for listing.
+      # Windows default shell is pwsh; empty CSC/path redirects break as D:\dev\null.
       - name: Build app (main / preload / renderer)
+        shell: bash
         run: |
           set -euo pipefail
           echo "::group::electron-vite build"
           npx electron-vite build
           echo "::endgroup::"
-          echo "out/ tree:"
-          if [ -d out ]; then
-            find out -maxdepth 2 -type f 2>/dev/null | head -40 || ls -la out
-          else
-            echo "WARNING: out/ directory missing after build"
-            exit 1
-          fi
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            if (!fs.existsSync('out')) {
+              console.error('ERROR: out/ missing after electron-vite build');
+              process.exit(1);
+            }
+            console.log('out/ tree:');
+            function walk(dir, depth) {
+              if (depth > 2) return;
+              for (const name of fs.readdirSync(dir)) {
+                const p = path.join(dir, name);
+                const st = fs.statSync(p);
+                console.log(st.isDirectory() ? p + '/' : p + ' (' + st.size + ' B)');
+                if (st.isDirectory()) walk(p, depth + 1);
+              }
+            }
+            walk('out', 0);
+          "
 
       - name: Package with electron-builder (${{ matrix.platform }})
+        shell: bash
         run: |
           set -euo pipefail
           echo "════════════════════════════════════════"
@@ -223,7 +240,14 @@ jobs:
           echo "════════════════════════════════════════"
           npx electron-builder ${{ matrix.builder_args }} --publish never
           echo "Package complete. Contents of dist/:"
-          ls -lah dist/ || true
+          node -e "
+            const fs = require('fs');
+            if (!fs.existsSync('dist')) { console.log('(no dist/)'); process.exit(0); }
+            for (const f of fs.readdirSync('dist')) {
+              const st = fs.statSync('dist/' + f);
+              console.log(f, st.isDirectory() ? '<dir>' : (st.size/1024/1024).toFixed(1) + ' MB');
+            }
+          "
 
       - name: Upload installers
         uses: actions/upload-artifact@v4
