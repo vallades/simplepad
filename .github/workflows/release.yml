@@ -26,9 +26,11 @@ concurrency:
 env:
   NODE_VERSION: '22'
   HUSKY: '0'
-  # Signing: set repository secrets when ready (see docs/DISTRIBUTION.md)
-  # CSC_LINK, CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
-  # Leave auto-discovery off unless CSC_LINK is configured in the Package step env.
+  # Code signing (optional — see docs/DISTRIBUTION.md):
+  #   CSC_LINK, CSC_KEY_PASSWORD          → Windows Authenticode / mac Developer ID
+  #   APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID → notarization
+  # Secrets are exported only when non-empty in the Package step (never force-sign).
+  # Leave auto-discovery off unless CSC_LINK is present.
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
   ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
   ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
