@@ -96,6 +96,8 @@ npm run dev
 
 Guia completo: [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)
 
+**Documentação do projeto:** [docs/PROJETO.md](./docs/PROJETO.md) — o que foi feito, decisões, melhorias e roadmap.
+
 ---
 
 ## CI/CD
@@ -109,10 +111,12 @@ Workflows em [`.github/workflows/`](./.github/workflows/):
 
 ### Jobs do CI
 
-1. **Lint & Type Check** — `npm run lint` + `npm run typecheck`
-2. **Tests** — `npm run test:coverage` (artifact `coverage-report`)
-3. **Build (matrix)** — `electron-vite build` + `electron-builder` por SO
+1. **Lint & Type Check** — `npm run lint` + `npm run typecheck` (Node 22)
+2. **Tests** — `npm run test:coverage` (artifact de coverage)
+3. **Build (matrix)** — `electron-vite build` + `electron-builder` por SO (timeout **60 min**)
 4. **CI Success** — agregador para _branch protection_
+
+**Timeout do Build (60 min):** o passo mais lento é o **macOS** (download do Electron, packaging arm64, geração de **DMG** + ZIP e blockmaps). Em runners do GitHub isso costuma levar vários minutos a mais que Linux/Windows. O job usa 60 minutos para evitar falhas por tempo e **não cancela** runs em andamento em `main` (só cancela CI desatualizado em PRs) — senão o log termina com _“The operation was canceled.”_ logo após o DMG/ZIP terem sido gerados com sucesso.
 
 ### Secrets (code signing, opcional)
 

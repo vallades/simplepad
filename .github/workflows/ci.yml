@@ -15,19 +15,20 @@ permissions:
   contents: read
 
 concurrency:
-  # One active CI per branch/PR. Only cancel outdated PR runs — on `main`, let
-  # long electron-builder jobs (esp. macOS DMG) finish. Otherwise Actions reports
-  # "Error: The operation was canceled." right after a successful package step.
+  # One active CI per branch/PR.
+  # On `main`, do NOT cancel in-progress runs — electron-builder (especially
+  # macOS DMG/ZIP) can take a long time; canceling mid-package surfaces as
+  # "Error: The operation was canceled." even after a successful build.
+  # On other refs (PRs), cancel outdated runs to save minutes.
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  NODE_VERSION: '22'
   # Skip husky hooks in CI
   HUSKY: '0'
   # Do not attempt code signing in PR/CI builds
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-  # Electron download cache (used by setup-node cache keys below)
+  # Electron download caches (workspace-scoped for actions/cache)
   ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
   ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
 
@@ -39,24 +40,35 @@ jobs:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    continue-on-error: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "::group::npm ci"
+          npm ci
+          echo "::endgroup::"
+          node -v
+          npm -v
 
       - name: ESLint
-        run: npm run lint
+        run: |
+          echo "Running ESLint…"
+          npm run lint
 
       - name: TypeScript (strict)
-        run: npm run typecheck
+        run: |
+          echo "Running TypeScript typecheck…"
+          npm run typecheck
 
   # ---------------------------------------------------------------------------
   # Job 2 — Unit tests + coverage (parallel with lint)
@@ -65,27 +77,34 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    continue-on-error: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "::group::npm ci"
+          npm ci
+          echo "::endgroup::"
 
       - name: Run Vitest with coverage
-        run: npm run test:coverage
+        run: |
+          echo "Running tests with coverage…"
+          npm run test:coverage
 
       - name: Upload coverage summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-${{ github.run_id }}
           path: |
             coverage/lcov.info
             coverage/coverage-summary.json
@@ -95,12 +114,14 @@ jobs:
   # ---------------------------------------------------------------------------
   # Job 3 — Production build + platform installers (matrix)
   # Waits for lint + test so we do not waste builder minutes on broken code.
+  # macOS DMG is the slowest step — timeout is 60m to avoid false cancels.
   # ---------------------------------------------------------------------------
   build:
     name: Build (${{ matrix.platform }})
     needs: [lint, test]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 60
+    continue-on-error: false
     strategy:
       fail-fast: false
       matrix:
@@ -139,12 +160,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
 
+      # npm (from setup-node) + Electron binary + electron-builder toolchains
       - name: Cache Electron & electron-builder
         uses: actions/cache@v4
         with:
@@ -157,23 +180,38 @@ jobs:
             ~/Library/Caches/electron-builder
             ~/AppData/Local/electron/Cache
             ~/AppData/Local/electron-builder/Cache
-          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
+            electron-${{ runner.os }}-${{ runner.arch }}-
             electron-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "::group::npm ci (platform=${{ matrix.platform }})"
+          npm ci
+          echo "::endgroup::"
+          echo "node=$(node -v) npm=$(npm -v) os=${{ runner.os }}"
 
-      # electron-vite build (typecheck already ran in lint job — still safe via npm run build)
       - name: Build app (main / preload / renderer)
-        run: npx electron-vite build
+        run: |
+          echo "::group::electron-vite build"
+          npx electron-vite build
+          echo "::endgroup::"
+          echo "out/ tree:"
+          ls -lah out/main out/preload out/renderer 2>/dev/null || ls -lah out/ || true
 
       - name: Package with electron-builder (${{ matrix.platform }})
         run: |
           set -euo pipefail
-          echo "Packaging platform=${{ matrix.platform }} args=${{ matrix.builder_args }}"
+          echo "════════════════════════════════════════"
+          echo " Packaging SimplePad"
+          echo " platform : ${{ matrix.platform }}"
+          echo " os       : ${{ matrix.os }}"
+          echo " args     : ${{ matrix.builder_args }}"
+          echo " publish  : never"
+          echo "════════════════════════════════════════"
           npx electron-builder ${{ matrix.builder_args }} --publish never
-          echo "Package complete. Artifacts in dist/:"
+          echo "Package complete. Contents of dist/:"
           ls -lah dist/ || true
 
       - name: Upload installers
@@ -193,7 +231,14 @@ jobs:
     if: always()
     needs: [lint, test, build]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: false
     steps:
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Check required jobs
         run: |
           echo "lint=${{ needs.lint.result }}"
@@ -202,7 +247,7 @@ jobs:
           if [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.test.result }}" != "success" ] || \
              [ "${{ needs.build.result }}" != "success" ]; then
-            echo "::error::One or more CI jobs failed"
+            echo "::error::One or more CI jobs failed (or were cancelled)"
             exit 1
           fi
           echo "All CI jobs passed."
