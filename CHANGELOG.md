@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.1.0] — 2026-07-16
+
+**Polimento e Confiança** — split redimensionável, busca, docs de assinatura e contribuição.
+
+### Added
+
+- **Divisor redimensionável** no Split View (arrastar; posição salva em preferências)
+- **Orientação do split**: lado a lado ou empilhado (Settings + menu Exibir)
+- **Localizar / Substituir** expostos na status bar e menu Editar (Monaco)
+- **Ir para linha** (`Ctrl/Cmd+G`)
+- **Buscar em todas as abas** (`Ctrl/Cmd+Shift+F`) com lista de resultados por aba
+- **CONTRIBUTING.md** + templates de issue/PR (já existentes, documentados)
+- **docs/PROJECT_OVERVIEW.md**, placeholders de screenshots, guia de signing ampliado
+- Preferências: `splitRatio`, `splitOrientation`
+
+### Changed
+
+- Versão **1.0.1 → 1.1.0**
+- Workflow de Release documentado para secrets CSC__/Apple__ (sem forçar assinatura)
+
+### Fixed
+
+- (herdado da linha 1.0.x) CI Windows/bash e concurrency em main
+
 ## [1.0.1] — 2026-07-16
 
 Patch de auto-update, CI Windows e documentação.
@@ -101,6 +125,7 @@ Patch de auto-update, CI Windows e documentação.
 
 - Fundação do MVP: abas, Monaco, sessão, abrir/salvar, menu nativo
 
+[1.1.0]: https://github.com/vallades/simplepad/releases/tag/v1.1.0
 [1.0.1]: https://github.com/vallades/simplepad/releases/tag/v1.0.1
 [1.0.0]: https://github.com/vallades/simplepad/releases/tag/v1.0.0
 [0.1.0]: https://github.com/vallades/simplepad/releases/tag/v0.1.0
