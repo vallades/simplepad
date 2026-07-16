@@ -122,6 +122,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     continue-on-error: false
+    # Git Bash on all OSes — avoid PowerShell treating "2>/dev/null" as D:\dev\null
+    # (that false-failed Windows after a successful electron-vite build).
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -194,11 +199,17 @@ jobs:
 
       - name: Build app (main / preload / renderer)
         run: |
+          set -euo pipefail
           echo "::group::electron-vite build"
           npx electron-vite build
           echo "::endgroup::"
           echo "out/ tree:"
-          ls -lah out/main out/preload out/renderer 2>/dev/null || ls -lah out/ || true
+          if [ -d out ]; then
+            find out -maxdepth 2 -type f 2>/dev/null | head -40 || ls -la out
+          else
+            echo "WARNING: out/ directory missing after build"
+            exit 1
+          fi
 
       - name: Package with electron-builder (${{ matrix.platform }})
         run: |

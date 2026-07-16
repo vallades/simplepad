@@ -118,6 +118,8 @@ Workflows em [`.github/workflows/`](./.github/workflows/):
 
 **Timeout do Build (60 min):** o passo mais lento é o **macOS** (download do Electron, packaging arm64, geração de **DMG** + ZIP e blockmaps). Em runners do GitHub isso costuma levar vários minutos a mais que Linux/Windows. O job usa 60 minutos para evitar falhas por tempo e **não cancela** runs em andamento em `main` (só cancela CI desatualizado em PRs) — senão o log termina com _“The operation was canceled.”_ logo após o DMG/ZIP terem sido gerados com sucesso.
 
+**Windows:** steps do job de Build usam **Git Bash** (`shell: bash`), não PowerShell. Redirects no estilo `2>/dev/null` no PowerShell viram o caminho `D:\dev\null` e falham o job _depois_ de um `electron-vite build` bem-sucedido.
+
 ### Secrets (code signing, opcional)
 
 | Secret                        | Uso                    |
