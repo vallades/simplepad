@@ -1,7 +1,7 @@
 {
   "name": "simplepad",
   "productName": "SimplePad",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Editor de texto multiplataforma minimalista com abas — inspirado no Bloco de Notas",
   "main": "./out/main/index.js",
   "author": "SimplePad",
