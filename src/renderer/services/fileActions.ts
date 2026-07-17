@@ -1,5 +1,6 @@
 import { useTabsStore } from '../store/useTabsStore'
 import { isMarkdownFile } from '../utils/fileUtils'
+import { isUntitledNotesPath } from '../../shared/untitledNotes'
 import { isElectronApiAvailable } from './sessionBridge'
 import { showToast } from '../store/useToastStore'
 
@@ -80,7 +81,8 @@ function openOrFocusFile(filePath: string, fileName: string, content: string): v
 }
 
 /**
- * Saves the active tab to its path, or prompts Save As when missing.
+ * Saves the active tab to its path, or prompts Save As when missing / untitled-notes.
+ * Manual save on untitled-notes path still opens Save As so the user picks a real location.
  */
 export async function saveActiveTab(): Promise<boolean> {
   const store = useTabsStore.getState()
@@ -92,7 +94,7 @@ export async function saveActiveTab(): Promise<boolean> {
     return false
   }
 
-  if (tab.filePath) {
+  if (tab.filePath && !isUntitledNotesPath(tab.filePath)) {
     const result = await window.api.saveFile({
       content: tab.content,
       filePath: tab.filePath
@@ -110,12 +112,13 @@ export async function saveActiveTab(): Promise<boolean> {
 }
 
 /**
- * Saves a specific tab by id (used by auto-save). Only works when filePath is set.
+ * Saves a specific tab by id (used by auto-save). Only works when filePath is a real path.
  */
 export async function saveTabById(tabId: string): Promise<boolean> {
   const store = useTabsStore.getState()
   const tab = store.tabs.find((item) => item.id === tabId)
   if (!tab || !tab.filePath || !tab.isDirty) return false
+  if (isUntitledNotesPath(tab.filePath)) return false
 
   if (!isElectronApiAvailable()) return false
 
@@ -135,7 +138,40 @@ export async function saveTabById(tabId: string): Promise<boolean> {
 }
 
 /**
+ * Auto-save an untitled (or untitled-notes) tab into userData/untitled-notes/.
+ * Keeps display title as "Sem título N" when possible; session stores the path for restore.
+ */
+export async function saveUntitledTabById(tabId: string): Promise<boolean> {
+  const store = useTabsStore.getState()
+  const tab = store.tabs.find((item) => item.id === tabId)
+  if (!tab || !tab.isDirty) return false
+  if (tab.filePath && !isUntitledNotesPath(tab.filePath)) return false
+
+  if (!isElectronApiAvailable() || typeof window.api.saveUntitledNote !== 'function') {
+    return false
+  }
+
+  const result = await window.api.saveUntitledNote({
+    content: tab.content,
+    filePath: tab.filePath
+  })
+
+  if (!result.ok || !result.data?.filePath) {
+    if (result.error) showToast(`Auto-save (rascunho): ${result.error}`, 'error')
+    return false
+  }
+
+  // markAsSaved would rename title to filename — keep human "Sem título" title
+  store.markAsSaved(tab.id, result.data.filePath)
+  if (/^Sem título/.test(tab.title)) {
+    store.updateTabTitle(tab.id, tab.title)
+  }
+  return true
+}
+
+/**
  * Always shows the native Save As dialog for the active tab.
+ * If previous path was under untitled-notes/, removes that draft after success.
  */
 export async function saveActiveTabAs(): Promise<boolean> {
   const store = useTabsStore.getState()
@@ -147,7 +183,12 @@ export async function saveActiveTabAs(): Promise<boolean> {
     return false
   }
 
-  const defaultPath = tab.filePath ?? `${tab.title || 'Sem título'}.txt`
+  const previousPath = tab.filePath
+  const defaultPath =
+    previousPath && !isUntitledNotesPath(previousPath)
+      ? previousPath
+      : `${tab.title || 'Sem título'}.md`
+
   const result = await window.api.saveFileAs({
     content: tab.content,
     defaultPath
@@ -161,7 +202,27 @@ export async function saveActiveTabAs(): Promise<boolean> {
 
   store.markAsSaved(tab.id, result.filePath)
   store.updateTabTitle(tab.id, fileNameFromPath(result.filePath))
+
+  if (previousPath && isUntitledNotesPath(previousPath) && previousPath !== result.filePath) {
+    if (typeof window.api.removeUntitledNote === 'function') {
+      void window.api.removeUntitledNote(previousPath)
+    }
+  }
+
   return true
+}
+
+/**
+ * Open a filesystem path dropped from Finder/Explorer (.txt / .md).
+ */
+export async function openDroppedFilePath(filePath: string): Promise<void> {
+  if (!filePath) return
+  const lower = filePath.toLowerCase()
+  if (!lower.endsWith('.txt') && !lower.endsWith('.md') && !lower.endsWith('.markdown')) {
+    showToast('Apenas arquivos .txt e .md são suportados.', 'info')
+    return
+  }
+  await openRecentFile(filePath)
 }
 
 /**

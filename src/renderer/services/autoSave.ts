@@ -1,6 +1,7 @@
 import { useTabsStore } from '../store/useTabsStore'
 import { useSettingsStore } from '../store/useSettingsStore'
-import { saveTabById } from './fileActions'
+import { isUntitledAutoSaveCandidate, isUntitledNotesPath } from '../../shared/untitledNotes'
+import { saveTabById, saveUntitledTabById } from './fileActions'
 
 /**
  * Pure helpers for auto-save decisions (unit-tested).
@@ -8,17 +9,28 @@ import { saveTabById } from './fileActions'
 
 export interface AutoSaveTarget {
   id: string
-  filePath: string
+  /** Absolute path when known; omitted for brand-new untitled tabs */
+  filePath?: string
+  kind: 'disk' | 'untitled'
 }
 
-/** Tabs that can be auto-saved: dirty + already on disk. */
+/** Tabs that can be auto-saved: dirty + (on disk or untitled). */
 export function collectAutoSaveTargets(
   tabs: Array<{ id: string; filePath?: string; isDirty: boolean }>
 ): AutoSaveTarget[] {
   const targets: AutoSaveTarget[] = []
   for (const tab of tabs) {
-    if (tab.isDirty && tab.filePath) {
-      targets.push({ id: tab.id, filePath: tab.filePath })
+    if (!tab.isDirty) continue
+    if (tab.filePath && !isUntitledNotesPath(tab.filePath)) {
+      targets.push({ id: tab.id, filePath: tab.filePath, kind: 'disk' })
+      continue
+    }
+    if (isUntitledAutoSaveCandidate(tab)) {
+      targets.push({
+        id: tab.id,
+        filePath: tab.filePath,
+        kind: 'untitled'
+      })
     }
   }
   return targets
@@ -30,8 +42,7 @@ export function intervalMsFromSeconds(seconds: number): number {
 }
 
 /**
- * Saves all dirty tabs that already have a file path.
- * Untitled dirty tabs are skipped (user must Salvar como).
+ * Saves dirty tabs with a real path + dirty untitled tabs into userData/untitled-notes.
  */
 export async function runAutoSavePass(): Promise<number> {
   const settings = useSettingsStore.getState()
@@ -40,21 +51,30 @@ export async function runAutoSavePass(): Promise<number> {
   const targets = collectAutoSaveTargets(useTabsStore.getState().tabs)
   let saved = 0
   for (const target of targets) {
-    const ok = await saveTabById(target.id)
-    if (ok) saved += 1
+    if (target.kind === 'untitled') {
+      const ok = await saveUntitledTabById(target.id)
+      if (ok) saved += 1
+    } else {
+      const ok = await saveTabById(target.id)
+      if (ok) saved += 1
+    }
   }
   return saved
 }
 
 /**
- * Auto-save the previously active tab when switching away (if enabled + path).
+ * Auto-save the previously active tab when switching away (if enabled).
  */
 export async function autoSaveTabOnSwitch(tabId: string | null): Promise<boolean> {
   if (!tabId) return false
   if (!useSettingsStore.getState().autoSaveEnabled) return false
 
   const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
-  if (!tab || !tab.isDirty || !tab.filePath) return false
+  if (!tab || !tab.isDirty) return false
 
-  return saveTabById(tabId)
+  if (tab.filePath && !isUntitledNotesPath(tab.filePath)) {
+    return saveTabById(tabId)
+  }
+
+  return saveUntitledTabById(tabId)
 }
