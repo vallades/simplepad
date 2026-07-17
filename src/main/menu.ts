@@ -4,6 +4,7 @@ import log from 'electron-log/main'
 import type { MenuCommand } from '../shared/session'
 import { requestQuitConfirmation } from './quitController'
 import { getPreferencesManager } from './preferencesManager'
+import { getTemplateManager } from './templateManager'
 import { checkForUpdates } from './updater'
 
 function sendMenuCommand(command: MenuCommand): void {
@@ -22,6 +23,33 @@ function sendOpenRecent(filePath: string): void {
     return
   }
   window.webContents.send('menu:open-recent', filePath)
+}
+
+function sendNewFromTemplate(templateId: string): void {
+  const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null
+  if (!window) {
+    log.warn('[menu] no window for new-from-template')
+    return
+  }
+  window.webContents.send('menu:new-from-template', templateId)
+}
+
+function buildTemplatesSubmenu(): MenuItemConstructorOptions {
+  const templates = getTemplateManager().list()
+  if (templates.length === 0) {
+    return {
+      label: 'Nova nota a partir de template',
+      submenu: [{ label: 'Nenhum template', enabled: false }]
+    }
+  }
+
+  return {
+    label: 'Nova nota a partir de template',
+    submenu: templates.map((t) => ({
+      label: t.name,
+      click: (): void => sendNewFromTemplate(t.id)
+    }))
+  }
 }
 
 function buildRecentSubmenu(recentFiles: string[]): MenuItemConstructorOptions {
@@ -100,6 +128,7 @@ export function createAppMenu(recentFiles?: string[]): void {
           accelerator: 'CmdOrCtrl+N',
           click: () => sendMenuCommand('new-tab')
         },
+        buildTemplatesSubmenu(),
         {
           label: 'Abrir...',
           accelerator: 'CmdOrCtrl+O',

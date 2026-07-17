@@ -17,6 +17,8 @@ import type {
 } from '../shared/session'
 import { exportDocument } from './exportManager'
 import { checkForUpdates, quitAndInstallUpdate } from './updater'
+import { getTemplateManager } from './templateManager'
+import { getUntitledNotesManager } from './untitledNotesManager'
 import type {
   AppSettings,
   ConfirmDialogRequest,
@@ -25,6 +27,8 @@ import type {
 } from '../shared/settings'
 import { DEFAULT_SETTINGS } from '../shared/settings'
 import { sanitizeSettings } from '../shared/settingsSanitize'
+import type { NoteTemplate } from '../shared/templates'
+import { isValidTemplate } from '../shared/templates'
 
 function getSenderWindow(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
   return BrowserWindow.fromWebContents(event.sender)
@@ -290,6 +294,94 @@ export function registerIpcHandlers(): void {
       return { ok: true }
     } catch (error) {
       log.error('[ipc] update:install', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  // ——— Templates (userData/templates/templates.json) ———
+  ipcMain.handle('templates:list', (): IpcResult<NoteTemplate[]> => {
+    try {
+      return { ok: true, data: getTemplateManager().list() }
+    } catch (error) {
+      log.error('[ipc] templates:list', error)
+      return { ok: false, error: errorMessage(error), data: [] }
+    }
+  })
+
+  ipcMain.handle(
+    'templates:save-all',
+    (_event, templates: NoteTemplate[]): IpcResult<NoteTemplate[]> => {
+      try {
+        if (!Array.isArray(templates)) {
+          return { ok: false, error: 'Lista de templates inválida', data: [] }
+        }
+        const file = getTemplateManager().saveAll(templates)
+        refreshAppMenu()
+        return { ok: true, data: file.templates }
+      } catch (error) {
+        log.error('[ipc] templates:save-all', error)
+        return { ok: false, error: errorMessage(error), data: [] }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'templates:upsert',
+    (_event, template: NoteTemplate): IpcResult<NoteTemplate[]> => {
+      try {
+        if (!isValidTemplate(template)) {
+          return { ok: false, error: 'Template inválido', data: getTemplateManager().list() }
+        }
+        const file = getTemplateManager().upsert(template)
+        refreshAppMenu()
+        return { ok: true, data: file.templates }
+      } catch (error) {
+        log.error('[ipc] templates:upsert', error)
+        return { ok: false, error: errorMessage(error), data: [] }
+      }
+    }
+  )
+
+  ipcMain.handle('templates:delete', (_event, id: string): IpcResult<NoteTemplate[]> => {
+    try {
+      if (typeof id !== 'string' || !id.trim()) {
+        return { ok: false, error: 'id inválido', data: getTemplateManager().list() }
+      }
+      const file = getTemplateManager().delete(id.trim())
+      refreshAppMenu()
+      return { ok: true, data: file.templates }
+    } catch (error) {
+      log.error('[ipc] templates:delete', error)
+      return { ok: false, error: errorMessage(error), data: [] }
+    }
+  })
+
+  // ——— Untitled auto-save (userData/untitled-notes/) ———
+  ipcMain.handle(
+    'untitled:save',
+    (_event, request: { content: string; filePath?: string }): IpcResult<{ filePath: string }> => {
+      try {
+        if (!request || typeof request.content !== 'string') {
+          return { ok: false, error: 'Conteúdo inválido' }
+        }
+        const filePath = getUntitledNotesManager().save(
+          request.content,
+          typeof request.filePath === 'string' ? request.filePath : undefined
+        )
+        return { ok: true, data: { filePath } }
+      } catch (error) {
+        log.error('[ipc] untitled:save', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle('untitled:remove', (_event, filePath: string): IpcResult => {
+    try {
+      getUntitledNotesManager().removeIfUntitled(filePath)
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] untitled:remove', error)
       return { ok: false, error: errorMessage(error) }
     }
   })

@@ -17,6 +17,7 @@ import type {
   ConfirmDialogResult,
   OpenPathResult
 } from '../shared/settings'
+import type { NoteTemplate } from '../shared/templates'
 
 export interface SimplePadApi {
   getVersion: () => Promise<string>
@@ -43,6 +44,17 @@ export interface SimplePadApi {
   onOpenRecent: (callback: (filePath: string) => void) => () => void
   onRequestQuit: (callback: () => void) => () => void
   onUpdateEvent: (callback: (payload: UpdateEventPayload) => void) => () => void
+  onNewFromTemplate: (callback: (templateId: string) => void) => () => void
+  listTemplates: () => Promise<IpcResult<NoteTemplate[]>>
+  saveAllTemplates: (templates: NoteTemplate[]) => Promise<IpcResult<NoteTemplate[]>>
+  upsertTemplate: (template: NoteTemplate) => Promise<IpcResult<NoteTemplate[]>>
+  deleteTemplate: (id: string) => Promise<IpcResult<NoteTemplate[]>>
+  saveUntitledNote: (request: {
+    content: string
+    filePath?: string
+  }) => Promise<IpcResult<{ filePath: string }>>
+  removeUntitledNote: (filePath: string) => Promise<IpcResult>
+  getPathForFile: (file: File) => string
 }
 
 declare global {

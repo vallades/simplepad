@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type {
   AppSession,
@@ -18,6 +18,7 @@ import type {
   ConfirmDialogResult,
   OpenPathResult
 } from '../shared/settings'
+import type { NoteTemplate } from '../shared/templates'
 
 /**
  * Secure API surface exposed to the renderer via contextBridge.
@@ -106,6 +107,43 @@ const api = {
     }
     ipcRenderer.on('update:event', listener)
     return () => ipcRenderer.removeListener('update:event', listener)
+  },
+
+  onNewFromTemplate: (callback: (templateId: string) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, templateId: string): void => {
+      callback(templateId)
+    }
+    ipcRenderer.on('menu:new-from-template', listener)
+    return () => ipcRenderer.removeListener('menu:new-from-template', listener)
+  },
+
+  listTemplates: (): Promise<IpcResult<NoteTemplate[]>> => ipcRenderer.invoke('templates:list'),
+
+  saveAllTemplates: (templates: NoteTemplate[]): Promise<IpcResult<NoteTemplate[]>> =>
+    ipcRenderer.invoke('templates:save-all', templates),
+
+  upsertTemplate: (template: NoteTemplate): Promise<IpcResult<NoteTemplate[]>> =>
+    ipcRenderer.invoke('templates:upsert', template),
+
+  deleteTemplate: (id: string): Promise<IpcResult<NoteTemplate[]>> =>
+    ipcRenderer.invoke('templates:delete', id),
+
+  saveUntitledNote: (request: {
+    content: string
+    filePath?: string
+  }): Promise<IpcResult<{ filePath: string }>> => ipcRenderer.invoke('untitled:save', request),
+
+  removeUntitledNote: (filePath: string): Promise<IpcResult> =>
+    ipcRenderer.invoke('untitled:remove', filePath),
+
+  /** Resolve absolute path for a File dropped from the OS (Electron webUtils). */
+  getPathForFile: (file: File): string => {
+    try {
+      return webUtils.getPathForFile(file)
+    } catch {
+      // Fallback for older Electron / browser test env
+      return (file as File & { path?: string }).path ?? ''
+    }
   }
 }
 
