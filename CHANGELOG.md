@@ -8,24 +8,36 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## [1.2.0] — 2026-07-16
 
-**Auto-update confiável** — feed GitHub explícito, logs e release com `latest*.yml`.
-
-### Fixed
-
-- Auto-update não detectava versões novas: `setFeedURL` GitHub + `channel: latest` no main process
-- Logs completos do updater via **electron-log** (`[updater] event:…`)
-- `dev-app-update.yml` alinhado ao provider GitHub de produção
+**Produtividade** — templates, rascunhos untitled, overflow de abas, drag & drop de arquivos.  
+Inclui também hardening de auto-update (feed GitHub + contorno de signature no Mac).
 
 ### Added
 
+#### Produtividade
+
+- **Templates de notas** em `userData/templates/templates.json`
+  - Menu **Arquivo → Nova nota a partir de template** (submenu dinâmico)
+  - Settings → aba **Templates** (criar/editar/excluir)
+  - Padrões: Daily Note, Reunião, Ideia, Checklist (`{{date}}`)
+- **Auto-save de abas “Sem título”** em `userData/untitled-notes/untitled-YYYYMMDD-HHmmss.md`
+  - Restaura rascunhos com a sessão; **Salvar como** promove e remove o draft
+- **Overflow de abas** — botão **…** no TabBar com lista completa (título + dirty)
+- **Drag & drop** de `.txt` / `.md` do Finder/Explorer → abre em nova aba
+
+#### Auto-update (mesma linha 1.2)
+
 - Atalho **Cmd/Ctrl+Shift+U** → Verificar atualizações
-- Link **Releases e downloads** no menu Ajuda
-- Toasts de progresso de download em marcos (~25/50/75/100%)
-- Documentação de diagnóstico e teste em **docs/AUTO_UPDATE.md**
+- Instalação custom no macOS sem Developer ID (`ditto` + `xattr`)
+- Documentação em **docs/AUTO_UPDATE.md**
+
+### Fixed
+
+- Auto-update: `setFeedURL` GitHub + `channel: latest`
+- macOS: install após download sem falhar só em signature (fallback ZIP)
 
 ### Changed
 
-- `electron-builder.yml`: `publishAutoUpdate: true`, zip mac documentado para updater
+- Auto-save também cobre rascunhos untitled (não só arquivos no disco)
 - Versão **1.1.0 → 1.2.0**
 
 ## [1.1.0] — 2026-07-16
