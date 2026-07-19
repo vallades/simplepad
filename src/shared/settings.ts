@@ -21,6 +21,12 @@ export interface AppSettings {
   markdownMathEnabled: boolean
   /** Render ```mermaid blocks in Preview */
   markdownMermaidEnabled: boolean
+  /** Mermaid node font size (10–24) */
+  mermaidFontSize: number
+  /** Mermaid flowchart edge curve */
+  mermaidCurve: 'basis' | 'linear' | 'cardinal' | 'step'
+  /** Mermaid diagram padding / spacing (4–40) */
+  mermaidDiagramPadding: number
   /** Show Outline (TOC) to the right of Preview when Markdown + Split View */
   showMarkdownOutline: boolean
   /** Outline panel width in px (clamped MIN_OUTLINE_WIDTH–MAX_OUTLINE_WIDTH) */
@@ -46,11 +52,19 @@ export const DEFAULT_SETTINGS: AppSettings = {
   splitOrientation: 'horizontal',
   markdownMathEnabled: true,
   markdownMermaidEnabled: true,
+  mermaidFontSize: 14,
+  mermaidCurve: 'basis',
+  mermaidDiagramPadding: 12,
   showMarkdownOutline: true,
   outlineWidth: 220,
   newTabDefaultMarkdown: false,
   autoEnablePreviewOnMarkdown: true
 }
+
+export const MIN_MERMAID_FONT_SIZE = 10
+export const MAX_MERMAID_FONT_SIZE = 24
+export const MIN_MERMAID_PADDING = 4
+export const MAX_MERMAID_PADDING = 40
 
 export const MIN_SPLIT_RATIO = 0.2
 export const MAX_SPLIT_RATIO = 0.8

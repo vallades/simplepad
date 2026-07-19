@@ -42,6 +42,9 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const splitOrientation = useSettingsStore((s) => s.splitOrientation)
   const markdownMathEnabled = useSettingsStore((s) => s.markdownMathEnabled)
   const markdownMermaidEnabled = useSettingsStore((s) => s.markdownMermaidEnabled)
+  const mermaidFontSize = useSettingsStore((s) => s.mermaidFontSize)
+  const mermaidCurve = useSettingsStore((s) => s.mermaidCurve)
+  const mermaidDiagramPadding = useSettingsStore((s) => s.mermaidDiagramPadding)
   const showMarkdownOutline = useSettingsStore((s) => s.showMarkdownOutline)
   const newTabDefaultMarkdown = useSettingsStore((s) => s.newTabDefaultMarkdown)
   const autoEnablePreviewOnMarkdown = useSettingsStore((s) => s.autoEnablePreviewOnMarkdown)
@@ -355,6 +358,65 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                     }}
                   />
                 </label>
+                {markdownMermaidEnabled ? (
+                  <div className="mt-1 flex flex-col gap-2 border-t border-zinc-100 pt-2 dark:border-zinc-800">
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="flex justify-between text-zinc-500">
+                        Fonte do diagrama
+                        <span className="tabular-nums">{mermaidFontSize}px</span>
+                      </span>
+                      <input
+                        type="range"
+                        min={10}
+                        max={24}
+                        step={1}
+                        value={mermaidFontSize}
+                        className="w-full accent-zinc-800 dark:accent-zinc-200"
+                        onChange={(e) => {
+                          void updateSettings({ mermaidFontSize: Number(e.target.value) })
+                        }}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="text-zinc-500">Curva das setas</span>
+                      <select
+                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 dark:border-zinc-700 dark:bg-zinc-950"
+                        value={mermaidCurve}
+                        onChange={(e) => {
+                          void updateSettings({
+                            mermaidCurve: e.target.value as typeof mermaidCurve
+                          })
+                        }}
+                      >
+                        <option value="basis">Basis (suave)</option>
+                        <option value="linear">Linear</option>
+                        <option value="cardinal">Cardinal</option>
+                        <option value="step">Step</option>
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="flex justify-between text-zinc-500">
+                        Espaçamento
+                        <span className="tabular-nums">{mermaidDiagramPadding}px</span>
+                      </span>
+                      <input
+                        type="range"
+                        min={4}
+                        max={40}
+                        step={1}
+                        value={mermaidDiagramPadding}
+                        className="w-full accent-zinc-800 dark:accent-zinc-200"
+                        onChange={(e) => {
+                          void updateSettings({ mermaidDiagramPadding: Number(e.target.value) })
+                        }}
+                      />
+                    </label>
+                    <span className="text-[11px] text-zinc-400">
+                      Tema do diagrama segue claro/escuro do app. No Preview: hover no diagrama →
+                      zoom, pan e export PNG/SVG.
+                    </span>
+                  </div>
+                ) : null}
                 <span className="text-[11px] text-zinc-400">
                   Outline fica à <strong className="font-medium">direita do Preview</strong> (não do
                   editor). Só com Markdown + Split View. Atalho ⌘⇧O. Largura arrastável (~220px).

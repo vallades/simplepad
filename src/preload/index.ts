@@ -7,6 +7,8 @@ import type {
   IpcResult,
   MenuCommand,
   OpenFileResult,
+  SaveBinaryRequest,
+  SaveBinaryResult,
   SaveFileRequest,
   SaveFileResult,
   SessionLoadResult,
@@ -64,6 +66,9 @@ const api = {
 
   exportFile: (request: ExportFileRequest): Promise<ExportFileResult> =>
     ipcRenderer.invoke('file:export', request),
+
+  saveBinaryFile: (request: SaveBinaryRequest): Promise<SaveBinaryResult> =>
+    ipcRenderer.invoke('file:save-binary', request),
 
   checkForUpdates: (): Promise<IpcResult> => ipcRenderer.invoke('update:check'),
 

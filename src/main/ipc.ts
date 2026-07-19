@@ -11,6 +11,8 @@ import type {
   ExportFileResult,
   IpcResult,
   OpenFileResult,
+  SaveBinaryRequest,
+  SaveBinaryResult,
   SaveFileRequest,
   SaveFileResult,
   SessionLoadResult
@@ -273,6 +275,47 @@ export function registerIpcHandlers(): void {
         return await exportDocument(window, request)
       } catch (error) {
         log.error('[ipc] file:export', error)
+        return { canceled: true, error: errorMessage(error) }
+      }
+    }
+  )
+
+  // Save SVG/PNG (Mermaid diagram export, etc.)
+  ipcMain.handle(
+    'file:save-binary',
+    async (event, request: SaveBinaryRequest): Promise<SaveBinaryResult> => {
+      const window = getSenderWindow(event)
+      if (!window) {
+        return { canceled: true, error: 'Janela não encontrada' }
+      }
+      if (!request || (request.format !== 'svg' && request.format !== 'png')) {
+        return { canceled: true, error: 'Formato inválido' }
+      }
+      if (typeof request.data !== 'string' || request.data.length === 0) {
+        return { canceled: true, error: 'Dados vazios' }
+      }
+
+      try {
+        const isPng = request.format === 'png'
+        const filters = isPng
+          ? [{ name: 'PNG', extensions: ['png'] }]
+          : [{ name: 'SVG', extensions: ['svg'] }]
+        const targetPath = await files.showSaveDialog(
+          window,
+          request.defaultPath ?? (isPng ? 'diagrama.png' : 'diagrama.svg'),
+          filters,
+          isPng ? 'Exportar diagrama PNG' : 'Exportar diagrama SVG'
+        )
+        if (!targetPath) return { canceled: true }
+
+        if (isPng || request.isBase64) {
+          await files.writeBinaryFile(targetPath, Buffer.from(request.data, 'base64'))
+        } else {
+          await files.writeFile(targetPath, request.data)
+        }
+        return { canceled: false, filePath: targetPath }
+      } catch (error) {
+        log.error('[ipc] file:save-binary', error)
         return { canceled: true, error: errorMessage(error) }
       }
     }

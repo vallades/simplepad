@@ -6,6 +6,8 @@ import type {
   IpcResult,
   MenuCommand,
   OpenFileResult,
+  SaveBinaryRequest,
+  SaveBinaryResult,
   SaveFileRequest,
   SaveFileResult,
   SessionLoadResult,
@@ -36,6 +38,7 @@ export interface SimplePadApi {
   saveFile: (request: SaveFileRequest) => Promise<SaveFileResult>
   saveFileAs: (request: SaveFileRequest) => Promise<SaveFileResult>
   exportFile: (request: ExportFileRequest) => Promise<ExportFileResult>
+  saveBinaryFile: (request: SaveBinaryRequest) => Promise<SaveBinaryResult>
   checkForUpdates: () => Promise<IpcResult>
   installUpdate: () => Promise<IpcResult>
   setFocusMode: (enabled: boolean) => Promise<IpcResult>

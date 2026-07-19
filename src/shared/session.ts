@@ -113,6 +113,24 @@ export interface ExportFileResult {
   error?: string
 }
 
+/** Save SVG text or PNG/binary via native dialog (e.g. Mermaid export). */
+export type SaveBinaryFormat = 'svg' | 'png'
+
+export interface SaveBinaryRequest {
+  format: SaveBinaryFormat
+  /** UTF-8 text (svg) or base64 payload (png) */
+  data: string
+  /** true when `data` is base64 (png) */
+  isBase64?: boolean
+  defaultPath?: string
+}
+
+export interface SaveBinaryResult {
+  canceled: boolean
+  filePath?: string
+  error?: string
+}
+
 export interface OpenFileResult {
   canceled: boolean
   files: OpenedFileDTO[]
