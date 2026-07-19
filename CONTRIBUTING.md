@@ -50,10 +50,18 @@ test: ...
 
 ## Docs úteis
 
-- [docs/PROJETO.md](./docs/PROJETO.md) — visão do projeto
+- [docs/PROJETO.md](./docs/PROJETO.md) — visão completa, arquitetura e roadmap
+- [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) — overview atual (**v1.4.1**)
 - [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md) — releases e updater
 - [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md) — build e assinatura
-- [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) — overview v1.1
+- [CHANGELOG.md](./CHANGELOG.md) — histórico de versões
+- [README.md](./README.md) — entrada do repositório
+
+## Releases
+
+1. Atualize `package.json` + `CHANGELOG.md`
+2. Merge em `main` via PR (CI verde)
+3. Tag `vX.Y.Z` e push — o workflow **Release** gera instaladores
 
 ## Dúvidas
 

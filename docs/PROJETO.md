@@ -2,17 +2,17 @@
 
 Documento de contexto: o que foi construído, decisões técnicas, limitações, oportunidades de melhoria e ideias de futuro.
 
-| Campo            | Valor                                                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **Produto**      | SimplePad — editor de texto multiplataforma minimalista com abas                                                           |
-| **Versão atual** | **1.0.1** (patch: auto-update UX + CI)                                                                                     |
-| **Licença**      | MIT                                                                                                                        |
-| **Repositório**  | https://github.com/vallades/simplepad                                                                                      |
-| **Release**      | https://github.com/vallades/simplepad/releases/tag/v1.0.1                                                                  |
-| **Stack**        | Electron · Vite · React 19 · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · electron-updater |
-| **Inspiração**   | Bloco de Notas / TextEdit — simples por design                                                                             |
+| Campo            | Valor                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Produto**      | SimplePad — editor de texto multiplataforma minimalista com abas                                                                             |
+| **Versão atual** | **1.4.1** (Outline à direita do Preview + linha 1.4 de formato Markdown)                                                                     |
+| **Licença**      | MIT                                                                                                                                          |
+| **Repositório**  | https://github.com/vallades/simplepad                                                                                                        |
+| **Release**      | https://github.com/vallades/simplepad/releases/tag/v1.4.1                                                                                    |
+| **Stack**        | Electron · Vite · React 19 · TypeScript · Monaco · Zustand · Tailwind · electron-store · react-markdown · KaTeX · Mermaid · electron-updater |
+| **Inspiração**   | Bloco de Notas / TextEdit — simples por design                                                                                               |
 
-Documentos relacionados: [README](../README.md) · [CHANGELOG](../CHANGELOG.md) · [DISTRIBUTION](./DISTRIBUTION.md) · [AUTO_UPDATE](./AUTO_UPDATE.md) · [PRD original](../SimplePad_PRD.md) · [Notas v1.0.0](./RELEASE_NOTES_v1.0.0.md) · [Notas v1.0.1](./RELEASE_NOTES_v1.0.1.md)
+Documentos relacionados: [README](../README.md) · [CHANGELOG](../CHANGELOG.md) · [PROJECT_OVERVIEW](./PROJECT_OVERVIEW.md) · [DISTRIBUTION](./DISTRIBUTION.md) · [AUTO_UPDATE](./AUTO_UPDATE.md) · [PRD original](../SimplePad_PRD.md) · [Notas v1.4.1](./RELEASE_NOTES_v1.4.1.md)
 
 ---
 
@@ -36,15 +36,12 @@ SimplePad existe para ser um **bloco de notas moderno multiplataforma**:
 
 ## 2. Histórico de entrega (fases)
 
-O desenvolvimento seguiu o roadmap do PRD, com polimento e distribuição além do MVP.
-
 ### Fase 0 — Fundação
 
 - Scaffold **electron-vite** (React + TypeScript)
 - ESLint, Prettier, Husky + lint-staged, Vitest
 - Tailwind CSS v4
 - Estrutura `main` / `preload` / `renderer` / `shared`
-- Scripts de dev, build, dist
 
 ### Fase 1 — MVP Core
 
@@ -57,40 +54,44 @@ O desenvolvimento seguiu o roadmap do PRD, com polimento e distribuição além 
 | Menu       | Arquivo, Editar, Exibir + atalhos                                   |
 | Quit       | Confirmação com alterações não salvas + flush de sessão             |
 
-**Polimento da Fase 1:**
-
-- `window.confirm` → `dialog.showMessageBox`
-- Toasts para erros de I/O e sessão
-- Arquivos recentes (máx. 10) no menu Arquivo
-
 ### Fase 2 — Experiência
 
-| Capacidade   | Detalhe                                                             |
-| ------------ | ------------------------------------------------------------------- |
-| Settings     | Fonte monoespaçada, tamanho, tema (sistema/claro/escuro), auto-save |
-| Persistência | `preferences.json` (settings + recentes)                            |
-| Auto-save    | Intervalo, troca de aba, blur (só abas com path no disco)           |
-| Status bar   | Ln/Col, palavras/caracteres, Salvo/Não salvo, encoding UTF-8        |
+| Capacidade   | Detalhe                                                      |
+| ------------ | ------------------------------------------------------------ |
+| Settings     | Fonte, tamanho, tema (sistema/claro/escuro), auto-save       |
+| Persistência | `preferences.json` (settings + recentes)                     |
+| Auto-save    | Intervalo, troca de aba, blur                                |
+| Status bar   | Ln/Col, palavras/caracteres, Salvo/Não salvo, encoding UTF-8 |
 
 ### Fase 3 — Preview e export
 
-| Capacidade          | Detalhe                                                  |
-| ------------------- | -------------------------------------------------------- |
-| Split View          | Editor \| Preview (`react-markdown` + `remark-gfm`)      |
-| Performance preview | Debounce ~120 ms, scroll ratio editor → preview          |
-| Markdown mode       | Auto por extensão + toggle manual                        |
-| Export              | HTML (documento standalone) e PDF (`printToPDF` no main) |
+| Capacidade | Detalhe                                             |
+| ---------- | --------------------------------------------------- |
+| Split View | Editor \| Preview (`react-markdown` + `remark-gfm`) |
+| Export     | HTML standalone e PDF (`printToPDF`)                |
 
-### Fechamento v1.0 e distribuição
+### v1.0 — Distribuição
 
-| Capacidade  | Detalhe                                                                  |
-| ----------- | ------------------------------------------------------------------------ |
-| Modo foco   | Distração zero (F11 / Esc): fullscreen, chrome oculto                    |
-| Auto-update | `electron-updater` + menu Ajuda → Verificar atualizações                 |
-| Builder     | Win NSIS+portable, mac DMG+ZIP, Linux AppImage+deb                       |
-| CI/CD       | GitHub Actions: lint, testes, coverage, matrix de build, Release em tags |
-| UX macOS    | `app.setName('SimplePad')`, padding traffic lights (`hiddenInset`)       |
-| Docs        | README, CHANGELOG, LICENSE, DISTRIBUTION, notas de release               |
+Modo foco, electron-updater, electron-builder (Win/mac/Linux), CI/CD, docs oficiais.
+
+### v1.1 — Polimento e confiança
+
+Split redimensionável + orientação; Find/Replace/Ir à linha; busca em todas as abas; CONTRIBUTING e templates de issue/PR; docs de signing.
+
+### v1.2 — Produtividade
+
+Templates de notas (`userData/templates/`); auto-save de “Sem título” em `untitled-notes/`; overflow de abas (**…**); drag & drop de `.txt`/`.md`; auto-update com `setFeedURL` GitHub + contorno de signature no Mac.
+
+### v1.3 — Markdown avançado
+
+Outline (TOC); Math (KaTeX); Mermaid; export PDF com margens/tema/outline; preferências de Markdown avançado.
+
+### v1.4 — Formato e layout do Outline
+
+| Versão    | Entrega                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **1.4.0** | Nova aba em Plain Text; toggle Markdown (Status Bar + menu da aba); Salvar como `.md`/`.txt`; settings de padrão da aba |
+| **1.4.1** | Outline **à direita do Preview**; `outlineWidth` persistida; toggles ⌘⇧O / TOC / Status Bar                             |
 
 ---
 
@@ -99,48 +100,49 @@ O desenvolvimento seguiu o roadmap do PRD, com polimento e distribuição além 
 ```
 simplepad/
 ├── src/
-│   ├── main/           # Processo principal Electron
-│   │   ├── index.ts           # Janela, lifecycle, nome do app
-│   │   ├── ipc.ts             # Handlers IPC tipados
-│   │   ├── menu.ts            # Menu nativo
-│   │   ├── sessionManager.ts  # session.json
-│   │   ├── preferencesManager.ts
-│   │   ├── fileManager.ts
-│   │   ├── exportManager.ts   # HTML write + PDF printToPDF
-│   │   ├── updater.ts         # electron-updater
-│   │   └── quitController.ts
-│   ├── preload/        # contextBridge → window.api
-│   ├── shared/         # Contratos sessão/settings (main + renderer)
-│   └── renderer/       # React UI
-│       ├── components/ # Editor, Preview, TabBar, StatusBar, Settings, Toasts
-│       ├── store/      # tabs, settings, toast, ui (split/focus)
-│       ├── services/   # file, session, auto-save, export, update
-│       ├── monaco/     # setup lazy + model registry
-│       └── utils/
-├── .github/workflows/
-│   ├── ci.yml          # push/PR main
-│   └── release.yml     # tags v* + workflow_dispatch
+│   ├── main/
+│   │   ├── index.ts, ipc.ts, menu.ts, quitController.ts
+│   │   ├── sessionManager.ts, preferencesManager.ts, fileManager.ts
+│   │   ├── exportManager.ts, updater.ts
+│   │   ├── templateManager.ts, untitledNotesManager.ts
+│   ├── preload/          # contextBridge → window.api
+│   ├── shared/           # session, settings, templates, untitledNotes (+ sanitize)
+│   └── renderer/
+│       ├── components/   # Editor, Preview (+ Outline à direita), TabBar, StatusBar, Settings…
+│       ├── store/        # tabs, settings, toast, ui
+│       ├── services/     # file, session, autoSave, export, markdownMode, templates, update
+│       ├── monaco/       # setup + model registry
+│       └── utils/        # outline, markdownExport, fileUtils…
+├── .github/workflows/    # ci.yml, release.yml
 ├── docs/
 └── electron-builder.yml
 ```
 
-### Fluxo de dados (resumo)
+### Fluxo de dados
 
 1. **Renderer** edita via Monaco → Zustand (`useTabsStore`).
 2. Sessão debounced → IPC → **main** grava `session.json`.
-3. Arquivos / export / diálogos / update → IPC → **main** (fs, dialog, printToPDF, autoUpdater).
-4. Preferências → `preferences.json` no main; tema/fonte aplicados no renderer.
-5. Preview Markdown só monta com split ativo (lazy).
+3. Arquivos / export / diálogos / update → IPC → **main**.
+4. Preferências → `preferences.json`; templates → `templates/templates.json`.
+5. Preview (e Outline) só com Split View; Outline só com Markdown.
 
 ### Dados no disco (userData)
 
-| Arquivo            | Conteúdo                                  |
-| ------------------ | ----------------------------------------- |
-| `session.json`     | Abas, conteúdo, cursor, scroll, aba ativa |
-| `preferences.json` | Settings + lista de recentes              |
-| Logs               | `electron-log` sob userData               |
+| Caminho                    | Conteúdo                                                |
+| -------------------------- | ------------------------------------------------------- |
+| `session.json`             | Abas, conteúdo, cursor, scroll, `isMarkdown`, aba ativa |
+| `preferences.json`         | Settings + recentes                                     |
+| `templates/templates.json` | Templates de notas                                      |
+| `untitled-notes/*.md`      | Rascunhos auto-salvos                                   |
+| logs                       | `electron-log`                                          |
 
 Caminhos típicos: macOS `~/Library/Application Support/simplepad/`, Windows `%APPDATA%/simplepad/`, Linux `~/.config/simplepad/`.
+
+### Layout Split View (v1.4.1)
+
+```
+[ Editor (Monaco) ] | [ Preview Markdown | Outline TOC ]
+```
 
 ---
 
@@ -148,215 +150,191 @@ Caminhos típicos: macOS `~/Library/Application Support/simplepad/`, Windows `%A
 
 ### Editor e abas
 
-- [x] Múltiplas abas, reordenação, dirty state
-- [x] Atalhos: nova, fechar, abrir, salvar, salvar como, trocar abas
-- [x] Monaco com modelo por aba
-- [x] Fallback se Monaco falhar
-- [x] Sessão restaurada ao reiniciar
+- [x] Múltiplas abas, reordenação, dirty state, overflow (**…**)
+- [x] Plain Text ↔ Markdown por aba; badge MD; menu de contexto
+- [x] Monaco com modelo por aba; linguagem reage a `isMarkdown`
+- [x] Sessão restaurada (inclui formato Markdown)
 
 ### Arquivos e feedback
 
-- [x] Diálogos nativos open/save
-- [x] Recentes (10)
-- [x] Confirmações nativas (aba dirty / sair)
-- [x] Toasts de erro/info/sucesso
+- [x] Diálogos nativos; recentes; DnD `.txt`/`.md`
+- [x] Salvar como com extensão por formato (`.md` / `.txt`)
+- [x] Auto-save em disco e em untitled-notes
+- [x] Templates (menu + Settings)
+- [x] Confirmações nativas e toasts
 
 ### Markdown e export
 
-- [x] Split preview GFM
-- [x] Toggle Markdown
-- [x] Export HTML / PDF
+- [x] Split preview GFM, redimensionável, orientação
+- [x] Outline à **direita** do Preview (toggle, largura, debounce)
+- [x] KaTeX e Mermaid (toggles)
+- [x] Export HTML / PDF (opções de PDF)
 
-### UX e tema
+### UX e distribuição
 
-- [x] Tema sistema / claro / escuro
-- [x] Fonte e tamanho configuráveis
-- [x] Auto-save configurável
-- [x] Modo distração zero
-- [x] Status bar rica
-
-### Distribuição e qualidade
-
-- [x] Instaladores 3 plataformas
-- [x] Auto-update (feed GitHub Releases)
-- [x] CI + Release workflows
-- [x] Testes unitários (Vitest) + coverage
-- [x] TypeScript strict + ESLint
+- [x] Tema, fonte, modo foco, status bar
+- [x] Instaladores 3 plataformas + auto-update GitHub
+- [x] CI + Release; testes unitários; TypeScript strict
 
 ---
 
 ## 5. Problemas encontrados e como foram resolvidos
 
-| Problema                                  | Causa                                        | Solução                                                         |
-| ----------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- |
-| Título sob os traffic lights (macOS)      | `titleBarStyle: hiddenInset` sem padding     | Classe `mac-titlebar-pad` (~78px) só no Darwin                  |
-| Menu “Electron” em dev                    | Nome do binário Electron                     | `app.setName('SimplePad')` + `productName` + label fixo no menu |
-| Release mac falha: `simplepad not a file` | `CSC_LINK=""` injetado pelo Actions          | Só exportar secrets de assinatura se não-vazios                 |
-| Job “canceled” após DMG OK                | `cancel-in-progress: true` em push em `main` | Cancelar só em PRs; builds longos em main terminam              |
-| Instalador > 70 MB                        | Electron + Monaco                            | Documentado como limitação; chunks lazy reduzem shell inicial   |
-| `sandbox: false` no renderer              | Workers Monaco                               | Documentado; PDF export usa janela sandboxed                    |
+| Problema                          | Causa                        | Solução                                |
+| --------------------------------- | ---------------------------- | -------------------------------------- |
+| Título sob traffic lights (macOS) | `hiddenInset` sem padding    | `mac-titlebar-pad`                     |
+| Menu “Electron” em dev            | Nome do binário              | `app.setName` + productName            |
+| Release mac: CSC vazio            | `CSC_LINK=""`                | Exportar secrets só se não-vazios      |
+| Job canceled em main              | concurrency                  | Não cancelar builds longos em main     |
+| Auto-update sem detecção          | feed ≤ app / sem latest*.yml | Docs + setFeedURL + releases com yml   |
+| Mac: signature no install         | Squirrel + ad-hoc            | Instalador custom zip + xattr          |
+| Outline à esquerda do editor      | Layout inicial v1.3          | Mover para direita do Preview (v1.4.1) |
+| Instalador > 70 MB                | Electron + Monaco            | Limitação documentada; chunks lazy     |
 
 ---
 
-## 6. Métricas e qualidade (estado v1.0)
+## 6. Métricas e qualidade (estado v1.4)
 
-| Área               | Estado aproximado                                                                     |
-| ------------------ | ------------------------------------------------------------------------------------- |
-| Testes             | Dezenas de testes unitários (store, sanitize, export, auto-save, update bridge, etc.) |
-| Coverage           | Relatório via `npm run test:coverage` (CI artifact); foco em stores/utils/services    |
-| Bundle renderer    | Monaco e markdown em chunks separados; Editor/Preview com `React.lazy`                |
-| Instaladores       | ~95–115 MB por artefato (típico Electron desktop)                                     |
-| App unpackaged mac | Ordem de ~300 MB+ (runtime Electron)                                                  |
+| Área         | Estado                                                                          |
+| ------------ | ------------------------------------------------------------------------------- |
+| Testes       | 100+ unitários (Vitest): stores, sanitize, outline, export, markdown mode, etc. |
+| Coverage     | `npm run test:coverage`                                                         |
+| Bundle       | Monaco, markdown, katex, mermaid em chunks separados                            |
+| Instaladores | Ordem de ~100 MB+ por artefato (típico Electron)                                |
 
 ---
 
 ## 7. Oportunidades de melhoria
 
-Priorizadas por impacto vs. esforço (orientativo).
+### 7.1 Alta prioridade (confiança)
 
-### 7.1 Alta prioridade (confiança e distribuição)
-
-| Melhoria                                                                  | Por quê                                                                   |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| **Code signing + notarização macOS**                                      | Gatekeeper; builds “oficiais” sem aviso de desenvolvedor não identificado |
-| **Assinatura Windows (Authenticode)**                                     | SmartScreen menos agressivo                                               |
-| **Branch protection**                                                     | Exigir job “CI Success” em PRs                                            |
-| **Templates de issue/PR**                                                 | Onboarding de contribuidores                                              |
-| **Screenshots reais**                                                     | README / landing; pasta `docs/screenshots/` já prevista                   |
-| **Smoke E2E** (Playwright/Spectron-like ou manual checklist automatizado) | CI hoje é unitário + package, não UI real no app                          |
+| Melhoria                         | Por quê                       |
+| -------------------------------- | ----------------------------- |
+| Code signing + notarização macOS | Gatekeeper                    |
+| Authenticode Windows             | SmartScreen                   |
+| Screenshots reais                | README / marketing            |
+| Smoke E2E                        | CI ainda é unitário + package |
 
 ### 7.2 Performance e tamanho
 
-| Melhoria                                                                    | Por quê                                                                   |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| **Tree-shake / workers Monaco**                                             | `ts.worker` e outros workers pesam muito; plaintext+markdown talvez baste |
-| **Não empacotar linguagens desnecessárias do Monaco**                       | Menor download e RAM                                                      |
-| **Avaliar editor mais leve** (CodeMirror 6, textarea rich) para “modo lite” | Meta de instalador menor                                                  |
-| **Lazy ainda mais agressivo** no first paint                                | Abrir app antes de carregar Monaco                                        |
+| Melhoria                          | Por quê                  |
+| --------------------------------- | ------------------------ |
+| Reduzir workers/linguagens Monaco | Download e RAM           |
+| Avaliar editor “lite” opcional    | Meta de instalador menor |
 
 ### 7.3 Segurança
 
-| Melhoria                                    | Por quê                                       |
-| ------------------------------------------- | --------------------------------------------- |
-| **`sandbox: true` com workers sandboxados** | Melhor postura de segurança Electron          |
-| **CSP no renderer**                         | Mitigar XSS se no futuro houver HTML embutido |
-| **Validação estrita de paths no main**      | Abrir/salvar só em paths esperados            |
+| Melhoria                  | Por quê          |
+| ------------------------- | ---------------- |
+| `sandbox: true` + workers | Postura Electron |
+| CSP no renderer           | XSS              |
 
-### 7.4 UX e produto
+### 7.4 UX (próximas ideias)
 
-| Melhoria                                         | Por quê                                               |
-| ------------------------------------------------ | ----------------------------------------------------- |
-| **Divisor redimensionável** no split             | Usuários com monitores largos / estreitos             |
-| **Layout preview vertical** (editor em cima)     | Preferência documentada como “futura” no PRD          |
-| **Find in file / replace** nativo além do Monaco | Fluxo notepad clássico                                |
-| **Encoding configurável**                        | Hoje UTF-8 fixo                                       |
-| **Auto-save de untitled** (temp file)            | Hoje só path real                                     |
-| **Acessibilidade**                               | Foco no modal Settings, anúncios de toasts, contraste |
-| **i18n** (pt-BR / en)                            | Menus e strings hardcoded em português                |
+| Melhoria                        | Por quê              |
+| ------------------------------- | -------------------- |
+| Encoding configurável           | Hoje UTF-8 fixo      |
+| i18n (pt-BR / en)               | Strings em português |
+| Acessibilidade (modais, toasts) | Inclusão             |
 
 ### 7.5 Engenharia
 
-| Melhoria                                                           | Por quê                                    |
-| ------------------------------------------------------------------ | ------------------------------------------ |
-| **Coverage gates** no CI                                           | Evitar regressão silenciosa                |
-| **Changelog automático** (conventional-changelog / release-please) | Menos trabalho em cada release             |
-| **Dependabot / Renovate**                                          | Electron e Monaco atualizam com frequência |
-| **Snapshot de tamanho de artefato** no CI                          | Alerta se o DMG/exe crescer demais         |
+| Melhoria                              | Por quê         |
+| ------------------------------------- | --------------- |
+| Coverage gates no CI                  | Regressão       |
+| Dependabot / Renovate                 | Electron/Monaco |
+| release-please / changelog automático | Menos fricção   |
 
 ---
 
-## 8. Futuras funcionalidades (roadmap sugerido)
+## 8. Roadmap
 
-### v1.1 — Polimento e confiança
+### Entregue
 
-- Assinatura + notarização documentada e aplicada em CI
-- Screenshots e página de “Getting started”
-- Divisor redimensionável no Split View
-- Find/replace exposto na UI/status
-- Templates de contribuição
+- [x] v1.0 — MVP + distribuição
+- [x] v1.1 — Polimento e confiança
+- [x] v1.2 — Produtividade
+- [x] v1.3 — Markdown avançado
+- [x] v1.4 — Formato Markdown + layout Outline
 
-### v1.2 — Produtividade
+### Futuro sugerido (v1.5+)
 
-- Busca em todas as abas abertas
-- “Ir para linha”
-- Snippets leves ou templates de nota
-- Lista de abas (overflow quando muitas abas)
-- Arrastar arquivo do Finder/Explorer para abrir
+- Assinatura de código em CI (quando houver certificados)
+- Screenshots e onboarding visual
+- Encoding / i18n leve
+- Workspace de pasta local (ainda offline-first)
 
-### v1.3 — Markdown avançado
+### v2.0 (avaliar fit ao minimalismo)
 
-- Preview com math (KaTeX) opcional
-- Diagramas (Mermaid) opcional
-- Export PDF com opções (margens, tema print)
-- Outline (TOC) da nota markdown
+- Sync opcional (folder / iCloud — sem SaaS por padrão)
+- Plugins leves
+- Preview web view-only
 
-### v2.0 — Expansão (avaliar fit ao “minimalismo”)
-
-- Workspace / pasta de notas (ainda local-first)
-- Sync opcional (iCloud / folder sync — **sem** virar SaaS por padrão)
-- Extensões / plugins leves
-- Versão web “view-only” ou PWA do preview
-
-> Qualquer feature v2 deve ser filtrada pelo princípio: **não virar IDE nem app de notas na nuvem sem opção offline-first.**
+> Filtrar pelo princípio: **não virar IDE nem app de notas na nuvem sem opção offline-first.**
 
 ---
 
 ## 9. Atalhos atuais (referência)
 
-| Atalho                   | Ação                 |
-| ------------------------ | -------------------- |
-| `Ctrl/Cmd+N`             | Nova aba             |
-| `Ctrl/Cmd+O`             | Abrir                |
-| `Ctrl/Cmd+S` / `Shift+S` | Salvar / Salvar como |
-| `Ctrl/Cmd+W`             | Fechar aba           |
-| `Ctrl/Cmd+,`             | Configurações        |
-| `Ctrl/Cmd+Shift+P`       | Toggle Preview       |
-| `Ctrl/Cmd+Shift+M`       | Toggle Markdown      |
-| `Ctrl/Cmd+Tab`           | Alternar abas        |
-| `F11`                    | Modo distração zero  |
-| `Esc`                    | Sair do modo foco    |
+| Atalho                   | Ação                    |
+| ------------------------ | ----------------------- |
+| `Ctrl/Cmd+N`             | Nova aba                |
+| `Ctrl/Cmd+O`             | Abrir                   |
+| `Ctrl/Cmd+S` / `Shift+S` | Salvar / Salvar como    |
+| `Ctrl/Cmd+W`             | Fechar aba              |
+| `Ctrl/Cmd+,`             | Configurações           |
+| `Ctrl/Cmd+Shift+P`       | Toggle Preview          |
+| `Ctrl/Cmd+Shift+M`       | Toggle Markdown         |
+| `Ctrl/Cmd+Shift+O`       | Toggle Outline (TOC)    |
+| `Ctrl/Cmd+F` / `Alt+F`   | Localizar / Substituir  |
+| `Ctrl/Cmd+G`             | Ir para linha           |
+| `Ctrl/Cmd+Shift+F`       | Buscar em todas as abas |
+| `Ctrl/Cmd+Shift+U`       | Verificar atualizações  |
+| `Ctrl/Cmd+Tab`           | Alternar abas           |
+| `F11` / `Esc`            | Modo foco / sair        |
 
 ---
 
-## 10. Como rodar e distribuir (lembrete)
+## 10. Como rodar e distribuir
 
 ```bash
 npm install
-npm run dev                 # desenvolvimento
+npm run dev
 npm test && npm run lint && npm run typecheck
-npm run dist:mac            # ou dist:win / dist:linux
+npm run dist:mac   # ou dist:win / dist:linux
 ```
 
 CI: push/PR em `main` → `.github/workflows/ci.yml`  
 Release: tag `v*` → `.github/workflows/release.yml`
 
-Detalhes de assinatura e publish: [DISTRIBUTION.md](./DISTRIBUTION.md).
+Detalhes: [DISTRIBUTION.md](./DISTRIBUTION.md) · [AUTO_UPDATE.md](./AUTO_UPDATE.md).
 
 ---
 
 ## 11. Riscos conhecidos
 
-1. **Tamanho do instalador** — Electron + Monaco; difícil &lt; 70 MB sem troca de stack.
-2. **Gatekeeper / SmartScreen** sem signing — fricção no first run.
-3. **Auto-update** depende de assets + `latest*.yml` corretos no GitHub Release.
-4. **Monaco workers** — `sandbox: false` no renderer até estratégia alternativa.
-5. **Cancelamento de CI** — mitigado em main; PRs ainda cancelam runs antigos (desejável).
+1. **Tamanho do instalador** — Electron + Monaco.
+2. **Gatekeeper / SmartScreen** sem signing.
+3. **Auto-update** exige Release com `latest*.yml` e versão maior.
+4. **Monaco workers** — `sandbox: false` no renderer.
+5. **macOS update nativo** sem Developer ID — contorno via instalador custom (docs).
 
 ---
 
 ## 12. Conclusão
 
-A **v1.0.0** entrega o ciclo completo do PRD: MVP utilizável, experiência de configurações e auto-save, preview Markdown com export, distribuição multi-OS, CI/CD e documentação.
+A **v1.4.1** consolida o ciclo do PRD e as linhas de produtividade e Markdown avançado:
 
-O produto está **pronto para uso real** e para um primeiro ciclo de feedback de usuários. O melhor ROI pós-lançamento é:
+- Editor multi-aba confiável, offline-first
+- Markdown com preview, outline, math e diagramas
+- Formato da aba antes de salvar
+- Distribuição multi-OS, CI e auto-update
 
-1. Assinatura de builds (confiança do SO)
-2. Screenshots e onboarding visual
-3. Redução de peso do editor / workers
-4. Features pequenas de produtividade (find, splitter, overflow de abas)
+O produto está **pronto para uso real**. Melhor ROI pós-1.4:
+
+1. Assinatura de builds
+2. Screenshots reais
+3. Redução de peso do editor
+4. Pequenos polimentos de acessibilidade/i18n
 
 sem abandonar o espírito **“simples por design”**.
-
----
-
-_Documento gerado a partir do histórico de implementação do SimplePad (Fases 0–3, polish v1.0 e CI/CD). Atualizar quando houver release major/minor relevante._

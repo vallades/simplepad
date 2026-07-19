@@ -1,35 +1,36 @@
-# Screenshots (v1.1)
+# Screenshots (v1.4)
 
-Coloque capturas reais do app instalado/desenvolvido nesta pasta e referencie no README.
+Coloque capturas reais do app nesta pasta e referencie no [README](../../README.md).
 
-## Lista principal (v1.1)
+## Lista sugerida (v1.4.x)
 
-| Arquivo                | Conteúdo sugerido                                       |
-| ---------------------- | ------------------------------------------------------- |
-| `main-tabs.png`        | Interface principal com 2–3 abas e status bar           |
-| `split-view.png`       | Split View redimensionável (editor + preview Markdown)  |
-| `settings.png`         | Modal de Configurações (fonte, tema, layout do preview) |
-| `preview-markdown.png` | Preview com headings, lista e código                    |
-| `search-tabs.png`      | Modal “Buscar em todas as abas” (opcional)              |
+| Arquivo                | Conteúdo sugerido                                           |
+| ---------------------- | ----------------------------------------------------------- |
+| `main-tabs.png`        | Interface com abas, badge MD opcional e status bar          |
+| `split-view.png`       | **Editor \| Preview \| Outline** (TOC à direita do Preview) |
+| `settings.png`         | Configurações: Geral + aba Templates + toggles Markdown     |
+| `preview-markdown.png` | Preview com headings, math (`$…$`) ou mermaid               |
+| `format-toggle.png`    | Status Bar Plain Text / Markdown (opcional)                 |
+| `search-tabs.png`      | Modal “Buscar em todas as abas” (opcional)                  |
 
 ## Como capturar
 
 ```bash
 npm run dev
-# ou abra o app da Release
+# ou abra o app da Release v1.4.1+
 ```
 
-1. Use tema claro **e** escuro se possível.
+1. Tema claro **e** escuro se possível.
 2. Resolução ~1280×800 ou retina.
-3. PNG ou WebP, peso razoável (&lt; 500 KB se der).
+3. PNG ou WebP (&lt; 500 KB se der).
+4. Para o split: Markdown + Preview + Outline visível (`⌘⇧O` se oculto).
 
 ## Placeholders
 
-Enquanto não houver PNGs reais, o README descreve a seção Getting Started com caminhos esperados.  
-Arquivos SVG mínimos de referência (opcional) podem ser gerados depois.
+Enquanto não houver PNGs reais, o README usa SVG de referência em `placeholder-*.svg` (se existirem).
 
 Exemplo no README:
 
 ```markdown
-![Interface principal](docs/screenshots/main-tabs.png)
+![Split com Outline](docs/screenshots/split-view.png)
 ```

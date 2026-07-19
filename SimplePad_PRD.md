@@ -1,4 +1,6 @@
-# SimplePad - PRD Completo
+# SimplePad
+
+> **Nota (2026-07):** este PRD é o documento **original de produto**. O estado implementado atual é a **v1.4.1** — ver [README.md](./README.md), [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md), [docs/PROJETO.md](./docs/PROJETO.md) e [CHANGELOG.md](./CHANGELOG.md). - PRD Completo
 
 **Nome do Produto:** SimplePad  
 **Descrição:** Editor de texto multiplataforma simples e leve com abas, inspirado no Bloco de Notas e TextEdit  

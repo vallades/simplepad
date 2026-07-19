@@ -4,7 +4,7 @@ Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco 
 
 **Versão:** [1.4.1](https://github.com/vallades/simplepad/releases/tag/v1.4.1) · **Licença:** [MIT](./LICENSE)
 
-**Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · electron-updater
+**Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · KaTeX · Mermaid · electron-updater
 
 [![CI](https://github.com/vallades/simplepad/actions/workflows/ci.yml/badge.svg)](https://github.com/vallades/simplepad/actions/workflows/ci.yml)
 [![Release](https://github.com/vallades/simplepad/actions/workflows/release.yml/badge.svg)](https://github.com/vallades/simplepad/actions/workflows/release.yml)
@@ -62,7 +62,8 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.1**            | Split redimensionável, Find/Replace/Ir à linha, busca multi-aba, CONTRIBUTING, signing docs        |
 | **v1.2**            | Templates, auto-save untitled, overflow de abas, drag & drop de arquivos, auto-update robusto      |
 | **v1.3**            | Outline, Math (KaTeX), Mermaid, export PDF com opções                                              |
-| **v1.4**            | Alternar Plain Text ↔ Markdown antes de salvar; extensão .md / .txt automática                     |
+| **v1.4.0**          | Alternar Plain Text ↔ Markdown antes de salvar; extensão .md / .txt automática                     |
+| **v1.4.1**          | Outline **à direita do Preview**; largura/toggle persistidos                                       |
 
 ### Funcionalidades
 
@@ -73,9 +74,10 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
 - **Drag & drop** de `.txt` / `.md` do sistema de arquivos → nova aba
 - **Templates** — Daily Note, Reunião, Ideia, Checklist (editáveis em Settings)
-- **Configurações** — fonte, tema, auto-save, formato padrão da aba, Markdown avançado, Templates
+- **Configurações** — fonte, tema, auto-save, formato da aba, Markdown avançado, Templates
 - **Auto-save** — arquivos no disco **e** rascunhos “Sem título” (`untitled-notes/`)
-- **Preview Markdown** — GFM, split redimensionável, **Outline**, **Math (KaTeX)**, **Mermaid**
+- **Preview Markdown** — GFM, split redimensionável; layout **Editor \| Preview \| Outline (TOC à direita)**
+- **Math (KaTeX)** e **Mermaid** (toggles em Settings)
 - **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
 - **Exportar** HTML e PDF (PDF: margens, tema, outline)
 - **Modo Distração Zero** (F11 / Esc)
@@ -84,15 +86,16 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 
 ### Documentação no repositório
 
-| Documento                                              | Conteúdo                                             |
-| ------------------------------------------------------ | ---------------------------------------------------- |
-| [docs/PROJETO.md](./docs/PROJETO.md)                   | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.4 (formato Markdown)                  |
-| [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)           | Como publicar versão e o que o usuário recebe        |
-| [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)         | Build, signing, notarização, CI                      |
-| [CONTRIBUTING.md](./CONTRIBUTING.md)                   | Como contribuir                                      |
-| [CHANGELOG.md](./CHANGELOG.md)                         | Histórico de versões                                 |
-| [SimplePad_PRD.md](./SimplePad_PRD.md)                 | PRD original                                         |
+| Documento                                                      | Conteúdo                                             |
+| -------------------------------------------------------------- | ---------------------------------------------------- |
+| [docs/PROJETO.md](./docs/PROJETO.md)                           | Histórico completo, arquitetura, melhorias e roadmap |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md)         | Overview atual (**v1.4.1**)                          |
+| [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)                   | Como publicar versão e o que o usuário recebe        |
+| [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)                 | Build, signing, notarização, CI                      |
+| [docs/RELEASE_NOTES_v1.4.1.md](./docs/RELEASE_NOTES_v1.4.1.md) | Notas da release 1.4.1                               |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)                           | Como contribuir                                      |
+| [CHANGELOG.md](./CHANGELOG.md)                                 | Histórico de versões                                 |
+| [SimplePad_PRD.md](./SimplePad_PRD.md)                         | PRD original                                         |
 
 ---
 
