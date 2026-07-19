@@ -37,7 +37,10 @@ describe('exportActions', () => {
 
     expect(exportFile).toHaveBeenCalledTimes(2)
     expect(exportFile.mock.calls[0]?.[0]).toMatchObject({ format: 'html' })
-    expect(exportFile.mock.calls[1]?.[0]).toMatchObject({ format: 'pdf' })
+    expect(exportFile.mock.calls[1]?.[0]).toMatchObject({
+      format: 'pdf',
+      pdfOptions: { margins: 'default', printBackground: true }
+    })
     expect(String(exportFile.mock.calls[0]?.[0].content)).toContain('<!DOCTYPE html>')
   })
 

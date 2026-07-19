@@ -38,6 +38,18 @@ describe('sanitizeSettings', () => {
       sanitizeSettings({ splitOrientation: 'diagonal' as 'horizontal' }).splitOrientation
     ).toBe('horizontal')
   })
+
+  it('preserves markdown advanced toggles', () => {
+    const result = sanitizeSettings({
+      markdownMathEnabled: false,
+      markdownMermaidEnabled: false,
+      showMarkdownOutline: false
+    })
+    expect(result.markdownMathEnabled).toBe(false)
+    expect(result.markdownMermaidEnabled).toBe(false)
+    expect(result.showMarkdownOutline).toBe(false)
+    expect(sanitizeSettings({}).markdownMathEnabled).toBe(DEFAULT_SETTINGS.markdownMathEnabled)
+  })
 })
 
 describe('sanitizeRecentFiles / pushRecentFile', () => {

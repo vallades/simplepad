@@ -2,6 +2,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { extractMarkdownOutline, outlineToHtmlList } from './markdownOutline'
 
 export type ExportTheme = 'light' | 'dark'
 
@@ -56,13 +57,17 @@ const PREVIEW_CSS = `
   hr { border: none; border-top: 1px solid #e4e4e7; margin: 1.5em 0; }
   body.theme-dark hr { border-top-color: #3f3f46; }
   img { max-width: 100%; }
+  .export-outline { font-size: 0.9em; color: #52525b; }
+  body.theme-dark .export-outline { color: #a1a1aa; }
+  .export-outline a { text-decoration: none; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; }
   @media print {
-    body { max-width: none; padding: 0; background: #fff !important; color: #000 !important; }
-    a { color: #000; text-decoration: underline; }
+    body { max-width: none; }
+    a { text-decoration: underline; }
   }
 `.trim()
 
-/** Renders Markdown → HTML fragment (GFM). */
+/** Renders Markdown → HTML fragment (GFM). Math/Mermaid not server-rendered for export simplicity. */
 export function markdownToHtmlFragment(markdown: string): string {
   const source = typeof markdown === 'string' ? markdown : ''
   return renderToStaticMarkup(createElement(ReactMarkdown, { remarkPlugins: [remarkGfm] }, source))
@@ -76,21 +81,36 @@ export function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/**
- * Full standalone HTML document for export / print-to-PDF.
- * Non-markdown tabs are wrapped in <pre>.
- */
-export function buildExportHtmlDocument(options: {
+export interface BuildExportHtmlOptions {
   title: string
   content: string
   isMarkdown: boolean
   theme?: ExportTheme
-}): string {
+  /** Prepend outline of ATX headings (markdown only) */
+  includeOutline?: boolean
+  /** Extra body class / padding for tight margins */
+  compact?: boolean
+}
+
+/**
+ * Full standalone HTML document for export / print-to-PDF.
+ * Non-markdown tabs are wrapped in <pre>.
+ */
+export function buildExportHtmlDocument(options: BuildExportHtmlOptions): string {
   const theme = options.theme ?? 'light'
   const title = escapeHtml(options.title || 'SimplePad')
-  const body = options.isMarkdown
-    ? markdownToHtmlFragment(options.content)
-    : `<pre style="white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;font-size:13px;">${escapeHtml(options.content)}</pre>`
+  let body: string
+  if (options.isMarkdown) {
+    const outlineHtml =
+      options.includeOutline === true
+        ? outlineToHtmlList(extractMarkdownOutline(options.content))
+        : ''
+    body = outlineHtml + markdownToHtmlFragment(options.content)
+  } else {
+    body = `<pre style="white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;font-size:13px;">${escapeHtml(options.content)}</pre>`
+  }
+
+  const padding = options.compact ? '1rem' : '2rem 1.5rem'
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -98,7 +118,7 @@ export function buildExportHtmlDocument(options: {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${title}</title>
-<style>${PREVIEW_CSS}</style>
+<style>${PREVIEW_CSS.replace('padding: 2rem 1.5rem;', `padding: ${padding};`)}</style>
 </head>
 <body class="theme-${theme}">
 ${body}

@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.2.1](https://github.com/vallades/simplepad/releases/tag/v1.2.1) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.3.0](https://github.com/vallades/simplepad/releases/tag/v1.3.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · electron-updater
 
@@ -61,6 +61,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.0.1**          | UX de auto-update (toast + diálogo reiniciar), fixes de CI Windows/mac, docs                       |
 | **v1.1**            | Split redimensionável, Find/Replace/Ir à linha, busca multi-aba, CONTRIBUTING, signing docs        |
 | **v1.2**            | Templates, auto-save untitled, overflow de abas, drag & drop de arquivos, auto-update robusto      |
+| **v1.3**            | Outline, Math (KaTeX), Mermaid, export PDF com opções                                              |
 
 ### Funcionalidades
 
@@ -70,11 +71,11 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
 - **Drag & drop** de `.txt` / `.md` do sistema de arquivos → nova aba
 - **Templates** — Daily Note, Reunião, Ideia, Checklist (editáveis em Settings)
-- **Configurações** — fonte, tema, auto-save, layout do preview, aba Templates
+- **Configurações** — fonte, tema, auto-save, layout do preview, Markdown avançado, Templates
 - **Auto-save** — arquivos no disco **e** rascunhos “Sem título” (`untitled-notes/`)
-- **Preview Markdown** — GFM, split redimensionável (lado a lado ou empilhado)
+- **Preview Markdown** — GFM, split redimensionável, **Outline**, **Math (KaTeX)**, **Mermaid**
 - **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
-- **Exportar** HTML e PDF
+- **Exportar** HTML e PDF (PDF: margens, tema, outline)
 - **Modo Distração Zero** (F11 / Esc)
 - **Auto-update** — verifica no launch (app instalado), baixa e pede reinício
 - **Toasts** e confirmações nativas
@@ -84,7 +85,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | Documento                                              | Conteúdo                                             |
 | ------------------------------------------------------ | ---------------------------------------------------- |
 | [docs/PROJETO.md](./docs/PROJETO.md)                   | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.2 (Produtividade)                     |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.3 (Markdown Avançado)                 |
 | [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)           | Como publicar versão e o que o usuário recebe        |
 | [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)         | Build, signing, notarização, CI                      |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                   | Como contribuir                                      |
