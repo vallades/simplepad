@@ -2,11 +2,15 @@ import {
   DEFAULT_SETTINGS,
   MAX_AUTO_SAVE_SECONDS,
   MAX_FONT_SIZE,
+  MAX_MERMAID_FONT_SIZE,
+  MAX_MERMAID_PADDING,
   MAX_OUTLINE_WIDTH,
   MAX_RECENT_FILES,
   MAX_SPLIT_RATIO,
   MIN_AUTO_SAVE_SECONDS,
   MIN_FONT_SIZE,
+  MIN_MERMAID_FONT_SIZE,
+  MIN_MERMAID_PADDING,
   MIN_OUTLINE_WIDTH,
   MIN_SPLIT_RATIO,
   type AppSettings,
@@ -82,6 +86,30 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.markdownMermaidEnabled
       : DEFAULT_SETTINGS.markdownMermaidEnabled
 
+  const mermaidFontSize = clamp(
+    typeof candidate.mermaidFontSize === 'number'
+      ? Math.round(candidate.mermaidFontSize)
+      : DEFAULT_SETTINGS.mermaidFontSize,
+    MIN_MERMAID_FONT_SIZE,
+    MAX_MERMAID_FONT_SIZE
+  )
+
+  const mermaidCurve =
+    candidate.mermaidCurve === 'basis' ||
+    candidate.mermaidCurve === 'linear' ||
+    candidate.mermaidCurve === 'cardinal' ||
+    candidate.mermaidCurve === 'step'
+      ? candidate.mermaidCurve
+      : DEFAULT_SETTINGS.mermaidCurve
+
+  const mermaidDiagramPadding = clamp(
+    typeof candidate.mermaidDiagramPadding === 'number'
+      ? Math.round(candidate.mermaidDiagramPadding)
+      : DEFAULT_SETTINGS.mermaidDiagramPadding,
+    MIN_MERMAID_PADDING,
+    MAX_MERMAID_PADDING
+  )
+
   const showMarkdownOutline =
     typeof candidate.showMarkdownOutline === 'boolean'
       ? candidate.showMarkdownOutline
@@ -115,6 +143,9 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     splitOrientation,
     markdownMathEnabled,
     markdownMermaidEnabled,
+    mermaidFontSize,
+    mermaidCurve,
+    mermaidDiagramPadding,
     showMarkdownOutline,
     outlineWidth,
     newTabDefaultMarkdown,

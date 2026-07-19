@@ -68,6 +68,18 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings({}).newTabDefaultMarkdown).toBe(false)
     expect(sanitizeSettings({}).autoEnablePreviewOnMarkdown).toBe(true)
   })
+
+  it('sanitizes mermaid style options', () => {
+    const result = sanitizeSettings({
+      mermaidFontSize: 99,
+      mermaidCurve: 'linear',
+      mermaidDiagramPadding: 1
+    })
+    expect(result.mermaidFontSize).toBe(24)
+    expect(result.mermaidCurve).toBe('linear')
+    expect(result.mermaidDiagramPadding).toBe(4)
+    expect(sanitizeSettings({ mermaidCurve: 'nope' as 'basis' }).mermaidCurve).toBe('basis')
+  })
 })
 
 describe('sanitizeRecentFiles / pushRecentFile', () => {
