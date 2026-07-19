@@ -213,14 +213,72 @@ export async function saveActiveTabAs(): Promise<boolean> {
   return true
 }
 
+/** Text-like extensions accepted for drag & drop open. */
+export const DROP_TEXT_EXTENSIONS = new Set([
+  'txt',
+  'md',
+  'markdown',
+  'mdown',
+  'mkd',
+  'text',
+  'log',
+  'csv',
+  'tsv',
+  'json',
+  'jsonc',
+  'yml',
+  'yaml',
+  'xml',
+  'html',
+  'htm',
+  'css',
+  'scss',
+  'js',
+  'jsx',
+  'ts',
+  'tsx',
+  'mjs',
+  'cjs',
+  'py',
+  'rb',
+  'go',
+  'rs',
+  'java',
+  'c',
+  'h',
+  'cpp',
+  'cs',
+  'sh',
+  'bash',
+  'zsh',
+  'ini',
+  'cfg',
+  'conf',
+  'toml',
+  'env',
+  'sql',
+  'mdx',
+  'rst'
+])
+
+export function isDroppableTextPath(filePath: string): boolean {
+  const base = filePath.split(/[/\\]/).pop() ?? filePath
+  const lowerName = base.toLowerCase()
+  if (lowerName === 'makefile' || lowerName === 'dockerfile' || lowerName === 'readme') {
+    return true
+  }
+  const dot = base.lastIndexOf('.')
+  if (dot <= 0 || dot === base.length - 1) return false
+  return DROP_TEXT_EXTENSIONS.has(base.slice(dot + 1).toLowerCase())
+}
+
 /**
- * Open a filesystem path dropped from Finder/Explorer (.txt / .md).
+ * Open a filesystem path dropped from Finder/Explorer (text-like formats).
  */
 export async function openDroppedFilePath(filePath: string): Promise<void> {
   if (!filePath) return
-  const lower = filePath.toLowerCase()
-  if (!lower.endsWith('.txt') && !lower.endsWith('.md') && !lower.endsWith('.markdown')) {
-    showToast('Apenas arquivos .txt e .md são suportados.', 'info')
+  if (!isDroppableTextPath(filePath)) {
+    showToast('Formato não suportado (use texto: .txt, .md, .json, .ts…).', 'info')
     return
   }
   await openRecentFile(filePath)

@@ -96,6 +96,11 @@ function App(): React.JSX.Element {
     (enabled: boolean): void => {
       setFocusMode(enabled)
       void syncFocusModeToMain(enabled)
+      // Persist last focus state when user prefers to remember it
+      const remember = useSettingsStore.getState().rememberFocusMode
+      if (remember) {
+        void useSettingsStore.getState().updateSettings({ focusModeLast: enabled })
+      }
     },
     [setFocusMode]
   )
@@ -215,7 +220,7 @@ function App(): React.JSX.Element {
     ]
   )
 
-  // Hydrate settings + session from main
+  // Hydrate settings + session from main; restore focus mode if remembered
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -229,6 +234,12 @@ function App(): React.JSX.Element {
           // ignore
         }
       }
+      // Prefetch snippets for Tab expansion
+      void import('./services/snippetActions').then((m) => m.listSnippets())
+      const settings = useSettingsStore.getState()
+      if (settings.rememberFocusMode && settings.focusModeLast) {
+        applyFocusMode(true)
+      }
       try {
         const { session } = await loadSessionFromMain()
         if (cancelled) return
@@ -241,7 +252,7 @@ function App(): React.JSX.Element {
     return () => {
       cancelled = true
     }
-  }, [hydrateFromSession, loadSettings])
+  }, [hydrateFromSession, loadSettings, applyFocusMode])
 
   // Theme
   useEffect(() => {
@@ -477,24 +488,34 @@ function App(): React.JSX.Element {
     // Only react to file drops from OS (not internal tab reorder)
     if (![...event.dataTransfer.types].includes('Files')) return
     event.preventDefault()
+    event.stopPropagation()
     event.dataTransfer.dropEffect = 'copy'
     if (!fileDropActive) setFileDropActive(true)
   }
 
+  const onWindowDragEnter = (event: React.DragEvent): void => {
+    if (![...event.dataTransfer.types].includes('Files')) return
+    event.preventDefault()
+    setFileDropActive(true)
+  }
+
   const onWindowDragLeave = (event: React.DragEvent): void => {
-    if (event.currentTarget === event.target) {
-      setFileDropActive(false)
-    }
+    // Only clear when leaving the app root (not when entering a child)
+    const related = event.relatedTarget as Node | null
+    if (related && event.currentTarget.contains(related)) return
+    setFileDropActive(false)
   }
 
   const onWindowDrop = (event: React.DragEvent): void => {
     if (![...event.dataTransfer.types].includes('Files')) return
     event.preventDefault()
+    event.stopPropagation()
     setFileDropActive(false)
 
     const files = Array.from(event.dataTransfer.files)
     if (files.length === 0) return
 
+    let opened = 0
     for (const file of files) {
       let path = ''
       if (isElectronApiAvailable() && typeof window.api.getPathForFile === 'function') {
@@ -505,7 +526,11 @@ function App(): React.JSX.Element {
       }
       if (path) {
         void openDroppedFilePath(path)
+        opened += 1
       }
+    }
+    if (opened === 0) {
+      // no path resolved (e.g. browser-only)
     }
   }
 
@@ -518,14 +543,18 @@ function App(): React.JSX.Element {
       ].join(' ')}
       data-focus-mode={focusMode ? 'true' : 'false'}
       data-preview={splitPreview ? 'true' : 'false'}
+      onDragEnter={onWindowDragEnter}
       onDragOver={onWindowDragOver}
       onDragLeave={onWindowDragLeave}
       onDrop={onWindowDrop}
     >
       {fileDropActive ? (
-        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-50/80 dark:border-blue-500 dark:bg-blue-950/50">
-          <p className="rounded-md bg-white/90 px-4 py-2 text-sm font-medium text-blue-800 shadow dark:bg-zinc-900/90 dark:text-blue-200">
-            Solte .txt ou .md para abrir em nova aba
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-4 border-dashed border-blue-500 bg-blue-500/10 ring-4 ring-inset ring-blue-400/30 dark:border-blue-400 dark:bg-blue-500/15">
+          <p className="rounded-lg border border-blue-200 bg-white/95 px-5 py-3 text-sm font-medium text-blue-900 shadow-lg dark:border-blue-800 dark:bg-zinc-900/95 dark:text-blue-100">
+            Solte arquivos de texto para abrir em novas abas
+            <span className="mt-1 block text-[11px] font-normal text-blue-700/80 dark:text-blue-300/80">
+              .txt · .md · .json · .ts · .csv · …
+            </span>
           </p>
         </div>
       ) : null}
