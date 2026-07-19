@@ -70,6 +70,21 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     ? candidate.splitOrientation
     : DEFAULT_SETTINGS.splitOrientation
 
+  const markdownMathEnabled =
+    typeof candidate.markdownMathEnabled === 'boolean'
+      ? candidate.markdownMathEnabled
+      : DEFAULT_SETTINGS.markdownMathEnabled
+
+  const markdownMermaidEnabled =
+    typeof candidate.markdownMermaidEnabled === 'boolean'
+      ? candidate.markdownMermaidEnabled
+      : DEFAULT_SETTINGS.markdownMermaidEnabled
+
+  const showMarkdownOutline =
+    typeof candidate.showMarkdownOutline === 'boolean'
+      ? candidate.showMarkdownOutline
+      : DEFAULT_SETTINGS.showMarkdownOutline
+
   return {
     fontFamily,
     fontSize,
@@ -77,7 +92,10 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     autoSaveEnabled,
     autoSaveIntervalSeconds,
     splitRatio,
-    splitOrientation
+    splitOrientation,
+    markdownMathEnabled,
+    markdownMermaidEnabled,
+    showMarkdownOutline
   }
 }
 

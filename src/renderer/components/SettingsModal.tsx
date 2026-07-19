@@ -40,6 +40,9 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const autoSaveEnabled = useSettingsStore((s) => s.autoSaveEnabled)
   const autoSaveIntervalSeconds = useSettingsStore((s) => s.autoSaveIntervalSeconds)
   const splitOrientation = useSettingsStore((s) => s.splitOrientation)
+  const markdownMathEnabled = useSettingsStore((s) => s.markdownMathEnabled)
+  const markdownMermaidEnabled = useSettingsStore((s) => s.markdownMermaidEnabled)
+  const showMarkdownOutline = useSettingsStore((s) => s.showMarkdownOutline)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
 
   const knownFont = MONOSPACE_FONT_OPTIONS.includes(fontFamily)
@@ -280,6 +283,46 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                   ))}
                 </div>
               </fieldset>
+
+              <div className="flex flex-col gap-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">
+                <p className="text-xs font-medium text-zinc-500">Markdown avançado</p>
+                <label className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400">Outline (sumário)</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={showMarkdownOutline}
+                    onChange={(event) => {
+                      void updateSettings({ showMarkdownOutline: event.target.checked })
+                    }}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400">Math (KaTeX) $…$</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={markdownMathEnabled}
+                    onChange={(event) => {
+                      void updateSettings({ markdownMathEnabled: event.target.checked })
+                    }}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400">Diagramas Mermaid</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={markdownMermaidEnabled}
+                    onChange={(event) => {
+                      void updateSettings({ markdownMermaidEnabled: event.target.checked })
+                    }}
+                  />
+                </label>
+                <span className="text-[11px] text-zinc-400">
+                  Outline e Preview só com Markdown + Split View ativos.
+                </span>
+              </div>
 
               <div className="flex flex-col gap-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">
                 <label className="flex items-center justify-between gap-3">

@@ -84,6 +84,17 @@ export interface SaveFileResult {
 
 export type ExportFormat = 'html' | 'pdf'
 
+/** PDF margin presets for printToPDF */
+export type PdfMarginPreset = 'none' | 'default' | 'minimal'
+
+export interface PdfExportOptions {
+  /** Margin preset for Electron printToPDF */
+  margins?: PdfMarginPreset
+  /** Prefer printBackground (themes with bg color) */
+  printBackground?: boolean
+  landscape?: boolean
+}
+
 export interface ExportFileRequest {
   format: ExportFormat
   /** Full HTML document (HTML export body or print-ready HTML for PDF) */
@@ -91,6 +102,8 @@ export interface ExportFileRequest {
   defaultPath?: string
   /** Raw binary as base64 — only used when main writes pre-rendered PDF from renderer (unused if main prints) */
   binaryBase64?: string
+  /** PDF-only options forwarded to printToPDF */
+  pdfOptions?: PdfExportOptions
 }
 
 export interface ExportFileResult {

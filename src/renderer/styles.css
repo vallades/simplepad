@@ -53,9 +53,20 @@ body {
   height: 100%;
 }
 
-/* Markdown preview (GFM) — minimal, theme-aware */
+/* Markdown preview (GFM + KaTeX + Mermaid) — minimal, theme-aware */
 .markdown-preview {
   user-select: text;
+}
+
+.markdown-preview .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 0.75em 0;
+}
+
+.markdown-preview .mermaid-block svg {
+  max-width: 100%;
+  height: auto;
 }
 
 .markdown-preview > :first-child {

@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { useTabsStore } from '../store/useTabsStore'
 import { useUiStore } from '../store/useUiStore'
+import { useSettingsStore } from '../store/useSettingsStore'
 import { applyScrollRatio } from '../utils/debounce'
+import MermaidBlock from './MermaidBlock'
 
-const PREVIEW_DEBOUNCE_MS = 120
+const PREVIEW_DEBOUNCE_MS = 150
 
 /**
- * Live Markdown preview (GFM). Debounced content; optional scroll sync from editor.
+ * Live Markdown preview (GFM + optional KaTeX / Mermaid). Debounced content.
  */
 function PreviewPanel(): React.JSX.Element {
   const content = useTabsStore((state) => {
@@ -24,6 +29,9 @@ function PreviewPanel(): React.JSX.Element {
     return tab?.title ?? ''
   })
 
+  const mathEnabled = useSettingsStore((s) => s.markdownMathEnabled)
+  const mermaidEnabled = useSettingsStore((s) => s.markdownMermaidEnabled)
+
   const editorScrollRatio = useUiStore((state) => state.editorScrollRatio)
   const [debouncedContent, setDebouncedContent] = useState(content)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -36,7 +44,6 @@ function PreviewPanel(): React.JSX.Element {
     return () => window.clearTimeout(timer)
   }, [content])
 
-  // Apply editor scroll ratio to preview (best-effort, one-way)
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -46,6 +53,19 @@ function PreviewPanel(): React.JSX.Element {
       syncingRef.current = false
     })
   }, [editorScrollRatio, debouncedContent])
+
+  const remarkPlugins = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plugins: any[] = [remarkGfm]
+    if (mathEnabled) plugins.push(remarkMath)
+    return plugins
+  }, [mathEnabled])
+
+  const rehypePlugins = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!mathEnabled) return [] as any[]
+    return [rehypeKatex]
+  }, [mathEnabled])
 
   const body = useMemo(() => {
     if (!isMarkdown) {
@@ -58,12 +78,42 @@ function PreviewPanel(): React.JSX.Element {
 
     return (
       <div className="markdown-preview">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <ReactMarkdown
+          remarkPlugins={remarkPlugins}
+          rehypePlugins={rehypePlugins}
+          components={
+            mermaidEnabled
+              ? {
+                  code({ className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    const code = String(children).replace(/\n$/, '')
+                    if (match?.[1] === 'mermaid') {
+                      return <MermaidBlock chart={code} />
+                    }
+                    return (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    )
+                  }
+                }
+              : undefined
+          }
+        >
           {debouncedContent.length > 0 ? debouncedContent : '*Nada para pré-visualizar*'}
         </ReactMarkdown>
       </div>
     )
-  }, [debouncedContent, isMarkdown])
+  }, [debouncedContent, isMarkdown, remarkPlugins, rehypePlugins, mermaidEnabled])
+
+  const badges: string[] = []
+  if (isMarkdown) {
+    badges.push('Markdown')
+    if (mathEnabled) badges.push('Math')
+    if (mermaidEnabled) badges.push('Mermaid')
+  } else {
+    badges.push('Texto puro')
+  }
 
   return (
     <aside
@@ -73,7 +123,7 @@ function PreviewPanel(): React.JSX.Element {
       <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 px-3 py-1 text-[11px] text-zinc-400 dark:border-zinc-800">
         <span>Preview</span>
         <span className="truncate pl-2" title={title}>
-          {isMarkdown ? 'Markdown' : 'Texto puro'}
+          {badges.join(' · ')}
         </span>
       </div>
       <div

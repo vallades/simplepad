@@ -2,17 +2,18 @@ import { useTabsStore } from '../store/useTabsStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { useUiStore } from '../store/useUiStore'
 import { countWords, shortenPath } from '../utils/fileUtils'
-import { exportActiveAsHtml, exportActiveAsPdf } from '../services/exportActions'
+import { exportActiveAsHtml } from '../services/exportActions'
 import { dispatchEditorCommand } from '../services/editorCommands'
 
 interface StatusBarProps {
   onOpenSearchTabs?: () => void
+  onExportPdf?: () => void
 }
 
 /**
  * Minimal status bar: cursor, counts, dirty, path, preview, export, encoding.
  */
-function StatusBar({ onOpenSearchTabs }: StatusBarProps): React.JSX.Element {
+function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX.Element {
   const title = useTabsStore((state) => {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.title
@@ -152,8 +153,8 @@ function StatusBar({ onOpenSearchTabs }: StatusBarProps): React.JSX.Element {
         <button
           type="button"
           className="rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800"
-          title="Exportar PDF"
-          onClick={() => void exportActiveAsPdf()}
+          title="Exportar PDF (opções)"
+          onClick={() => onExportPdf?.()}
         >
           PDF
         </button>

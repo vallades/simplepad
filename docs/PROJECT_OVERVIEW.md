@@ -1,60 +1,46 @@
-# SimplePad — Project Overview (v1.2)
+# SimplePad — Project Overview (v1.3)
 
-Documento de visão da linha **v1.2 “Produtividade”**.  
-Histórico completo e arquitetura detalhada: [PROJETO.md](./PROJETO.md).
+Documento de visão da linha **v1.3 “Markdown Avançado”**.  
+Histórico completo: [PROJETO.md](./PROJETO.md).
 
 ## Versão
 
-| Campo            | Valor                                                                    |
-| ---------------- | ------------------------------------------------------------------------ |
-| Atual            | **1.2.0**                                                                |
-| Anterior estável | 1.1.0                                                                    |
-| Foco             | Templates, rascunhos untitled, overflow de abas, drag & drop de arquivos |
+| Campo            | Valor                                                 |
+| ---------------- | ----------------------------------------------------- |
+| Atual            | **1.3.0**                                             |
+| Anterior estável | 1.2.1                                                 |
+| Foco             | Outline, Math (KaTeX), Mermaid, export PDF com opções |
 
-## O que entra na v1.2
+## O que entra na v1.3
 
-1. **Templates de notas** — `userData/templates/`; menu Arquivo; Settings → Templates; defaults (Daily, Reunião, Ideia, Checklist)
-2. **Auto-save untitled** — `userData/untitled-notes/untitled-YYYYMMDD-HHmmss.md`; promove no Salvar como; restaura na sessão
-3. **Overflow de abas** — botão **…** com dropdown de todas as abas
-4. **Drag & drop** — soltar `.txt`/`.md` na janela abre em nova aba
-5. **Auto-update** — feed GitHub + contorno de signature no Mac (builds sem Developer ID)
+1. **Outline** — headings ATX; clique revela linha no Monaco (Markdown + Preview + setting)
+2. **Math** — remark-math + rehype-katex; toggle Settings
+3. **Mermaid** — fenced `mermaid` no Preview (lazy load); toggle Settings
+4. **PDF export** — margens, tema, incluir outline via `printToPDF`
 
-## Como testar (antes do merge)
+## Como testar
 
 ```bash
-git checkout feature/v1.2-productivity
+git checkout feature/v1.3-markdown-advanced
 npm install
 npm test && npm run lint && npm run typecheck
 npm run dev
 ```
 
-Checklist manual:
+Checklist:
 
-- [ ] Arquivo → Nova nota a partir de template → Daily Note
-- [ ] Settings → Templates → editar / novo / excluir
-- [ ] Digitar em “Sem título” com auto-save on → arquivo em `untitled-notes/`
-- [ ] Salvar como → draft removido; título vira nome do arquivo
-- [ ] Abrir 7+ abas → **…** lista todas; clique troca
-- [ ] Arrastar `.md` do Finder para a janela → nova aba
-
-## userData relevante
-
-| Pasta / arquivo            | Uso                       |
-| -------------------------- | ------------------------- |
-| `session.json`             | Abas e conteúdo da sessão |
-| `preferences.json`         | Settings + recentes       |
-| `templates/templates.json` | Templates de notas        |
-| `untitled-notes/*.md`      | Rascunhos auto-salvos     |
+- [ ] Markdown + Preview → Outline à esquerda; clique em heading
+- [ ] `$E=mc^2$` e `$$\int_0^1 x\,dx$$` com Math ligado
+- [ ] Bloco mermaid flowchart com Mermaid ligado
+- [ ] Exportar PDF → opções → arquivo gerado
+- [ ] Desligar toggles em Settings → preview sem math/mermaid/outline
 
 ## Release
 
 ```bash
-# Após merge em main (se a tag v1.2.0 ainda não existir no remoto com estes assets):
-git tag -a v1.2.0 -m "SimplePad v1.2.0 - Produtividade"
-git push origin v1.2.0
+git tag -a v1.3.0 -m "SimplePad v1.3.0 - Markdown Avançado"
+git push origin v1.3.0
 ```
-
-> Se `v1.2.0` já existir no remoto com o pacote anterior, publique **v1.2.1** com o mesmo conteúdo de produtividade.
 
 ## Links
 

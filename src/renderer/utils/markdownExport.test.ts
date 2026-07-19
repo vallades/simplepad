@@ -42,6 +42,19 @@ describe('markdownToHtmlFragment', () => {
 })
 
 describe('buildExportHtmlDocument', () => {
+  it('includes outline when requested', () => {
+    const doc = buildExportHtmlDocument({
+      title: 'Doc',
+      content: '# One\n\n## Two\n',
+      isMarkdown: true,
+      theme: 'light',
+      includeOutline: true
+    })
+    expect(doc).toContain('export-outline')
+    expect(doc).toContain('One')
+    expect(doc).toContain('Two')
+  })
+
   it('wraps markdown in a full document with theme', () => {
     const doc = buildExportHtmlDocument({
       title: 'Nota <test>',

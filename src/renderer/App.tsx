@@ -4,6 +4,7 @@ import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import SettingsModal from './components/SettingsModal'
 import SearchAllTabsModal from './components/SearchAllTabsModal'
+import ExportPdfModal from './components/ExportPdfModal'
 import ToastStack from './components/ToastStack'
 import EditorWorkspace from './components/EditorWorkspace'
 import { dispatchEditorCommand } from './services/editorCommands'
@@ -26,7 +27,11 @@ import {
   saveActiveTabAs
 } from './services/fileActions'
 import { createTabFromTemplateId } from './services/templateActions'
-import { exportActiveAsHtml, exportActiveAsPdf } from './services/exportActions'
+import {
+  currentExportTheme,
+  exportActiveAsHtml,
+  exportActiveAsPdfWithOptions
+} from './services/exportActions'
 import { autoSaveTabOnSwitch, intervalMsFromSeconds, runAutoSavePass } from './services/autoSave'
 import {
   handleUpdateEvent,
@@ -65,6 +70,7 @@ function App(): React.JSX.Element {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchTabsOpen, setSearchTabsOpen] = useState(false)
+  const [pdfExportOpen, setPdfExportOpen] = useState(false)
   const [appVersion, setAppVersion] = useState<string>('')
   const [fileDropActive, setFileDropActive] = useState(false)
   /** Detect macOS once — traffic-light left padding for hiddenInset */
@@ -154,7 +160,7 @@ function App(): React.JSX.Element {
           void exportActiveAsHtml()
           break
         case 'export-pdf':
-          void exportActiveAsPdf()
+          setPdfExportOpen(true)
           break
         case 'toggle-focus-mode':
           requestToggleFocusMode()
@@ -597,9 +603,23 @@ function App(): React.JSX.Element {
         <EditorWorkspace />
       </main>
 
-      {!focusMode ? <StatusBar onOpenSearchTabs={() => setSearchTabsOpen(true)} /> : null}
+      {!focusMode ? (
+        <StatusBar
+          onOpenSearchTabs={() => setSearchTabsOpen(true)}
+          onExportPdf={() => setPdfExportOpen(true)}
+        />
+      ) : null}
       {settingsOpen ? <SettingsModal open onClose={() => setSettingsOpen(false)} /> : null}
       <SearchAllTabsModal open={searchTabsOpen} onClose={() => setSearchTabsOpen(false)} />
+      <ExportPdfModal
+        open={pdfExportOpen}
+        defaultTheme={currentExportTheme()}
+        onCancel={() => setPdfExportOpen(false)}
+        onConfirm={(values) => {
+          setPdfExportOpen(false)
+          void exportActiveAsPdfWithOptions(values)
+        }}
+      />
       <ToastStack />
     </div>
   )

@@ -17,6 +17,12 @@ export interface AppSettings {
   /** Fraction of workspace for the editor pane when split is on (0.2–0.8) */
   splitRatio: number
   splitOrientation: SplitOrientation
+  /** Render $…$ / $$…$$ with KaTeX in Preview */
+  markdownMathEnabled: boolean
+  /** Render ```mermaid blocks in Preview */
+  markdownMermaidEnabled: boolean
+  /** Show Outline (headings) when Markdown + Preview are active */
+  showMarkdownOutline: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -26,7 +32,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoSaveEnabled: true,
   autoSaveIntervalSeconds: 30,
   splitRatio: 0.5,
-  splitOrientation: 'horizontal'
+  splitOrientation: 'horizontal',
+  markdownMathEnabled: true,
+  markdownMermaidEnabled: true,
+  showMarkdownOutline: true
 }
 
 export const MIN_SPLIT_RATIO = 0.2
