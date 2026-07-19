@@ -65,8 +65,13 @@ body {
 }
 
 .markdown-preview .mermaid-block svg {
-  max-width: 100%;
+  max-width: none;
   height: auto;
+}
+
+.mermaid-viewport {
+  touch-action: none;
+  user-select: none;
 }
 
 /* Outline (TOC) — right of Preview; hide on very small windows */
