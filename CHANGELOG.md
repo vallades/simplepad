@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.0.0] — 2026-07-19
+
+**Workspaces + File Explorer** — vaults leves por pasta e sidebar de arquivos.
+
+### Added
+
+- **Workspaces**: Abrir pasta como workspace (`Arquivo → Abrir pasta…`, `⌘⌥O`)
+- Dados por workspace: `session`, `preferences`, `templates`, `untitled-notes` em `userData/workspaces/<id>/`
+- Modo **Pessoal** (sem pasta) mantém dados no `userData` global
+- Menu **Workspaces recentes** (últimos 5)
+- Status Bar com nome do workspace (clicável)
+- **File Explorer** (sidebar esquerda): árvore lazy, busca, clique abre aba
+- Toggle explorador: `⌘B` / `Ctrl+B`, menu Exibir, botão no header
+- Persistência por workspace: `sidebarOpen` (padrão fechado), `sidebarWidth`
+
+### Changed
+
+- Versão **1.8.0 → 2.0.0** (major: novo modelo de dados multi-workspace)
+
 ## [1.8.0] — 2026-07-19
 
 **Produtividade e UX** — snippets, drag & drop aprimorado, modo foco e split/outline.

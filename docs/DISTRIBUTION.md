@@ -1,9 +1,19 @@
 # Distribuição, code signing e auto-update
 
-Guia operacional para publicar o **SimplePad** (v1.4.x e posteriores).
+Guia operacional para publicar o **SimplePad** (v2.x e posteriores).
 
-**Versão de referência:** ver `package.json` (ex.: **1.4.1**).  
+**Versão de referência:** ver `package.json` (ex.: **2.0.0**).  
 Fluxo de auto-update detalhado: [AUTO_UPDATE.md](./AUTO_UPDATE.md).
+
+### Dados do usuário (v2.0)
+
+| Caminho                             | Conteúdo                                                          |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `userData/workspaces-registry.json` | Workspace ativo + recentes (global)                               |
+| `userData/`                         | Modo Pessoal: session, preferences, templates, untitled, snippets |
+| `userData/workspaces/<id>/`         | Dados isolados por pasta-workspace                                |
+
+Ao publicar major (2.x), usuários v1.x mantêm o modo Pessoal intacto; workspaces só após “Abrir pasta”.
 
 ## Builds
 

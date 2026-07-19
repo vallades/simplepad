@@ -3,7 +3,7 @@
 O SimplePad **avisa e baixa** atualizações no app **instalado** (build packaged).  
 Isso **não** acontece a cada push na `main` — só quando existe uma **GitHub Release** com versão **maior** que a instalada e arquivos `latest*.yml`.
 
-**Versão estável de referência do repositório:** ver `package.json` (hoje **1.4.1**).
+**Versão estável de referência do repositório:** ver `package.json` (hoje **2.0.0**).
 
 ---
 
