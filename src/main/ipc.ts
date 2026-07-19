@@ -21,6 +21,8 @@ import { exportDocument } from './exportManager'
 import { checkForUpdates, quitAndInstallUpdate } from './updater'
 import { getTemplateManager } from './templateManager'
 import { getUntitledNotesManager } from './untitledNotesManager'
+import { getSnippetsManager } from './snippetsManager'
+import type { TextSnippet } from '../shared/snippets'
 import type {
   AppSettings,
   ConfirmDialogRequest,
@@ -398,6 +400,32 @@ export function registerIpcHandlers(): void {
       return { ok: false, error: errorMessage(error), data: [] }
     }
   })
+
+  // ——— Text snippets ———
+  ipcMain.handle('snippets:list', (): IpcResult<TextSnippet[]> => {
+    try {
+      return { ok: true, data: getSnippetsManager().list() }
+    } catch (error) {
+      log.error('[ipc] snippets:list', error)
+      return { ok: false, error: errorMessage(error), data: [] }
+    }
+  })
+
+  ipcMain.handle(
+    'snippets:save-all',
+    (_event, snippets: TextSnippet[]): IpcResult<TextSnippet[]> => {
+      try {
+        if (!Array.isArray(snippets)) {
+          return { ok: false, error: 'Lista de snippets inválida', data: [] }
+        }
+        const file = getSnippetsManager().saveAll(snippets)
+        return { ok: true, data: file.snippets }
+      } catch (error) {
+        log.error('[ipc] snippets:save-all', error)
+        return { ok: false, error: errorMessage(error), data: [] }
+      }
+    }
+  )
 
   // ——— Untitled auto-save (userData/untitled-notes/) ———
   ipcMain.handle(
