@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { CursorPosition, Tab, TabCreateInput } from '../types/tab'
 import type { AppSession } from '../../shared/session'
 import { dtoToTab } from '../services/sessionBridge'
+import { useSettingsStore } from './useSettingsStore'
 
 export type { CursorPosition, Tab, TabCreateInput } from '../types/tab'
 
@@ -89,7 +90,21 @@ export const useTabsStore = create<TabsState>()((set, get) => ({
 
   createNewTab: (partial) => {
     const title = partial?.title ?? nextUntitledTitle(get().tabs)
-    const tab = createTabEntity(partial, title)
+    // Untitled tabs: Plain Text by default unless settings prefer Markdown
+    // (files with .md path still force Markdown via createTabEntity)
+    const defaultMd =
+      partial?.isMarkdown !== undefined
+        ? partial.isMarkdown
+        : partial?.filePath
+          ? undefined
+          : useSettingsStore.getState().newTabDefaultMarkdown
+    const tab = createTabEntity(
+      {
+        ...partial,
+        ...(defaultMd !== undefined ? { isMarkdown: defaultMd } : {})
+      },
+      title
+    )
     set((state) => ({
       tabs: [...state.tabs, tab],
       activeTabId: tab.id

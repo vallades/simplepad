@@ -23,6 +23,15 @@ export interface AppSettings {
   markdownMermaidEnabled: boolean
   /** Show Outline (headings) when Markdown + Preview are active */
   showMarkdownOutline: boolean
+  /**
+   * When true, new "Sem título" tabs start as Markdown.
+   * Default false → Plain Text until the user switches format.
+   */
+  newTabDefaultMarkdown: boolean
+  /**
+   * When enabling Markdown on a tab, automatically turn Split View / Preview on.
+   */
+  autoEnablePreviewOnMarkdown: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -35,7 +44,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   splitOrientation: 'horizontal',
   markdownMathEnabled: true,
   markdownMermaidEnabled: true,
-  showMarkdownOutline: true
+  showMarkdownOutline: true,
+  newTabDefaultMarkdown: false,
+  autoEnablePreviewOnMarkdown: true
 }
 
 export const MIN_SPLIT_RATIO = 0.2

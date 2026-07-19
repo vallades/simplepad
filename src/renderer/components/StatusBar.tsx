@@ -4,6 +4,7 @@ import { useUiStore } from '../store/useUiStore'
 import { countWords, shortenPath } from '../utils/fileUtils'
 import { exportActiveAsHtml } from '../services/exportActions'
 import { dispatchEditorCommand } from '../services/editorCommands'
+import { toggleMarkdownModeForTab } from '../services/markdownMode'
 
 interface StatusBarProps {
   onOpenSearchTabs?: () => void
@@ -35,7 +36,6 @@ function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX
     return tab?.isDirty ?? false
   })
   const activeTabId = useTabsStore((state) => state.activeTabId)
-  const toggleMarkdownMode = useTabsStore((state) => state.toggleMarkdownMode)
   const line = useTabsStore((state) => {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.cursorPosition.lineNumber ?? 1
@@ -121,12 +121,19 @@ function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX
         <button
           type="button"
           className={[
-            'rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800',
-            isMarkdown ? 'text-blue-600 dark:text-blue-400' : ''
+            'inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-medium hover:bg-zinc-200 dark:hover:bg-zinc-800',
+            isMarkdown
+              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+              : 'text-zinc-600 dark:text-zinc-400'
           ].join(' ')}
-          title="Alternar modo Markdown (⌘⇧M)"
+          title={
+            isMarkdown
+              ? 'Formato Markdown — Preview renderiza #, listas, etc. Ao salvar, sugere .md. Clique para Plain Text. (⌘⇧M)'
+              : 'Formato Plain Text — texto simples. Clique para Markdown (ativa Preview e sugere .md ao salvar). (⌘⇧M)'
+          }
+          aria-pressed={isMarkdown}
           onClick={() => {
-            if (activeTabId) toggleMarkdownMode(activeTabId)
+            if (activeTabId) toggleMarkdownModeForTab(activeTabId)
           }}
         >
           {isMarkdown ? 'Markdown' : 'Plain Text'}

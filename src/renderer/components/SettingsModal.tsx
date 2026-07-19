@@ -43,6 +43,8 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const markdownMathEnabled = useSettingsStore((s) => s.markdownMathEnabled)
   const markdownMermaidEnabled = useSettingsStore((s) => s.markdownMermaidEnabled)
   const showMarkdownOutline = useSettingsStore((s) => s.showMarkdownOutline)
+  const newTabDefaultMarkdown = useSettingsStore((s) => s.newTabDefaultMarkdown)
+  const autoEnablePreviewOnMarkdown = useSettingsStore((s) => s.autoEnablePreviewOnMarkdown)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
 
   const knownFont = MONOSPACE_FONT_OPTIONS.includes(fontFamily)
@@ -283,6 +285,40 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                   ))}
                 </div>
               </fieldset>
+
+              <div className="flex flex-col gap-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">
+                <p className="text-xs font-medium text-zinc-500">Formato da aba</p>
+                <label className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Nova aba padrão: Markdown
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={newTabDefaultMarkdown}
+                    onChange={(event) => {
+                      void updateSettings({ newTabDefaultMarkdown: event.target.checked })
+                    }}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Ativar Preview ao mudar para Markdown
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={autoEnablePreviewOnMarkdown}
+                    onChange={(event) => {
+                      void updateSettings({ autoEnablePreviewOnMarkdown: event.target.checked })
+                    }}
+                  />
+                </label>
+                <span className="text-[11px] text-zinc-400">
+                  Por padrão, “Sem título” começa em Plain Text. Mude o formato na Status Bar ou
+                  clique direito na aba. Ao salvar: Markdown → .md, Plain Text → .txt.
+                </span>
+              </div>
 
               <div className="flex flex-col gap-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">
                 <p className="text-xs font-medium text-zinc-500">Markdown avançado</p>

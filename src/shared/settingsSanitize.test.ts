@@ -50,6 +50,17 @@ describe('sanitizeSettings', () => {
     expect(result.showMarkdownOutline).toBe(false)
     expect(sanitizeSettings({}).markdownMathEnabled).toBe(DEFAULT_SETTINGS.markdownMathEnabled)
   })
+
+  it('preserves new-tab format defaults', () => {
+    const result = sanitizeSettings({
+      newTabDefaultMarkdown: true,
+      autoEnablePreviewOnMarkdown: false
+    })
+    expect(result.newTabDefaultMarkdown).toBe(true)
+    expect(result.autoEnablePreviewOnMarkdown).toBe(false)
+    expect(sanitizeSettings({}).newTabDefaultMarkdown).toBe(false)
+    expect(sanitizeSettings({}).autoEnablePreviewOnMarkdown).toBe(true)
+  })
 })
 
 describe('sanitizeRecentFiles / pushRecentFile', () => {
