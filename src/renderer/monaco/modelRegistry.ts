@@ -1,6 +1,7 @@
 import type * as Monaco from 'monaco-editor'
 import type { Tab } from '../types/tab'
 import { resolveLanguage, type EditorLanguage } from '../utils/monacoUtils'
+import { getEditorDocumentText } from '../utils/frontmatter'
 
 /** In-memory models keyed by tab id — preserves Undo/Redo across tab switches. */
 const models = new Map<string, Monaco.editor.ITextModel>()
@@ -42,7 +43,9 @@ export function getOrCreateTabModel(monacoApi: typeof Monaco, tab: Tab): Monaco.
     orphan.dispose()
   }
 
-  const model = monacoApi.editor.createModel(tab.content, language, uri)
+  // Markdown: editor shows body only (YAML frontmatter hidden but kept in tab.content)
+  const initial = getEditorDocumentText(tab.content, tab.isMarkdown)
+  const model = monacoApi.editor.createModel(initial, language, uri)
   models.set(tab.id, model)
   return model
 }
@@ -50,14 +53,16 @@ export function getOrCreateTabModel(monacoApi: typeof Monaco, tab: Tab): Monaco.
 /**
  * Syncs model text from the store only when it diverges (e.g. external load).
  * Prefer avoiding this while the user is typing — it resets the undo stack.
+ * Markdown models use body-only text (frontmatter stripped for editing).
  */
 export function syncModelContentFromTab(
   monacoApi: typeof Monaco,
   model: Monaco.editor.ITextModel,
   tab: Tab
 ): void {
-  if (model.getValue() !== tab.content) {
-    model.setValue(tab.content)
+  const editorText = getEditorDocumentText(tab.content, tab.isMarkdown)
+  if (model.getValue() !== editorText) {
+    model.setValue(editorText)
   }
   const language = getLanguageForTab(tab)
   if (model.getLanguageId() !== language) {

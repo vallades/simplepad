@@ -3,6 +3,7 @@ import { ListTree, PanelRightClose } from 'lucide-react'
 import { useTabsStore } from '../store/useTabsStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { extractMarkdownOutline, type OutlineHeading } from '../utils/markdownOutline'
+import { parseFrontmatter } from '../utils/frontmatter'
 import { revealInEditor } from '../services/editorCommands'
 import { DEFAULT_OUTLINE_WIDTH, MAX_OUTLINE_WIDTH, MIN_OUTLINE_WIDTH } from '../../shared/settings'
 
@@ -26,11 +27,14 @@ function OutlinePanel({ onCollapse }: OutlinePanelProps): React.JSX.Element {
   const updateSettings = useSettingsStore((s) => s.updateSettings)
   const draggingRef = useRef(false)
 
-  const [headings, setHeadings] = useState<OutlineHeading[]>(() => extractMarkdownOutline(content))
+  const [headings, setHeadings] = useState<OutlineHeading[]>(() =>
+    extractMarkdownOutline(parseFrontmatter(content).body)
+  )
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setHeadings(extractMarkdownOutline(content))
+      // Body-only so line numbers match Monaco (frontmatter is hidden in the editor)
+      setHeadings(extractMarkdownOutline(parseFrontmatter(content).body))
     }, OUTLINE_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [content])

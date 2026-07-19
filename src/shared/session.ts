@@ -51,6 +51,7 @@ export type MenuCommand =
   | 'find-in-tabs'
   | 'toggle-split-orientation'
   | 'toggle-outline'
+  | 'toggle-properties'
 
 /** Events pushed from main (auto-updater) to the renderer. */
 export type UpdateEventType =

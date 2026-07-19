@@ -46,6 +46,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const mermaidCurve = useSettingsStore((s) => s.mermaidCurve)
   const mermaidDiagramPadding = useSettingsStore((s) => s.mermaidDiagramPadding)
   const showMarkdownOutline = useSettingsStore((s) => s.showMarkdownOutline)
+  const showMarkdownProperties = useSettingsStore((s) => s.showMarkdownProperties)
   const newTabDefaultMarkdown = useSettingsStore((s) => s.newTabDefaultMarkdown)
   const autoEnablePreviewOnMarkdown = useSettingsStore((s) => s.autoEnablePreviewOnMarkdown)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
@@ -333,6 +334,19 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                     checked={showMarkdownOutline}
                     onChange={(event) => {
                       void updateSettings({ showMarkdownOutline: event.target.checked })
+                    }}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Properties (YAML frontmatter)
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={showMarkdownProperties}
+                    onChange={(event) => {
+                      void updateSettings({ showMarkdownProperties: event.target.checked })
                     }}
                   />
                 </label>

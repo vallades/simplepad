@@ -40,6 +40,8 @@ export interface AppSettings {
    * When enabling Markdown on a tab, automatically turn Split View / Preview on.
    */
   autoEnablePreviewOnMarkdown: boolean
+  /** Show YAML frontmatter as Properties cards in the Markdown Preview */
+  showMarkdownProperties: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -58,7 +60,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showMarkdownOutline: true,
   outlineWidth: 220,
   newTabDefaultMarkdown: false,
-  autoEnablePreviewOnMarkdown: true
+  autoEnablePreviewOnMarkdown: true,
+  showMarkdownProperties: true
 }
 
 export const MIN_MERMAID_FONT_SIZE = 10

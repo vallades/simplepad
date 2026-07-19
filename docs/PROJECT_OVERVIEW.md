@@ -1,57 +1,41 @@
-# SimplePad — Project Overview (v1.5)
+# SimplePad — Project Overview (v1.7)
 
-Visão da linha **v1.5 “Mermaid Avançado”**.  
-Histórico completo: [PROJETO.md](./PROJETO.md).
+Visão da linha **v1.7 “YAML Frontmatter / Properties”**.  
+Histórico: [PROJETO.md](./PROJETO.md).
 
 ## Versão
 
-| Campo     | Valor                                          |
-| --------- | ---------------------------------------------- |
-| **Atual** | **1.5.0**                                      |
-| Anterior  | 1.4.1                                          |
-| Foco      | Tema, export PNG/SVG, zoom/pan e erros Mermaid |
+| Campo     | Valor                                    |
+| --------- | ---------------------------------------- |
+| **Atual** | **1.7.0**                                |
+| Anterior  | 1.5.0 (Mermaid avançado)                 |
+| Foco      | Frontmatter YAML + Properties no Preview |
 
-## O que entra na v1.5
+## O que entra na v1.7
 
-1. **Tema sincronizado** — diagramas seguem claro/escuro do app
-2. **Export PNG / SVG** — botões no hover de cada diagrama
-3. **Zoom + pan** — scroll/botões e arrastar; reset
-4. **Erros amigáveis** — mensagem + “Editar código” (reveal no Monaco)
-5. **Settings Mermaid** — fonte, curva, espaçamento
-
-## Layout Preview (inalterado)
-
-```
-Editor | Preview Markdown | Outline (TOC)
-              └── blocos mermaid com toolbar no hover
-```
+1. Bloco YAML no topo das notas Markdown (`---`)
+2. **Properties** no Preview (toggle, persistido)
+3. Editor **sem** o YAML editável — body only; save preserva o frontmatter
+4. Tags como badges; outros campos key/value
 
 ## Como testar
 
 ```bash
-git checkout feature/v1.5-mermaid-advanced
+git checkout feature/v1.7-properties
 npm install
 npm test && npm run lint && npm run typecheck
 npm run dev
 ```
 
-Checklist:
-
-- [ ] Markdown + Preview; bloco ` ```mermaid `
-- [ ] Alternar tema claro/escuro → diagrama atualiza
-- [ ] Hover → zoom / pan / export PNG e SVG
-- [ ] Código inválido → erro + Editar código
-- [ ] Settings → desligar Mermaid / mudar fonte e curva
+1. Markdown + Preview
+2. Cole frontmatter + body
+3. Confirme Properties no topo do Preview
+4. Editor não mostra `---`
+5. Salvar / reabrir → YAML intacto
 
 ## Release
 
 ```bash
-git tag -a v1.5.0 -m "SimplePad v1.5.0 - Mermaid Avançado"
-git push origin v1.5.0
+git tag -a v1.7.0 -m "SimplePad v1.7.0 - YAML Frontmatter e Properties"
+git push origin v1.7.0
 ```
-
-## Links
-
-- [CHANGELOG.md](../CHANGELOG.md)
-- [AUTO_UPDATE.md](./AUTO_UPDATE.md)
-- [DISTRIBUTION.md](./DISTRIBUTION.md)

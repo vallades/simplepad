@@ -192,6 +192,11 @@ function App(): React.JSX.Element {
             showMarkdownOutline: !useSettingsStore.getState().showMarkdownOutline
           })
           break
+        case 'toggle-properties':
+          void updateSettings({
+            showMarkdownProperties: !useSettingsStore.getState().showMarkdownProperties
+          })
+          break
         case 'quit':
           break
         default:

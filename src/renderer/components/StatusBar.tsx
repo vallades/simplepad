@@ -48,6 +48,7 @@ function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX
   const autoSaveEnabled = useSettingsStore((state) => state.autoSaveEnabled)
   const autoSaveIntervalSeconds = useSettingsStore((state) => state.autoSaveIntervalSeconds)
   const showMarkdownOutline = useSettingsStore((state) => state.showMarkdownOutline)
+  const showMarkdownProperties = useSettingsStore((state) => state.showMarkdownProperties)
   const updateSettings = useSettingsStore((state) => state.updateSettings)
   const splitPreview = useUiStore((state) => state.splitPreview)
   const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
@@ -152,24 +153,44 @@ function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX
           Preview
         </button>
         {isMarkdown && splitPreview ? (
-          <button
-            type="button"
-            className={[
-              'rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800',
-              showMarkdownOutline ? 'text-blue-600 dark:text-blue-400' : ''
-            ].join(' ')}
-            title={
-              showMarkdownOutline
-                ? 'Ocultar Outline (direita do Preview) — ⌘⇧O'
-                : 'Mostrar Outline à direita do Preview — ⌘⇧O'
-            }
-            aria-pressed={showMarkdownOutline}
-            onClick={() => {
-              void updateSettings({ showMarkdownOutline: !showMarkdownOutline })
-            }}
-          >
-            Outline
-          </button>
+          <>
+            <button
+              type="button"
+              className={[
+                'rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800',
+                showMarkdownProperties ? 'text-blue-600 dark:text-blue-400' : ''
+              ].join(' ')}
+              title={
+                showMarkdownProperties
+                  ? 'Ocultar Properties (YAML) — ⌘⇧Y'
+                  : 'Mostrar Properties no Preview — ⌘⇧Y'
+              }
+              aria-pressed={showMarkdownProperties}
+              onClick={() => {
+                void updateSettings({ showMarkdownProperties: !showMarkdownProperties })
+              }}
+            >
+              Props
+            </button>
+            <button
+              type="button"
+              className={[
+                'rounded px-1.5 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800',
+                showMarkdownOutline ? 'text-blue-600 dark:text-blue-400' : ''
+              ].join(' ')}
+              title={
+                showMarkdownOutline
+                  ? 'Ocultar Outline (direita do Preview) — ⌘⇧O'
+                  : 'Mostrar Outline à direita do Preview — ⌘⇧O'
+              }
+              aria-pressed={showMarkdownOutline}
+              onClick={() => {
+                void updateSettings({ showMarkdownOutline: !showMarkdownOutline })
+              }}
+            >
+              Outline
+            </button>
+          </>
         ) : null}
         <button
           type="button"
