@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   countWords,
+  defaultSaveExtension,
   getFileExtension,
   isMarkdownFile,
   sanitizeFilename,
   shortenPath,
+  suggestedSaveFileName,
   titleFromPath
 } from './fileUtils'
 
@@ -19,6 +21,15 @@ describe('fileUtils', () => {
     expect(isMarkdownFile('readme.md')).toBe(true)
     expect(isMarkdownFile('notes.markdown')).toBe(true)
     expect(isMarkdownFile('data.txt')).toBe(false)
+  })
+
+  it('suggests save extension and filename from format mode', () => {
+    expect(defaultSaveExtension(true)).toBe('md')
+    expect(defaultSaveExtension(false)).toBe('txt')
+    expect(suggestedSaveFileName('Sem título 1', true)).toBe('Sem título 1.md')
+    expect(suggestedSaveFileName('Sem título 1', false)).toBe('Sem título 1.txt')
+    expect(suggestedSaveFileName('nota.txt', true)).toBe('nota.md')
+    expect(suggestedSaveFileName('readme.md', false)).toBe('readme.txt')
   })
 
   it('sanitizes unsafe filenames', () => {

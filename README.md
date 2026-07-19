@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.3.0](https://github.com/vallades/simplepad/releases/tag/v1.3.0) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.4.0](https://github.com/vallades/simplepad/releases/tag/v1.4.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · electron-updater
 
@@ -62,16 +62,18 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.1**            | Split redimensionável, Find/Replace/Ir à linha, busca multi-aba, CONTRIBUTING, signing docs        |
 | **v1.2**            | Templates, auto-save untitled, overflow de abas, drag & drop de arquivos, auto-update robusto      |
 | **v1.3**            | Outline, Math (KaTeX), Mermaid, export PDF com opções                                              |
+| **v1.4**            | Alternar Plain Text ↔ Markdown antes de salvar; extensão .md / .txt automática                     |
 
 ### Funcionalidades
 
 - **Abas** com drag & drop (reordenar), indicador dirty (`*`), undo/redo isolado por aba (Monaco)
+- **Formato da aba** — **Plain Text** ou **Markdown** (Status Bar / menu da aba / ⌘⇧M); salva em `.txt` ou `.md`
 - **Overflow de abas** — botão **…** com lista completa quando há muitas abas
-- **Persistência de sessão** — restaura abas, conteúdo, cursor e scroll (`session.json`)
+- **Persistência de sessão** — restaura abas, conteúdo, cursor, scroll e `isMarkdown` (`session.json`)
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
 - **Drag & drop** de `.txt` / `.md` do sistema de arquivos → nova aba
 - **Templates** — Daily Note, Reunião, Ideia, Checklist (editáveis em Settings)
-- **Configurações** — fonte, tema, auto-save, layout do preview, Markdown avançado, Templates
+- **Configurações** — fonte, tema, auto-save, formato padrão da aba, Markdown avançado, Templates
 - **Auto-save** — arquivos no disco **e** rascunhos “Sem título” (`untitled-notes/`)
 - **Preview Markdown** — GFM, split redimensionável, **Outline**, **Math (KaTeX)**, **Mermaid**
 - **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
@@ -85,7 +87,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | Documento                                              | Conteúdo                                             |
 | ------------------------------------------------------ | ---------------------------------------------------- |
 | [docs/PROJETO.md](./docs/PROJETO.md)                   | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.3 (Markdown Avançado)                 |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.4 (formato Markdown)                  |
 | [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)           | Como publicar versão e o que o usuário recebe        |
 | [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)         | Build, signing, notarização, CI                      |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                   | Como contribuir                                      |

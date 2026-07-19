@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.4.0] — 2026-07-19
+
+**Formato Markdown antes de salvar** — mude Plain Text ↔ Markdown na aba e salve com a extensão certa.
+
+### Added
+
+- Toggle **Plain Text / Markdown** na Status Bar (com tooltip) e no **menu de contexto da aba**
+- Ao ativar Markdown: Monaco → linguagem `markdown`, Preview opcionalmente liga sozinho
+- **Salvar como** sugere **`.md`** em modo Markdown e **`.txt`** em Plain Text
+- Settings: **Nova aba padrão: Markdown** e **Ativar Preview ao mudar para Markdown**
+- Indicador **MD** na aba quando em Markdown
+
+### Changed
+
+- Novas abas “Sem título” começam em **Plain Text** por padrão
+- Arquivos `.md` / `.markdown` continuam abrindo em Markdown automaticamente
+- Versão **1.3.0 → 1.4.0**
+
 ## [1.3.0] — 2026-07-18
 
 **Markdown Avançado** — Outline, Math (KaTeX), Mermaid e export PDF com opções.

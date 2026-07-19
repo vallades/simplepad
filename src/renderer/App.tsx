@@ -32,6 +32,7 @@ import {
   exportActiveAsHtml,
   exportActiveAsPdfWithOptions
 } from './services/exportActions'
+import { toggleActiveTabMarkdownMode } from './services/markdownMode'
 import { autoSaveTabOnSwitch, intervalMsFromSeconds, runAutoSavePass } from './services/autoSave'
 import {
   handleUpdateEvent,
@@ -50,7 +51,7 @@ function App(): React.JSX.Element {
   const getActiveTab = useTabsStore((state) => state.getActiveTab)
   const hydrateFromSession = useTabsStore((state) => state.hydrateFromSession)
   const hasUnsavedChanges = useTabsStore((state) => state.hasUnsavedChanges)
-  const toggleMarkdownMode = useTabsStore((state) => state.toggleMarkdownMode)
+
   const sessionHydrated = useTabsStore((state) => state.sessionHydrated)
   const tabs = useTabsStore((state) => state.tabs)
   const activeTabId = useTabsStore((state) => state.activeTabId)
@@ -121,10 +122,8 @@ function App(): React.JSX.Element {
   }, [closeTab, getActiveTab])
 
   const toggleActiveMarkdown = useCallback((): void => {
-    const active = getActiveTab()
-    if (!active) return
-    toggleMarkdownMode(active.id)
-  }, [getActiveTab, toggleMarkdownMode])
+    toggleActiveTabMarkdownMode()
+  }, [])
 
   const handleMenuCommand = useCallback(
     (command: MenuCommand): void => {

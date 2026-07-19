@@ -85,6 +85,16 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.showMarkdownOutline
       : DEFAULT_SETTINGS.showMarkdownOutline
 
+  const newTabDefaultMarkdown =
+    typeof candidate.newTabDefaultMarkdown === 'boolean'
+      ? candidate.newTabDefaultMarkdown
+      : DEFAULT_SETTINGS.newTabDefaultMarkdown
+
+  const autoEnablePreviewOnMarkdown =
+    typeof candidate.autoEnablePreviewOnMarkdown === 'boolean'
+      ? candidate.autoEnablePreviewOnMarkdown
+      : DEFAULT_SETTINGS.autoEnablePreviewOnMarkdown
+
   return {
     fontFamily,
     fontSize,
@@ -95,7 +105,9 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     splitOrientation,
     markdownMathEnabled,
     markdownMermaidEnabled,
-    showMarkdownOutline
+    showMarkdownOutline,
+    newTabDefaultMarkdown,
+    autoEnablePreviewOnMarkdown
   }
 }
 

@@ -15,6 +15,22 @@ export function isMarkdownFile(fileName: string): boolean {
   return ext === 'md' || ext === 'markdown'
 }
 
+/** Suggested extension for first save, based on tab format mode. */
+export function defaultSaveExtension(isMarkdown: boolean): 'md' | 'txt' {
+  return isMarkdown ? 'md' : 'txt'
+}
+
+/**
+ * Build a suggested "Save As" filename from a tab title.
+ * Strips existing extension, then appends .md or .txt.
+ */
+export function suggestedSaveFileName(title: string, isMarkdown: boolean): string {
+  const raw = (title || 'Sem título').trim() || 'Sem título'
+  const withoutExt = raw.replace(/\.(md|markdown|txt|html|pdf)$/i, '').trim() || 'Sem título'
+  const safe = sanitizeFilename(withoutExt) || 'Sem título'
+  return `${safe}.${defaultSaveExtension(isMarkdown)}`
+}
+
 export function sanitizeFilename(name: string): string {
   // Strip path separators, reserved characters and ASCII control codes
   const unsafe = new RegExp(

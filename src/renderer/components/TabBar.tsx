@@ -2,13 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { MoreHorizontal, Plus, X } from 'lucide-react'
 import { useTabsStore, type Tab } from '../store/useTabsStore'
 import { confirmCloseTab } from '../services/fileActions'
+import { applyMarkdownMode } from '../services/markdownMode'
 
 /** Show overflow "…" when more than this many tabs. */
 export const TAB_OVERFLOW_THRESHOLD = 6
 
+interface TabContextMenuState {
+  tabId: string
+  x: number
+  y: number
+}
+
 /**
  * Horizontal tab strip with dirty indicators, close confirm, HTML5 drag reorder,
- * and overflow menu when many tabs are open.
+ * overflow menu, and right-click context menu (Markdown format).
  */
 function TabBar(): React.JSX.Element {
   const tabs = useTabsStore((state) => state.tabs)
@@ -22,19 +29,27 @@ function TabBar(): React.JSX.Element {
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [overflowOpen, setOverflowOpen] = useState(false)
   const overflowRef = useRef<HTMLDivElement | null>(null)
+  const [contextMenu, setContextMenu] = useState<TabContextMenuState | null>(null)
+  const contextRef = useRef<HTMLDivElement | null>(null)
 
   const showOverflow = tabs.length > TAB_OVERFLOW_THRESHOLD
   const visibleTabs = showOverflow ? tabs.slice(0, TAB_OVERFLOW_THRESHOLD) : tabs
 
   useEffect(() => {
-    if (!overflowOpen) return
+    if (!overflowOpen && !contextMenu) return
     const onDoc = (event: MouseEvent): void => {
-      if (!overflowRef.current?.contains(event.target as Node)) {
+      if (overflowOpen && !overflowRef.current?.contains(event.target as Node)) {
         setOverflowOpen(false)
+      }
+      if (contextMenu && !contextRef.current?.contains(event.target as Node)) {
+        setContextMenu(null)
       }
     }
     const onKey = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') setOverflowOpen(false)
+      if (event.key === 'Escape') {
+        setOverflowOpen(false)
+        setContextMenu(null)
+      }
     }
     document.addEventListener('mousedown', onDoc)
     document.addEventListener('keydown', onKey)
@@ -42,7 +57,7 @@ function TabBar(): React.JSX.Element {
       document.removeEventListener('mousedown', onDoc)
       document.removeEventListener('keydown', onKey)
     }
-  }, [overflowOpen])
+  }, [overflowOpen, contextMenu])
 
   const requestClose = useCallback(
     (tab: Tab) => {
@@ -113,6 +128,11 @@ function TabBar(): React.JSX.Element {
         onDragOver={(event) => onDragOver(event, tab.id)}
         onDrop={(event) => onDrop(event, tab.id)}
         onClick={() => switchTab(tab.id)}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          switchTab(tab.id)
+          setContextMenu({ tabId: tab.id, x: event.clientX, y: event.clientY })
+        }}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
@@ -131,9 +151,17 @@ function TabBar(): React.JSX.Element {
           isDragTarget ? 'bg-blue-50 dark:bg-blue-950/40' : ''
         ].join(' ')}
       >
-        <span className="flex-1 truncate" title={tab.filePath ?? tab.title}>
+        <span
+          className="flex-1 truncate"
+          title={`${tab.filePath ?? tab.title} · ${tab.isMarkdown ? 'Markdown' : 'Plain Text'}`}
+        >
           {tab.title}
           {tab.isDirty ? <span className="text-blue-600 dark:text-blue-400"> *</span> : null}
+          {tab.isMarkdown ? (
+            <span className="ml-0.5 text-[9px] font-medium text-blue-500/80" title="Markdown">
+              MD
+            </span>
+          ) : null}
         </span>
         <button
           type="button"
@@ -230,6 +258,46 @@ function TabBar(): React.JSX.Element {
       >
         <Plus size={14} />
       </button>
+
+      {contextMenu
+        ? (() => {
+            const tab = tabs.find((t) => t.id === contextMenu.tabId)
+            if (!tab) return null
+            return (
+              <div
+                ref={contextRef}
+                role="menu"
+                className="fixed z-[60] min-w-[200px] rounded-md border border-zinc-200 bg-white py-1 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+                style={{ left: contextMenu.x, top: contextMenu.y }}
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full px-3 py-1.5 text-left text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  onClick={() => {
+                    applyMarkdownMode(tab.id, !tab.isMarkdown)
+                    setContextMenu(null)
+                  }}
+                >
+                  {tab.isMarkdown
+                    ? 'Alterar formato para Plain Text'
+                    : 'Alterar formato para Markdown'}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full px-3 py-1.5 text-left text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  onClick={() => {
+                    setContextMenu(null)
+                    requestClose(tab)
+                  }}
+                >
+                  Fechar aba
+                </button>
+              </div>
+            )
+          })()
+        : null}
     </div>
   )
 }

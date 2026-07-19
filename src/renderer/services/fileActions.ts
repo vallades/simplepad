@@ -1,5 +1,5 @@
 import { useTabsStore } from '../store/useTabsStore'
-import { isMarkdownFile } from '../utils/fileUtils'
+import { isMarkdownFile, suggestedSaveFileName } from '../utils/fileUtils'
 import { isUntitledNotesPath } from '../../shared/untitledNotes'
 import { isElectronApiAvailable } from './sessionBridge'
 import { showToast } from '../store/useToastStore'
@@ -184,10 +184,11 @@ export async function saveActiveTabAs(): Promise<boolean> {
   }
 
   const previousPath = tab.filePath
+  // First save: .md if Markdown mode, .txt if Plain Text
   const defaultPath =
     previousPath && !isUntitledNotesPath(previousPath)
       ? previousPath
-      : `${tab.title || 'Sem título'}.md`
+      : suggestedSaveFileName(tab.title || 'Sem título', tab.isMarkdown)
 
   const result = await window.api.saveFileAs({
     content: tab.content,
