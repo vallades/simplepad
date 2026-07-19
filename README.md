@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.7.0](https://github.com/vallades/simplepad/releases/tag/v1.7.0) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.8.0](https://github.com/vallades/simplepad/releases/tag/v1.8.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · KaTeX · Mermaid · electron-updater
 
@@ -66,23 +66,25 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.4.1**          | Outline **à direita do Preview**; largura/toggle persistidos                                       |
 | **v1.5**            | Mermaid avançado: tema, export PNG/SVG, zoom/pan, erros amigáveis                                  |
 | **v1.7**            | YAML Frontmatter + Properties no Preview (editor body-only)                                        |
+| **v1.8**            | Snippets, DnD multi-arquivo, modo foco persistente, split/outline polidos                          |
 
 ### Funcionalidades
 
 - **Abas** com drag & drop (reordenar), indicador dirty (`*`), undo/redo isolado por aba (Monaco)
 - **Formato da aba** — **Plain Text** ou **Markdown** (Status Bar / menu da aba / ⌘⇧M); salva em `.txt` ou `.md`
 - **YAML Frontmatter** — bloco `---` no arquivo; **Properties** no Preview; editor edita só o corpo
+- **Snippets** — `;hoje`, `;check`, etc.; **Tab** ou **Ctrl/Cmd+Espaço**; editáveis em Settings
 - **Overflow de abas** — botão **…** com lista completa quando há muitas abas
 - **Persistência de sessão** — restaura abas, conteúdo (com frontmatter), cursor, scroll e `isMarkdown`
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
-- **Drag & drop** de `.txt` / `.md` do sistema de arquivos → nova aba
+- **Drag & drop** de arquivos de texto (`.txt`, `.md`, `.json`, código…) → novas abas + overlay
 - **Templates** — Daily Note, Reunião, Ideia, Checklist (editáveis em Settings)
-- **Configurações** — fonte, tema, auto-save, formato da aba, Markdown avançado, Mermaid, Properties, Templates
+- **Configurações** — fonte, tema, auto-save, formato da aba, Markdown, Mermaid, Properties, Templates, Snippets
 - **Auto-save** — arquivos no disco **e** rascunhos “Sem título” (`untitled-notes/`)
 - **Preview Markdown** — GFM, Properties, Outline (TOC à direita), Math (KaTeX), Mermaid
 - **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
 - **Exportar** HTML e PDF (PDF: margens, tema, outline)
-- **Modo Distração Zero** (F11 / Esc)
+- **Modo Distração Zero / Foco** (F11 / Esc; opcionalmente lembrar ao reabrir)
 - **Auto-update** — verifica no launch (app instalado), baixa e pede reinício
 - **Toasts** e confirmações nativas
 
@@ -91,7 +93,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | Documento                                                      | Conteúdo                                             |
 | -------------------------------------------------------------- | ---------------------------------------------------- |
 | [docs/PROJETO.md](./docs/PROJETO.md)                           | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md)         | Overview atual (**v1.7**)                            |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md)         | Overview atual (**v1.8**)                            |
 | [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)                   | Como publicar versão e o que o usuário recebe        |
 | [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)                 | Build, signing, notarização, CI                      |
 | [docs/RELEASE_NOTES_v1.4.1.md](./docs/RELEASE_NOTES_v1.4.1.md) | Notas da release 1.4.1                               |

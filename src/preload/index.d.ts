@@ -20,6 +20,7 @@ import type {
   OpenPathResult
 } from '../shared/settings'
 import type { NoteTemplate } from '../shared/templates'
+import type { TextSnippet } from '../shared/snippets'
 
 export interface SimplePadApi {
   getVersion: () => Promise<string>
@@ -52,6 +53,8 @@ export interface SimplePadApi {
   saveAllTemplates: (templates: NoteTemplate[]) => Promise<IpcResult<NoteTemplate[]>>
   upsertTemplate: (template: NoteTemplate) => Promise<IpcResult<NoteTemplate[]>>
   deleteTemplate: (id: string) => Promise<IpcResult<NoteTemplate[]>>
+  listSnippets: () => Promise<IpcResult<TextSnippet[]>>
+  saveAllSnippets: (snippets: TextSnippet[]) => Promise<IpcResult<TextSnippet[]>>
   saveUntitledNote: (request: {
     content: string
     filePath?: string

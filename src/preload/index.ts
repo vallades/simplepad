@@ -21,6 +21,7 @@ import type {
   OpenPathResult
 } from '../shared/settings'
 import type { NoteTemplate } from '../shared/templates'
+import type { TextSnippet } from '../shared/snippets'
 
 /**
  * Secure API surface exposed to the renderer via contextBridge.
@@ -132,6 +133,11 @@ const api = {
 
   deleteTemplate: (id: string): Promise<IpcResult<NoteTemplate[]>> =>
     ipcRenderer.invoke('templates:delete', id),
+
+  listSnippets: (): Promise<IpcResult<TextSnippet[]>> => ipcRenderer.invoke('snippets:list'),
+
+  saveAllSnippets: (snippets: TextSnippet[]): Promise<IpcResult<TextSnippet[]>> =>
+    ipcRenderer.invoke('snippets:save-all', snippets),
 
   saveUntitledNote: (request: {
     content: string

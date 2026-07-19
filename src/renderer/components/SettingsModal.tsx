@@ -8,6 +8,7 @@ import {
   type ThemePreference
 } from '../../shared/settings'
 import type { NoteTemplate } from '../../shared/templates'
+import type { TextSnippet } from '../../shared/snippets'
 import { useSettingsStore } from '../store/useSettingsStore'
 import {
   deleteTemplate,
@@ -15,6 +16,7 @@ import {
   newBlankTemplate,
   upsertTemplate
 } from '../services/templateActions'
+import { listSnippets, newBlankSnippet, saveAllSnippets } from '../services/snippetActions'
 import { showToast } from '../store/useToastStore'
 
 interface SettingsModalProps {
@@ -28,10 +30,10 @@ const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
   { value: 'dark', label: 'Escuro' }
 ]
 
-type SettingsTab = 'geral' | 'templates'
+type SettingsTab = 'geral' | 'templates' | 'snippets'
 
 /**
- * Settings dialog — Geral (font, theme, auto-save) + Templates.
+ * Settings dialog — Geral, Templates, Snippets.
  */
 function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element | null {
   const fontFamily = useSettingsStore((s) => s.fontFamily)
@@ -49,6 +51,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const showMarkdownProperties = useSettingsStore((s) => s.showMarkdownProperties)
   const newTabDefaultMarkdown = useSettingsStore((s) => s.newTabDefaultMarkdown)
   const autoEnablePreviewOnMarkdown = useSettingsStore((s) => s.autoEnablePreviewOnMarkdown)
+  const rememberFocusMode = useSettingsStore((s) => s.rememberFocusMode)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
 
   const knownFont = MONOSPACE_FONT_OPTIONS.includes(fontFamily)
@@ -58,6 +61,9 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const [templates, setTemplates] = useState<NoteTemplate[]>([])
   const [editing, setEditing] = useState<NoteTemplate | null>(null)
   const [templatesStatus, setTemplatesStatus] = useState<'idle' | 'ready'>('idle')
+  const [snippets, setSnippets] = useState<TextSnippet[]>([])
+  const [editingSnippet, setEditingSnippet] = useState<TextSnippet | null>(null)
+  const [snippetsStatus, setSnippetsStatus] = useState<'idle' | 'ready'>('idle')
 
   useEffect(() => {
     if (!open) return
@@ -67,12 +73,16 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
           setEditing(null)
           return
         }
+        if (editingSnippet) {
+          setEditingSnippet(null)
+          return
+        }
         onClose()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose, editing])
+  }, [open, onClose, editing, editingSnippet])
 
   useEffect(() => {
     if (!open || tab !== 'templates') return
@@ -82,6 +92,21 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
       if (!cancelled) {
         setTemplates(list)
         setTemplatesStatus('ready')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open, tab])
+
+  useEffect(() => {
+    if (!open || tab !== 'snippets') return
+    let cancelled = false
+    void (async () => {
+      const list = await listSnippets(true)
+      if (!cancelled) {
+        setSnippets(list)
+        setSnippetsStatus('ready')
       }
     })()
     return () => {
@@ -138,7 +163,8 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
           {(
             [
               { id: 'geral' as const, label: 'Geral' },
-              { id: 'templates' as const, label: 'Templates' }
+              { id: 'templates' as const, label: 'Templates' },
+              { id: 'snippets' as const, label: 'Snippets' }
             ] as const
           ).map((item) => (
             <button
@@ -153,6 +179,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
               onClick={() => {
                 setTab(item.id)
                 setEditing(null)
+                setEditingSnippet(null)
               }}
             >
               {item.label}
@@ -473,7 +500,150 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                     salvos automaticamente.
                   </span>
                 </label>
+                <label className="flex items-center justify-between gap-3 pt-1">
+                  <span className="text-xs font-medium text-zinc-500">
+                    Lembrar modo foco ao reabrir
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-zinc-800 dark:accent-zinc-200"
+                    checked={rememberFocusMode}
+                    onChange={(event) => {
+                      void updateSettings({ rememberFocusMode: event.target.checked })
+                    }}
+                  />
+                </label>
               </div>
+            </div>
+          ) : tab === 'snippets' ? (
+            <div className="flex flex-col gap-3 text-sm">
+              {editingSnippet ? (
+                <div className="flex flex-col gap-3">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-zinc-500">Nome</span>
+                    <input
+                      type="text"
+                      className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
+                      value={editingSnippet.name}
+                      onChange={(e) =>
+                        setEditingSnippet({ ...editingSnippet, name: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-zinc-500">Trigger (ex: ;hoje)</span>
+                    <input
+                      type="text"
+                      className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 font-mono text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                      value={editingSnippet.trigger}
+                      onChange={(e) =>
+                        setEditingSnippet({ ...editingSnippet, trigger: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-zinc-500">
+                      Corpo{' '}
+                      <span className="font-normal text-zinc-400">
+                        ({'{{date}}'}, {'{{time}}'}, $0)
+                      </span>
+                    </span>
+                    <textarea
+                      className="min-h-[120px] rounded-md border border-zinc-200 bg-white px-2 py-1.5 font-mono text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                      value={editingSnippet.body}
+                      onChange={(e) =>
+                        setEditingSnippet({ ...editingSnippet, body: e.target.value })
+                      }
+                    />
+                  </label>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      onClick={() => setEditingSnippet(null)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      onClick={() => {
+                        void (async () => {
+                          if (!editingSnippet.trigger.trim()) {
+                            showToast('Trigger é obrigatório.', 'error')
+                            return
+                          }
+                          const next = [...snippets]
+                          const idx = next.findIndex((s) => s.id === editingSnippet.id)
+                          if (idx >= 0) next[idx] = editingSnippet
+                          else next.push(editingSnippet)
+                          const saved = await saveAllSnippets(next)
+                          setSnippets(saved)
+                          setEditingSnippet(null)
+                          showToast('Snippet salvo.', 'success')
+                        })()
+                      }}
+                    >
+                      Salvar snippet
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[11px] text-zinc-400">
+                    Digite o trigger no editor e pressione <strong>Tab</strong> para expandir. Ou{' '}
+                    <strong>Ctrl/Cmd+Espaço</strong> para escolher um snippet.
+                  </p>
+                  {snippetsStatus === 'idle' ? (
+                    <p className="text-xs text-zinc-400">Carregando…</p>
+                  ) : (
+                    <ul className="flex flex-col gap-1">
+                      {snippets.map((s) => (
+                        <li
+                          key={s.id}
+                          className="flex items-center gap-2 rounded-md border border-zinc-100 px-2 py-1.5 dark:border-zinc-800"
+                        >
+                          <span className="min-w-0 flex-1 truncate text-xs">
+                            <span className="font-mono text-blue-600 dark:text-blue-400">
+                              {s.trigger}
+                            </span>
+                            <span className="text-zinc-400"> · </span>
+                            {s.name}
+                          </span>
+                          <button
+                            type="button"
+                            className="text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                            onClick={() => setEditingSnippet({ ...s })}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className="text-[11px] text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              void (async () => {
+                                const next = snippets.filter((x) => x.id !== s.id)
+                                const saved = await saveAllSnippets(next)
+                                setSnippets(saved)
+                                showToast('Snippet removido.', 'info')
+                              })()
+                            }}
+                          >
+                            Excluir
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <button
+                    type="button"
+                    className="self-start rounded-md border border-dashed border-zinc-300 px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800"
+                    onClick={() => setEditingSnippet(newBlankSnippet())}
+                  >
+                    + Novo snippet
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3 text-sm">

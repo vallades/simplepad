@@ -112,8 +112,10 @@ function EditorWorkspace(): React.JSX.Element {
             aria-label="Redimensionar painéis"
             title="Arraste para redimensionar"
             className={[
-              'z-10 shrink-0 bg-zinc-200 transition-colors hover:bg-blue-400 dark:bg-zinc-700 dark:hover:bg-blue-600',
-              isHorizontal ? 'w-1 cursor-col-resize' : 'h-1 cursor-row-resize'
+              'group/split z-10 shrink-0 bg-zinc-200 transition-colors hover:bg-blue-400 active:bg-blue-500 dark:bg-zinc-700 dark:hover:bg-blue-600',
+              isHorizontal
+                ? 'w-1.5 cursor-col-resize hover:w-1.5'
+                : 'h-1.5 cursor-row-resize hover:h-1.5'
             ].join(' ')}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}

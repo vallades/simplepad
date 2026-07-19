@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.8.0] — 2026-07-19
+
+**Produtividade e UX** — snippets, drag & drop aprimorado, modo foco e split/outline.
+
+### Added
+
+- **Snippets** de texto (ex: `;hoje` → data atual) com placeholders `{{date}}`, `{{time}}`, `{{datetime}}` e `$0`
+- Snippets padrão: data, hora, agora, checklist, reunião, ideia
+- Aba **Snippets** em Configurações (adicionar / editar / excluir); persistência em `userData/snippets/snippets.json`
+- Expansão no editor: **Tab** (após o trigger) ou **Ctrl/Cmd+Espaço** (seletor)
+- **Drag & drop** de arquivos de texto do Finder/Explorer em qualquer lugar da janela → abre em novas abas (múltiplos de uma vez)
+- Extensões suportadas no drop: `.txt`, `.md`, `.json`, `.ts`, `.csv`, `.yml`, código e outros formatos de texto
+- Feedback visual ao arrastar (borda destacada + overlay)
+- **Modo Foco** persistente opcional (`rememberFocusMode` / `focusModeLast` em Settings)
+
+### Changed
+
+- Divisor do Split View mais largo e com destaque visual ao hover/arraste; posição (`splitRatio`) já persistida
+- Outline continua **sempre à direita do Preview**, com redimensionamento e toggle (⌘⇧O / menu / Status Bar)
+- Versão **1.7.0 → 1.8.0**
+
 ## [1.7.0] — 2026-07-19
 
 **YAML Frontmatter + Properties** — metadata no topo das notas Markdown, visível no Preview.

@@ -15,6 +15,8 @@ import {
   syncModelContentFromTab
 } from '../monaco/modelRegistry'
 import { mergeEditorBodyIntoContent } from '../utils/frontmatter'
+import { getSnippetsSync, listSnippets } from '../services/snippetActions'
+import { tryExpandSnippetAtCursor } from '../services/snippetExpand'
 import { getDefaultEditorOptions, type MonacoThemeId } from '../utils/monacoUtils'
 import { isResolvedDark } from '../utils/theme'
 import { registerEditorCommandHandler } from '../services/editorCommands'
@@ -274,7 +276,85 @@ function Editor(): React.JSX.Element {
 
     editor.updateOptions({ fontSize, fontFamily })
 
+    const applySnippetResult = (
+      result: { nextText: string; cursorOffset: number },
+      model: import('monaco-editor').editor.ITextModel
+    ): void => {
+      beginApplying()
+      model.setValue(result.nextText)
+      const nextPos = model.getPositionAt(result.cursorOffset)
+      editor.setPosition(nextPos)
+      editor.revealPositionInCenter(nextPos)
+      const tabId = activeTabIdRef.current
+      if (!tabId) return
+      const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId)
+      if (!tab) return
+      const full = mergeEditorBodyIntoContent(tab.content, result.nextText, tab.isMarkdown)
+      useTabsStore.getState().updateTabContent(tabId, full)
+      useTabsStore.getState().setCursorPosition(tabId, {
+        lineNumber: nextPos.lineNumber,
+        column: nextPos.column
+      })
+    }
+
+    // Prefetch snippets for Tab expansion
+    void listSnippets()
+
     disposablesRef.current.push(
+      // Tab expands snippet when cursor follows a trigger (e.g. ;hoje); else default Tab
+      editor.onKeyDown((e) => {
+        if (
+          e.keyCode !== monacoApi.KeyCode.Tab ||
+          e.shiftKey ||
+          e.altKey ||
+          e.metaKey ||
+          e.ctrlKey
+        ) {
+          return
+        }
+        const model = editor.getModel()
+        const pos = editor.getPosition()
+        if (!model || !pos) return
+        const offset = model.getOffsetAt(pos)
+        const text = model.getValue()
+        const result = tryExpandSnippetAtCursor(text, offset, getSnippetsSync())
+        if (!result) return
+        e.preventDefault()
+        e.stopPropagation()
+        applySnippetResult(result, model)
+      }),
+      editor.addAction({
+        id: 'simplepad.insertSnippet',
+        label: 'Inserir snippet…',
+        keybindings: [monacoApi.KeyMod.CtrlCmd | monacoApi.KeyCode.Space],
+        run: () => {
+          void (async () => {
+            const model = editor.getModel()
+            const pos = editor.getPosition()
+            if (!model || !pos) return
+            const snippets = await listSnippets()
+            if (snippets.length === 0) return
+            const labels = snippets.map((s, i) => `${i + 1}. ${s.trigger} — ${s.name}`).join('\n')
+            const pick = window.prompt(`Snippets (número ou trigger):\n${labels}`, '')
+            if (!pick) return
+            const trimmed = pick.trim()
+            const byIndex = Number(trimmed)
+            const snippet =
+              Number.isFinite(byIndex) && byIndex >= 1 && byIndex <= snippets.length
+                ? snippets[byIndex - 1]
+                : snippets.find((s) => s.trigger === trimmed || s.trigger === `;${trimmed}`)
+            if (!snippet) return
+            const offset = model.getOffsetAt(pos)
+            const text = model.getValue()
+            const withTrigger = text.slice(0, offset) + snippet.trigger + text.slice(offset)
+            const result = tryExpandSnippetAtCursor(withTrigger, offset + snippet.trigger.length, [
+              snippet
+            ])
+            if (!result) return
+            applySnippetResult(result, model)
+          })()
+        }
+      }),
       editor.onDidChangeModelContent(() => {
         if (isApplyingRef.current) return
         const tabId = activeTabIdRef.current

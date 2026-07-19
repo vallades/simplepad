@@ -80,6 +80,17 @@ describe('sanitizeSettings', () => {
     expect(result.mermaidDiagramPadding).toBe(4)
     expect(sanitizeSettings({ mermaidCurve: 'nope' as 'basis' }).mermaidCurve).toBe('basis')
   })
+
+  it('preserves focus mode remember flags', () => {
+    const result = sanitizeSettings({
+      rememberFocusMode: false,
+      focusModeLast: true
+    })
+    expect(result.rememberFocusMode).toBe(false)
+    expect(result.focusModeLast).toBe(true)
+    expect(sanitizeSettings({}).rememberFocusMode).toBe(true)
+    expect(sanitizeSettings({}).focusModeLast).toBe(false)
+  })
 })
 
 describe('sanitizeRecentFiles / pushRecentFile', () => {
