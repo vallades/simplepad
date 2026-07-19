@@ -42,6 +42,10 @@ export interface AppSettings {
   autoEnablePreviewOnMarkdown: boolean
   /** Show YAML frontmatter as Properties cards in the Markdown Preview */
   showMarkdownProperties: boolean
+  /** Restore focus mode on next launch if left enabled */
+  rememberFocusMode: boolean
+  /** Last known focus-mode state (when rememberFocusMode is true) */
+  focusModeLast: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -61,7 +65,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   outlineWidth: 220,
   newTabDefaultMarkdown: false,
   autoEnablePreviewOnMarkdown: true,
-  showMarkdownProperties: true
+  showMarkdownProperties: true,
+  rememberFocusMode: true,
+  focusModeLast: false
 }
 
 export const MIN_MERMAID_FONT_SIZE = 10

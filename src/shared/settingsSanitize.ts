@@ -138,6 +138,16 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.showMarkdownProperties
       : DEFAULT_SETTINGS.showMarkdownProperties
 
+  const rememberFocusMode =
+    typeof candidate.rememberFocusMode === 'boolean'
+      ? candidate.rememberFocusMode
+      : DEFAULT_SETTINGS.rememberFocusMode
+
+  const focusModeLast =
+    typeof candidate.focusModeLast === 'boolean'
+      ? candidate.focusModeLast
+      : DEFAULT_SETTINGS.focusModeLast
+
   return {
     fontFamily,
     fontSize,
@@ -155,7 +165,9 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     outlineWidth,
     newTabDefaultMarkdown,
     autoEnablePreviewOnMarkdown,
-    showMarkdownProperties
+    showMarkdownProperties,
+    rememberFocusMode,
+    focusModeLast
   }
 }
 
