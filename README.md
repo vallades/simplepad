@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.1.0](https://github.com/vallades/simplepad/releases/tag/v1.1.0) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.2.1](https://github.com/vallades/simplepad/releases/tag/v1.2.1) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · electron-updater
 
@@ -60,14 +60,18 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **CI/CD**           | GitHub Actions (lint, test, matrix build, release em tags)                                         |
 | **v1.0.1**          | UX de auto-update (toast + diálogo reiniciar), fixes de CI Windows/mac, docs                       |
 | **v1.1**            | Split redimensionável, Find/Replace/Ir à linha, busca multi-aba, CONTRIBUTING, signing docs        |
+| **v1.2**            | Templates, auto-save untitled, overflow de abas, drag & drop de arquivos, auto-update robusto      |
 
 ### Funcionalidades
 
-- **Abas** com drag & drop, indicador dirty (`*`), undo/redo isolado por aba (Monaco)
+- **Abas** com drag & drop (reordenar), indicador dirty (`*`), undo/redo isolado por aba (Monaco)
+- **Overflow de abas** — botão **…** com lista completa quando há muitas abas
 - **Persistência de sessão** — restaura abas, conteúdo, cursor e scroll (`session.json`)
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
-- **Configurações** — fonte monoespaçada, tamanho, tema (sistema/claro/escuro), auto-save, layout do preview
-- **Auto-save** — intervalo, troca de aba e blur (só abas com arquivo no disco)
+- **Drag & drop** de `.txt` / `.md` do sistema de arquivos → nova aba
+- **Templates** — Daily Note, Reunião, Ideia, Checklist (editáveis em Settings)
+- **Configurações** — fonte, tema, auto-save, layout do preview, aba Templates
+- **Auto-save** — arquivos no disco **e** rascunhos “Sem título” (`untitled-notes/`)
 - **Preview Markdown** — GFM, split redimensionável (lado a lado ou empilhado)
 - **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
 - **Exportar** HTML e PDF
@@ -80,7 +84,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | Documento                                              | Conteúdo                                             |
 | ------------------------------------------------------ | ---------------------------------------------------- |
 | [docs/PROJETO.md](./docs/PROJETO.md)                   | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.1                                     |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | Overview da v1.2 (Produtividade)                     |
 | [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)           | Como publicar versão e o que o usuário recebe        |
 | [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)         | Build, signing, notarização, CI                      |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                   | Como contribuir                                      |

@@ -19,11 +19,13 @@ import {
   clearRecentFilesList,
   confirmCloseTab,
   confirmQuitWithUnsaved,
+  openDroppedFilePath,
   openFilesFromDisk,
   openRecentFile,
   saveActiveTab,
   saveActiveTabAs
 } from './services/fileActions'
+import { createTabFromTemplateId } from './services/templateActions'
 import { exportActiveAsHtml, exportActiveAsPdf } from './services/exportActions'
 import { autoSaveTabOnSwitch, intervalMsFromSeconds, runAutoSavePass } from './services/autoSave'
 import {
@@ -64,6 +66,7 @@ function App(): React.JSX.Element {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchTabsOpen, setSearchTabsOpen] = useState(false)
   const [appVersion, setAppVersion] = useState<string>('')
+  const [fileDropActive, setFileDropActive] = useState(false)
   /** Detect macOS once — traffic-light left padding for hiddenInset */
   const [isMac] = useState(() => {
     if (typeof window !== 'undefined' && typeof window.api?.getPlatform === 'function') {
@@ -309,6 +312,14 @@ function App(): React.JSX.Element {
     })
   }, [])
 
+  // Nova nota a partir de template (menu Arquivo)
+  useEffect(() => {
+    if (!isElectronApiAvailable() || typeof window.api.onNewFromTemplate !== 'function') return
+    return window.api.onNewFromTemplate((templateId) => {
+      void createTabFromTemplateId(templateId)
+    })
+  }, [])
+
   // Auto-updater events → toasts
   useEffect(() => {
     if (!isElectronApiAvailable() || typeof window.api.onUpdateEvent !== 'function') return
@@ -447,16 +458,62 @@ function App(): React.JSX.Element {
     ? 'Ocultar Preview (Ctrl/Cmd+Shift+P)'
     : 'Mostrar Preview / Split View (Ctrl/Cmd+Shift+P)'
 
+  const onWindowDragOver = (event: React.DragEvent): void => {
+    // Only react to file drops from OS (not internal tab reorder)
+    if (![...event.dataTransfer.types].includes('Files')) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    if (!fileDropActive) setFileDropActive(true)
+  }
+
+  const onWindowDragLeave = (event: React.DragEvent): void => {
+    if (event.currentTarget === event.target) {
+      setFileDropActive(false)
+    }
+  }
+
+  const onWindowDrop = (event: React.DragEvent): void => {
+    if (![...event.dataTransfer.types].includes('Files')) return
+    event.preventDefault()
+    setFileDropActive(false)
+
+    const files = Array.from(event.dataTransfer.files)
+    if (files.length === 0) return
+
+    for (const file of files) {
+      let path = ''
+      if (isElectronApiAvailable() && typeof window.api.getPathForFile === 'function') {
+        path = window.api.getPathForFile(file)
+      }
+      if (!path) {
+        path = (file as File & { path?: string }).path ?? ''
+      }
+      if (path) {
+        void openDroppedFilePath(path)
+      }
+    }
+  }
+
   return (
     <div
       className={[
-        'flex h-screen w-screen flex-col overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100',
+        'relative flex h-screen w-screen flex-col overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100',
         // macOS traffic lights clearance when titleBarStyle is hiddenInset
         focusMode ? '' : 'pt-0'
       ].join(' ')}
       data-focus-mode={focusMode ? 'true' : 'false'}
       data-preview={splitPreview ? 'true' : 'false'}
+      onDragOver={onWindowDragOver}
+      onDragLeave={onWindowDragLeave}
+      onDrop={onWindowDrop}
     >
+      {fileDropActive ? (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-50/80 dark:border-blue-500 dark:bg-blue-950/50">
+          <p className="rounded-md bg-white/90 px-4 py-2 text-sm font-medium text-blue-800 shadow dark:bg-zinc-900/90 dark:text-blue-200">
+            Solte .txt ou .md para abrir em nova aba
+          </p>
+        </div>
+      ) : null}
       {!focusMode ? (
         <header
           className={[

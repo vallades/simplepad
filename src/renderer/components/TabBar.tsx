@@ -1,10 +1,14 @@
-import { useCallback, useRef, useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { MoreHorizontal, Plus, X } from 'lucide-react'
 import { useTabsStore, type Tab } from '../store/useTabsStore'
 import { confirmCloseTab } from '../services/fileActions'
 
+/** Show overflow "…" when more than this many tabs. */
+export const TAB_OVERFLOW_THRESHOLD = 6
+
 /**
- * Horizontal tab strip with dirty indicators, close confirm, and HTML5 drag & drop reorder.
+ * Horizontal tab strip with dirty indicators, close confirm, HTML5 drag reorder,
+ * and overflow menu when many tabs are open.
  */
 function TabBar(): React.JSX.Element {
   const tabs = useTabsStore((state) => state.tabs)
@@ -16,6 +20,29 @@ function TabBar(): React.JSX.Element {
 
   const dragIdRef = useRef<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [overflowOpen, setOverflowOpen] = useState(false)
+  const overflowRef = useRef<HTMLDivElement | null>(null)
+
+  const showOverflow = tabs.length > TAB_OVERFLOW_THRESHOLD
+  const visibleTabs = showOverflow ? tabs.slice(0, TAB_OVERFLOW_THRESHOLD) : tabs
+
+  useEffect(() => {
+    if (!overflowOpen) return
+    const onDoc = (event: MouseEvent): void => {
+      if (!overflowRef.current?.contains(event.target as Node)) {
+        setOverflowOpen(false)
+      }
+    }
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') setOverflowOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [overflowOpen])
 
   const requestClose = useCallback(
     (tab: Tab) => {
@@ -34,7 +61,6 @@ function TabBar(): React.JSX.Element {
     dragIdRef.current = id
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', id)
-    // Improve drag ghost readability in some browsers
     event.currentTarget.classList.add('opacity-60')
   }
 
@@ -71,70 +97,129 @@ function TabBar(): React.JSX.Element {
     reorderTabs(next)
   }
 
+  const renderTab = (tab: Tab): React.JSX.Element => {
+    const isActive = tab.id === activeTabId
+    const isDragTarget = dragOverId === tab.id
+
+    return (
+      <div
+        key={tab.id}
+        role="tab"
+        aria-selected={isActive}
+        tabIndex={0}
+        draggable
+        onDragStart={(event) => onDragStart(event, tab.id)}
+        onDragEnd={onDragEnd}
+        onDragOver={(event) => onDragOver(event, tab.id)}
+        onDrop={(event) => onDrop(event, tab.id)}
+        onClick={() => switchTab(tab.id)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            switchTab(tab.id)
+          }
+          if (event.key === 'Delete' || (event.key === 'w' && (event.metaKey || event.ctrlKey))) {
+            event.preventDefault()
+            requestClose(tab)
+          }
+        }}
+        className={[
+          'group flex max-w-[200px] min-w-[110px] cursor-grab items-center gap-1 border-r border-zinc-200 px-2 py-1.5 text-xs select-none active:cursor-grabbing dark:border-zinc-800',
+          isActive
+            ? 'bg-white text-zinc-900 shadow-[inset_0_-2px_0_0_#2563eb] dark:bg-zinc-950 dark:text-zinc-50'
+            : 'bg-transparent text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800',
+          isDragTarget ? 'bg-blue-50 dark:bg-blue-950/40' : ''
+        ].join(' ')}
+      >
+        <span className="flex-1 truncate" title={tab.filePath ?? tab.title}>
+          {tab.title}
+          {tab.isDirty ? <span className="text-blue-600 dark:text-blue-400"> *</span> : null}
+        </span>
+        <button
+          type="button"
+          aria-label={`Fechar ${tab.title}`}
+          className={[
+            'rounded p-0.5 transition-opacity hover:bg-zinc-200 dark:hover:bg-zinc-700',
+            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'
+          ].join(' ')}
+          onClick={(event) => {
+            event.stopPropagation()
+            requestClose(tab)
+          }}
+        >
+          <X size={12} strokeWidth={2} />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div
       className="flex shrink-0 items-stretch gap-0 overflow-x-auto border-b border-zinc-200 bg-zinc-50 px-1 dark:border-zinc-800 dark:bg-zinc-900"
       role="tablist"
       aria-label="Abas abertas"
     >
-      {tabs.map((tab) => {
-        const isActive = tab.id === activeTabId
-        const isDragTarget = dragOverId === tab.id
+      {visibleTabs.map(renderTab)}
 
-        return (
-          <div
-            key={tab.id}
-            role="tab"
-            aria-selected={isActive}
-            tabIndex={0}
-            draggable
-            onDragStart={(event) => onDragStart(event, tab.id)}
-            onDragEnd={onDragEnd}
-            onDragOver={(event) => onDragOver(event, tab.id)}
-            onDrop={(event) => onDrop(event, tab.id)}
-            onClick={() => switchTab(tab.id)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                switchTab(tab.id)
-              }
-              if (
-                event.key === 'Delete' ||
-                (event.key === 'w' && (event.metaKey || event.ctrlKey))
-              ) {
-                event.preventDefault()
-                requestClose(tab)
-              }
-            }}
+      {showOverflow ? (
+        <div className="relative flex shrink-0 items-stretch" ref={overflowRef}>
+          <button
+            type="button"
+            aria-label="Mais abas"
+            aria-expanded={overflowOpen}
+            aria-haspopup="listbox"
+            title={`${tabs.length} abas — ver todas`}
             className={[
-              'group flex max-w-[200px] min-w-[110px] cursor-grab items-center gap-1 border-r border-zinc-200 px-2 py-1.5 text-xs select-none active:cursor-grabbing dark:border-zinc-800',
-              isActive
-                ? 'bg-white text-zinc-900 shadow-[inset_0_-2px_0_0_#2563eb] dark:bg-zinc-950 dark:text-zinc-50'
-                : 'bg-transparent text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800',
-              isDragTarget ? 'bg-blue-50 dark:bg-blue-950/40' : ''
+              'flex items-center border-r border-zinc-200 px-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200',
+              overflowOpen ? 'bg-zinc-100 dark:bg-zinc-800' : ''
             ].join(' ')}
+            onClick={() => setOverflowOpen((v) => !v)}
           >
-            <span className="flex-1 truncate" title={tab.filePath ?? tab.title}>
-              {tab.title}
-              {tab.isDirty ? <span className="text-blue-600 dark:text-blue-400"> *</span> : null}
-            </span>
-            <button
-              type="button"
-              aria-label={`Fechar ${tab.title}`}
-              className={[
-                'rounded p-0.5 transition-opacity hover:bg-zinc-200 dark:hover:bg-zinc-700',
-                isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'
-              ].join(' ')}
-              onClick={(event) => {
-                event.stopPropagation()
-                requestClose(tab)
-              }}
+            <MoreHorizontal size={14} />
+            <span className="ml-0.5 text-[10px] tabular-nums text-zinc-400">{tabs.length}</span>
+          </button>
+          {overflowOpen ? (
+            <ul
+              role="listbox"
+              aria-label="Todas as abas"
+              className="absolute top-full left-0 z-50 mt-0.5 max-h-64 min-w-[220px] overflow-y-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             >
-              <X size={12} strokeWidth={2} />
-            </button>
-          </div>
-        )
-      })}
+              {tabs.map((tab) => {
+                const isActive = tab.id === activeTabId
+                return (
+                  <li key={tab.id} role="option" aria-selected={isActive}>
+                    <button
+                      type="button"
+                      className={[
+                        'flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs',
+                        isActive
+                          ? 'bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-100'
+                          : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                      ].join(' ')}
+                      onClick={() => {
+                        switchTab(tab.id)
+                        setOverflowOpen(false)
+                      }}
+                    >
+                      <span className="min-w-0 flex-1 truncate" title={tab.filePath ?? tab.title}>
+                        {tab.title}
+                      </span>
+                      {tab.isDirty ? (
+                        <span
+                          className="shrink-0 text-blue-600 dark:text-blue-400"
+                          title="Não salvo"
+                        >
+                          •
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       <button
         type="button"
