@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.5.0] — 2026-07-19
+
+**Mermaid Avançado** — tema do app, export PNG/SVG, zoom/pan e erros amigáveis.
+
+### Added
+
+- Tema Mermaid sincronizado com claro/escuro do app (`themeVariables` + Tailwind)
+- Export de cada diagrama: **PNG** (2×) e **SVG** via diálogo nativo (hover → download)
+- Zoom (scroll / + −) e pan (arrastar) no container do diagrama; reset da vista
+- Erros Mermaid com mensagem amigável, linha do bloco e botão **Editar código**
+- Settings: fonte, curva das setas e espaçamento dos diagramas (além do toggle on/off)
+- IPC `file:save-binary` para salvar SVG/PNG
+
+### Changed
+
+- Lazy-load de Mermaid mantido; re-render ao mudar tema ou opções
+- Versão **1.4.1 → 1.5.0**
+
 ## [1.4.1] — 2026-07-19
 
 **Outline no lugar certo** — TOC à direita do Preview (não mais à esquerda do editor).

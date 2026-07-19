@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.4.1](https://github.com/vallades/simplepad/releases/tag/v1.4.1) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.5.0](https://github.com/vallades/simplepad/releases/tag/v1.5.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · KaTeX · Mermaid · electron-updater
 
@@ -64,6 +64,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.3**            | Outline, Math (KaTeX), Mermaid, export PDF com opções                                              |
 | **v1.4.0**          | Alternar Plain Text ↔ Markdown antes de salvar; extensão .md / .txt automática                     |
 | **v1.4.1**          | Outline **à direita do Preview**; largura/toggle persistidos                                       |
+| **v1.5**            | Mermaid avançado: tema, export PNG/SVG, zoom/pan, erros amigáveis                                  |
 
 ### Funcionalidades
 
@@ -74,10 +75,10 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 - **Arquivos** — Abrir / Salvar / Salvar como + **Recentes** (máx. 10)
 - **Drag & drop** de `.txt` / `.md` do sistema de arquivos → nova aba
 - **Templates** — Daily Note, Reunião, Ideia, Checklist (editáveis em Settings)
-- **Configurações** — fonte, tema, auto-save, formato da aba, Markdown avançado, Templates
+- **Configurações** — fonte, tema, auto-save, formato da aba, Markdown avançado, Mermaid, Templates
 - **Auto-save** — arquivos no disco **e** rascunhos “Sem título” (`untitled-notes/`)
 - **Preview Markdown** — GFM, split redimensionável; layout **Editor \| Preview \| Outline (TOC à direita)**
-- **Math (KaTeX)** e **Mermaid** (toggles em Settings)
+- **Math (KaTeX)** e **Mermaid** (tema do app, zoom/pan, export PNG/SVG no hover, settings de estilo)
 - **Localizar / Substituir / Ir para linha** (Monaco) + **busca em todas as abas**
 - **Exportar** HTML e PDF (PDF: margens, tema, outline)
 - **Modo Distração Zero** (F11 / Esc)
