@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { extractMarkdownOutline, outlineToHtmlList } from './markdownOutline'
+import { parseFrontmatter } from './frontmatter'
 
 export type ExportTheme = 'light' | 'dark'
 
@@ -101,11 +102,10 @@ export function buildExportHtmlDocument(options: BuildExportHtmlOptions): string
   const title = escapeHtml(options.title || 'SimplePad')
   let body: string
   if (options.isMarkdown) {
+    const { body: mdBody } = parseFrontmatter(options.content)
     const outlineHtml =
-      options.includeOutline === true
-        ? outlineToHtmlList(extractMarkdownOutline(options.content))
-        : ''
-    body = outlineHtml + markdownToHtmlFragment(options.content)
+      options.includeOutline === true ? outlineToHtmlList(extractMarkdownOutline(mdBody)) : ''
+    body = outlineHtml + markdownToHtmlFragment(mdBody)
   } else {
     body = `<pre style="white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;font-size:13px;">${escapeHtml(options.content)}</pre>`
   }

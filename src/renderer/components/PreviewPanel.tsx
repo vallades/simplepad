@@ -3,13 +3,15 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
-import { ListTree } from 'lucide-react'
+import { ListTree, Tags } from 'lucide-react'
 import 'katex/dist/katex.min.css'
 import { useTabsStore } from '../store/useTabsStore'
 import { useUiStore } from '../store/useUiStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { applyScrollRatio } from '../utils/debounce'
+import { parseFrontmatter } from '../utils/frontmatter'
 import MermaidBlock from './MermaidBlock'
+import PropertiesPanel from './PropertiesPanel'
 
 const OutlinePanel = lazy(() => import('./OutlinePanel'))
 
@@ -36,6 +38,7 @@ function PreviewPanel(): React.JSX.Element {
   const mathEnabled = useSettingsStore((s) => s.markdownMathEnabled)
   const mermaidEnabled = useSettingsStore((s) => s.markdownMermaidEnabled)
   const showMarkdownOutline = useSettingsStore((s) => s.showMarkdownOutline)
+  const showMarkdownProperties = useSettingsStore((s) => s.showMarkdownProperties)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
 
   const editorScrollRatio = useUiStore((state) => state.editorScrollRatio)
@@ -87,6 +90,11 @@ function PreviewPanel(): React.JSX.Element {
     return [rehypeKatex]
   }, [mathEnabled])
 
+  const frontmatter = useMemo(
+    () => (isMarkdown ? parseFrontmatter(debouncedContent) : null),
+    [debouncedContent, isMarkdown]
+  )
+
   const body = useMemo(() => {
     if (!isMarkdown) {
       return (
@@ -96,8 +104,15 @@ function PreviewPanel(): React.JSX.Element {
       )
     }
 
+    const mdBody = frontmatter?.body ?? debouncedContent
+    const showProps =
+      showMarkdownProperties && frontmatter?.hasFrontmatter && frontmatter.data
+        ? Object.keys(frontmatter.data).length > 0
+        : false
+
     return (
       <div className="markdown-preview">
+        {showProps && frontmatter ? <PropertiesPanel data={frontmatter.data} /> : null}
         <ReactMarkdown
           remarkPlugins={remarkPlugins}
           rehypePlugins={rehypePlugins}
@@ -120,17 +135,26 @@ function PreviewPanel(): React.JSX.Element {
               : undefined
           }
         >
-          {debouncedContent.length > 0 ? debouncedContent : '*Nada para pré-visualizar*'}
+          {mdBody.length > 0 ? mdBody : '*Nada para pré-visualizar*'}
         </ReactMarkdown>
       </div>
     )
-  }, [debouncedContent, isMarkdown, remarkPlugins, rehypePlugins, mermaidEnabled])
+  }, [
+    debouncedContent,
+    isMarkdown,
+    remarkPlugins,
+    rehypePlugins,
+    mermaidEnabled,
+    frontmatter,
+    showMarkdownProperties
+  ])
 
   const badges: string[] = []
   if (isMarkdown) {
     badges.push('Markdown')
     if (mathEnabled) badges.push('Math')
     if (mermaidEnabled) badges.push('Mermaid')
+    if (frontmatter?.hasFrontmatter) badges.push('Props')
   } else {
     badges.push('Texto puro')
   }
@@ -139,6 +163,10 @@ function PreviewPanel(): React.JSX.Element {
 
   const toggleOutline = (): void => {
     void updateSettings({ showMarkdownOutline: !showMarkdownOutline })
+  }
+
+  const toggleProperties = (): void => {
+    void updateSettings({ showMarkdownProperties: !showMarkdownProperties })
   }
 
   return (
@@ -154,25 +182,46 @@ function PreviewPanel(): React.JSX.Element {
             {badges.join(' · ')}
           </span>
           {isMarkdown ? (
-            <button
-              type="button"
-              className={[
-                'inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800',
-                showMarkdownOutline
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              ].join(' ')}
-              title={
-                showMarkdownOutline
-                  ? 'Ocultar Outline (à direita do Preview) — ⌘⇧O'
-                  : 'Mostrar Outline à direita do Preview — ⌘⇧O'
-              }
-              aria-pressed={showMarkdownOutline}
-              onClick={toggleOutline}
-            >
-              <ListTree size={12} aria-hidden />
-              TOC
-            </button>
+            <>
+              <button
+                type="button"
+                className={[
+                  'inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                  showMarkdownProperties
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-zinc-400 hover:text-zinc-600'
+                ].join(' ')}
+                title={
+                  showMarkdownProperties
+                    ? 'Ocultar Properties (YAML frontmatter) — ⌘⇧Y'
+                    : 'Mostrar Properties no topo do Preview — ⌘⇧Y'
+                }
+                aria-pressed={showMarkdownProperties}
+                onClick={toggleProperties}
+              >
+                <Tags size={12} aria-hidden />
+                Props
+              </button>
+              <button
+                type="button"
+                className={[
+                  'inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                  showMarkdownOutline
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-zinc-400 hover:text-zinc-600'
+                ].join(' ')}
+                title={
+                  showMarkdownOutline
+                    ? 'Ocultar Outline (à direita do Preview) — ⌘⇧O'
+                    : 'Mostrar Outline à direita do Preview — ⌘⇧O'
+                }
+                aria-pressed={showMarkdownOutline}
+                onClick={toggleOutline}
+              >
+                <ListTree size={12} aria-hidden />
+                TOC
+              </button>
+            </>
           ) : null}
         </div>
       </div>

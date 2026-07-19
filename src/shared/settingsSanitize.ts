@@ -133,6 +133,11 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.autoEnablePreviewOnMarkdown
       : DEFAULT_SETTINGS.autoEnablePreviewOnMarkdown
 
+  const showMarkdownProperties =
+    typeof candidate.showMarkdownProperties === 'boolean'
+      ? candidate.showMarkdownProperties
+      : DEFAULT_SETTINGS.showMarkdownProperties
+
   return {
     fontFamily,
     fontSize,
@@ -149,7 +154,8 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     showMarkdownOutline,
     outlineWidth,
     newTabDefaultMarkdown,
-    autoEnablePreviewOnMarkdown
+    autoEnablePreviewOnMarkdown,
+    showMarkdownProperties
   }
 }
 

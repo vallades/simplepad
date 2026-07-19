@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.7.0] — 2026-07-19
+
+**YAML Frontmatter + Properties** — metadata no topo das notas Markdown, visível no Preview.
+
+### Added
+
+- Parser de **YAML frontmatter** (`---` … `---`) com `gray-matter`
+- **PropertiesPanel** no Preview (cards minimalistas; tags como badges; tema claro/escuro)
+- Toggle **Mostrar Properties** (Preview header **Props**, Status Bar, menu **Exibir**, `⌘⇧Y`)
+- Settings: **Properties (YAML frontmatter)** / `showMarkdownProperties`
+- Editor Monaco/textarea mostra **só o body** (frontmatter oculto, preservado no save/sessão)
+- Outline e export HTML/PDF usam body sem o bloco YAML
+
+### Changed
+
+- Versão **1.5.0 → 1.7.0**
+
 ## [1.5.0] — 2026-07-19
 
 **Mermaid Avançado** — tema do app, export PNG/SVG, zoom/pan e erros amigáveis.

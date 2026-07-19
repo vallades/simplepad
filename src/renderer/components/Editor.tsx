@@ -11,8 +11,10 @@ import {
   getLanguageForTab,
   getOrCreateTabModel,
   restoreViewState,
-  saveViewState
+  saveViewState,
+  syncModelContentFromTab
 } from '../monaco/modelRegistry'
+import { mergeEditorBodyIntoContent } from '../utils/frontmatter'
 import { getDefaultEditorOptions, type MonacoThemeId } from '../utils/monacoUtils'
 import { isResolvedDark } from '../utils/theme'
 import { registerEditorCommandHandler } from '../services/editorCommands'
@@ -178,7 +180,7 @@ function Editor(): React.JSX.Element {
     editor.updateOptions({ fontSize, fontFamily })
   }, [fontSize, fontFamily])
 
-  // Update Monaco language when Markdown mode is toggled
+  // Update Monaco language + body-only document when Markdown mode is toggled
   useEffect(() => {
     if (boot !== 'ready') return
     const monacoApi = monacoRef.current
@@ -189,9 +191,12 @@ function Editor(): React.JSX.Element {
     const model = editor.getModel()
     if (!model) return
     const language = getLanguageForTab(tab)
+    beginApplying()
     if (model.getLanguageId() !== language) {
       monacoApi.editor.setModelLanguage(model, language)
     }
+    // Switching to/from Markdown must refresh body vs full content
+    syncModelContentFromTab(monacoApi, model, tab)
   }, [isMarkdown, activeTabId, boot])
 
   useEffect(() => {
@@ -275,7 +280,11 @@ function Editor(): React.JSX.Element {
         const tabId = activeTabIdRef.current
         const model = editor.getModel()
         if (!tabId || !model) return
-        useTabsStore.getState().updateTabContent(tabId, model.getValue())
+        const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId)
+        if (!tab) return
+        // Monaco holds body-only for Markdown; recombine YAML frontmatter for save/session
+        const full = mergeEditorBodyIntoContent(tab.content, model.getValue(), tab.isMarkdown)
+        useTabsStore.getState().updateTabContent(tabId, full)
       }),
       editor.onDidChangeCursorPosition((event) => {
         if (isApplyingRef.current) return

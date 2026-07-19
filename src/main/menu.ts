@@ -236,6 +236,11 @@ export function createAppMenu(recentFiles?: string[]): void {
           click: () => sendMenuCommand('toggle-outline')
         },
         {
+          label: 'Properties (YAML Frontmatter)',
+          accelerator: 'CmdOrCtrl+Shift+Y',
+          click: () => sendMenuCommand('toggle-properties')
+        },
+        {
           label: 'Modo Markdown',
           accelerator: 'CmdOrCtrl+Shift+M',
           click: () => sendMenuCommand('toggle-markdown')
