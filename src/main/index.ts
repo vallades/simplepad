@@ -8,6 +8,7 @@ import { registerIpcHandlers } from './ipc'
 import { isQuitAllowed, requestQuitConfirmation, wireQuitHandlers } from './quitController'
 import { getSessionManager } from './sessionManager'
 import { getPreferencesManager } from './preferencesManager'
+import { getWorkspaceManager } from './workspaceManager'
 import { setupAutoUpdater } from './updater'
 
 // Must run before Menu is built — otherwise macOS menu bar shows "Electron" in dev.
@@ -87,7 +88,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Touch stores early so files are ready under userData
+  // Bind workspace (or global) data dirs, then touch stores
+  getWorkspaceManager()
   getSessionManager()
   getPreferencesManager()
 

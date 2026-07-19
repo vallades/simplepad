@@ -22,6 +22,7 @@ import type {
 } from '../shared/settings'
 import type { NoteTemplate } from '../shared/templates'
 import type { TextSnippet } from '../shared/snippets'
+import type { ListDirResult, WorkspaceInfo } from '../shared/workspace'
 
 /**
  * Secure API surface exposed to the renderer via contextBridge.
@@ -122,6 +123,38 @@ const api = {
     ipcRenderer.on('menu:new-from-template', listener)
     return () => ipcRenderer.removeListener('menu:new-from-template', listener)
   },
+
+  onOpenRecentWorkspace: (callback: (rootPath: string) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, rootPath: string): void => {
+      callback(rootPath)
+    }
+    ipcRenderer.on('menu:open-recent-workspace', listener)
+    return () => ipcRenderer.removeListener('menu:open-recent-workspace', listener)
+  },
+
+  onWorkspaceChanged: (callback: (info: WorkspaceInfo) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, info: WorkspaceInfo): void => {
+      callback(info)
+    }
+    ipcRenderer.on('workspace:changed', listener)
+    return () => ipcRenderer.removeListener('workspace:changed', listener)
+  },
+
+  getWorkspace: (): Promise<IpcResult<WorkspaceInfo>> => ipcRenderer.invoke('workspace:get'),
+
+  listRecentWorkspaces: (): Promise<IpcResult<string[]>> =>
+    ipcRenderer.invoke('workspace:list-recent'),
+
+  openWorkspaceDialog: (): Promise<IpcResult<WorkspaceInfo | null>> =>
+    ipcRenderer.invoke('workspace:open-dialog'),
+
+  openWorkspacePath: (rootPath: string): Promise<IpcResult<WorkspaceInfo>> =>
+    ipcRenderer.invoke('workspace:open-path', rootPath),
+
+  closeWorkspace: (): Promise<IpcResult<WorkspaceInfo>> => ipcRenderer.invoke('workspace:close'),
+
+  listWorkspaceDir: (dirPath?: string): Promise<IpcResult<ListDirResult>> =>
+    ipcRenderer.invoke('workspace:list-dir', dirPath),
 
   listTemplates: (): Promise<IpcResult<NoteTemplate[]>> => ipcRenderer.invoke('templates:list'),
 

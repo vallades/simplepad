@@ -5,6 +5,7 @@ import type { MenuCommand } from '../shared/session'
 import { requestQuitConfirmation } from './quitController'
 import { getPreferencesManager } from './preferencesManager'
 import { getTemplateManager } from './templateManager'
+import { getWorkspaceManager } from './workspaceManager'
 import { checkForUpdates } from './updater'
 
 function sendMenuCommand(command: MenuCommand): void {
@@ -23,6 +24,15 @@ function sendOpenRecent(filePath: string): void {
     return
   }
   window.webContents.send('menu:open-recent', filePath)
+}
+
+function sendOpenRecentWorkspace(rootPath: string): void {
+  const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null
+  if (!window) {
+    log.warn('[menu] no window for open-recent-workspace')
+    return
+  }
+  window.webContents.send('menu:open-recent-workspace', rootPath)
 }
 
 function sendNewFromTemplate(templateId: string): void {
@@ -77,12 +87,36 @@ function buildRecentSubmenu(recentFiles: string[]): MenuItemConstructorOptions {
   }
 }
 
+function buildRecentWorkspacesSubmenu(recent: string[]): MenuItemConstructorOptions {
+  if (recent.length === 0) {
+    return {
+      label: 'Workspaces recentes',
+      submenu: [{ label: 'Nenhum workspace recente', enabled: false }]
+    }
+  }
+
+  return {
+    label: 'Workspaces recentes',
+    submenu: recent.map((rootPath) => ({
+      label: basename(rootPath),
+      toolTip: rootPath,
+      click: (): void => sendOpenRecentWorkspace(rootPath)
+    }))
+  }
+}
+
 /**
  * Native application menu wired to renderer actions via IPC events.
  */
 export function createAppMenu(recentFiles?: string[]): void {
   const isMac = process.platform === 'darwin'
   const files = recentFiles ?? getPreferencesManager().getRecentFiles()
+  let recentWorkspaces: string[] = []
+  try {
+    recentWorkspaces = getWorkspaceManager().listRecent()
+  } catch {
+    recentWorkspaces = []
+  }
 
   const template: MenuItemConstructorOptions[] = [
     ...(isMac
@@ -133,6 +167,16 @@ export function createAppMenu(recentFiles?: string[]): void {
           label: 'Abrir...',
           accelerator: 'CmdOrCtrl+O',
           click: () => sendMenuCommand('open-file')
+        },
+        {
+          label: 'Abrir pasta como Workspace…',
+          accelerator: 'CmdOrCtrl+Alt+O',
+          click: () => sendMenuCommand('open-workspace')
+        },
+        buildRecentWorkspacesSubmenu(recentWorkspaces),
+        {
+          label: 'Fechar Workspace',
+          click: () => sendMenuCommand('close-workspace')
         },
         buildRecentSubmenu(files),
         { type: 'separator' },
@@ -221,6 +265,11 @@ export function createAppMenu(recentFiles?: string[]): void {
     {
       label: 'Exibir',
       submenu: [
+        {
+          label: 'Explorador de arquivos',
+          accelerator: 'CmdOrCtrl+B',
+          click: () => sendMenuCommand('toggle-sidebar')
+        },
         {
           label: 'Split View (Preview)',
           accelerator: 'CmdOrCtrl+Shift+P',

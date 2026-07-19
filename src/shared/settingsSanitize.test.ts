@@ -91,6 +91,14 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings({}).rememberFocusMode).toBe(true)
     expect(sanitizeSettings({}).focusModeLast).toBe(false)
   })
+
+  it('sanitizes sidebar open and width', () => {
+    expect(sanitizeSettings({ sidebarOpen: true }).sidebarOpen).toBe(true)
+    expect(sanitizeSettings({}).sidebarOpen).toBe(false)
+    expect(sanitizeSettings({ sidebarWidth: 50 }).sidebarWidth).toBe(160)
+    expect(sanitizeSettings({ sidebarWidth: 999 }).sidebarWidth).toBe(480)
+    expect(sanitizeSettings({ sidebarWidth: 240 }).sidebarWidth).toBe(240)
+  })
 })
 
 describe('sanitizeRecentFiles / pushRecentFile', () => {

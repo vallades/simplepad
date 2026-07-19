@@ -79,6 +79,12 @@ export function getUntitledNotesManager(): UntitledNotesManager {
   return singleton
 }
 
+/** Rebind singleton to a workspace (or global) data directory. */
+export function rebindUntitledNotesManager(dataPath: string): UntitledNotesManager {
+  singleton = new UntitledNotesManager(dataPath)
+  return singleton
+}
+
 export function resetUntitledNotesManagerForTests(): void {
   singleton = null
 }

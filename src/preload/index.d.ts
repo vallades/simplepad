@@ -21,6 +21,7 @@ import type {
 } from '../shared/settings'
 import type { NoteTemplate } from '../shared/templates'
 import type { TextSnippet } from '../shared/snippets'
+import type { ListDirResult, WorkspaceInfo } from '../shared/workspace'
 
 export interface SimplePadApi {
   getVersion: () => Promise<string>
@@ -46,9 +47,17 @@ export interface SimplePadApi {
   respondToQuit: (allow: boolean) => void
   onMenuCommand: (callback: (command: MenuCommand) => void) => () => void
   onOpenRecent: (callback: (filePath: string) => void) => () => void
+  onOpenRecentWorkspace: (callback: (rootPath: string) => void) => () => void
+  onWorkspaceChanged: (callback: (info: WorkspaceInfo) => void) => () => void
   onRequestQuit: (callback: () => void) => () => void
   onUpdateEvent: (callback: (payload: UpdateEventPayload) => void) => () => void
   onNewFromTemplate: (callback: (templateId: string) => void) => () => void
+  getWorkspace: () => Promise<IpcResult<WorkspaceInfo>>
+  listRecentWorkspaces: () => Promise<IpcResult<string[]>>
+  openWorkspaceDialog: () => Promise<IpcResult<WorkspaceInfo | null>>
+  openWorkspacePath: (rootPath: string) => Promise<IpcResult<WorkspaceInfo>>
+  closeWorkspace: () => Promise<IpcResult<WorkspaceInfo>>
+  listWorkspaceDir: (dirPath?: string) => Promise<IpcResult<ListDirResult>>
   listTemplates: () => Promise<IpcResult<NoteTemplate[]>>
   saveAllTemplates: (templates: NoteTemplate[]) => Promise<IpcResult<NoteTemplate[]>>
   upsertTemplate: (template: NoteTemplate) => Promise<IpcResult<NoteTemplate[]>>

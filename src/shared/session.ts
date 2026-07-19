@@ -32,6 +32,8 @@ export const SESSION_VERSION = 1
 export type MenuCommand =
   | 'new-tab'
   | 'open-file'
+  | 'open-workspace'
+  | 'close-workspace'
   | 'save-file'
   | 'save-file-as'
   | 'close-tab'
@@ -52,6 +54,7 @@ export type MenuCommand =
   | 'toggle-split-orientation'
   | 'toggle-outline'
   | 'toggle-properties'
+  | 'toggle-sidebar'
 
 /** Events pushed from main (auto-updater) to the renderer. */
 export type UpdateEventType =

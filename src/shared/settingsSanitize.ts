@@ -6,12 +6,14 @@ import {
   MAX_MERMAID_PADDING,
   MAX_OUTLINE_WIDTH,
   MAX_RECENT_FILES,
+  MAX_SIDEBAR_WIDTH,
   MAX_SPLIT_RATIO,
   MIN_AUTO_SAVE_SECONDS,
   MIN_FONT_SIZE,
   MIN_MERMAID_FONT_SIZE,
   MIN_MERMAID_PADDING,
   MIN_OUTLINE_WIDTH,
+  MIN_SIDEBAR_WIDTH,
   MIN_SPLIT_RATIO,
   type AppSettings,
   type SplitOrientation,
@@ -148,6 +150,19 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.focusModeLast
       : DEFAULT_SETTINGS.focusModeLast
 
+  const sidebarOpen =
+    typeof candidate.sidebarOpen === 'boolean'
+      ? candidate.sidebarOpen
+      : DEFAULT_SETTINGS.sidebarOpen
+
+  const sidebarWidth = clamp(
+    typeof candidate.sidebarWidth === 'number'
+      ? Math.round(candidate.sidebarWidth)
+      : DEFAULT_SETTINGS.sidebarWidth,
+    MIN_SIDEBAR_WIDTH,
+    MAX_SIDEBAR_WIDTH
+  )
+
   return {
     fontFamily,
     fontSize,
@@ -167,7 +182,9 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     autoEnablePreviewOnMarkdown,
     showMarkdownProperties,
     rememberFocusMode,
-    focusModeLast
+    focusModeLast,
+    sidebarOpen,
+    sidebarWidth
   }
 }
 
