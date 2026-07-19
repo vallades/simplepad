@@ -1,10 +1,12 @@
 import { useTabsStore } from '../store/useTabsStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { useUiStore } from '../store/useUiStore'
+import { useWorkspaceStore } from '../store/useWorkspaceStore'
 import { countWords, shortenPath } from '../utils/fileUtils'
 import { exportActiveAsHtml } from '../services/exportActions'
 import { dispatchEditorCommand } from '../services/editorCommands'
 import { toggleMarkdownModeForTab } from '../services/markdownMode'
+import { openWorkspaceFromDialog } from '../services/workspaceActions'
 
 interface StatusBarProps {
   onOpenSearchTabs?: () => void
@@ -52,6 +54,8 @@ function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX
   const updateSettings = useSettingsStore((state) => state.updateSettings)
   const splitPreview = useUiStore((state) => state.splitPreview)
   const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
+  const workspaceName = useWorkspaceStore((state) => state.name)
+  const workspaceRoot = useWorkspaceStore((state) => state.rootPath)
 
   const words = countWords(content)
   const chars = content.length
@@ -61,6 +65,23 @@ function StatusBar({ onOpenSearchTabs, onExportPdf }: StatusBarProps): React.JSX
   return (
     <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
+        <button
+          type="button"
+          className={[
+            'max-w-[140px] truncate rounded px-1.5 py-0.5 font-medium hover:bg-zinc-200 dark:hover:bg-zinc-800',
+            workspaceRoot
+              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+              : 'text-zinc-500'
+          ].join(' ')}
+          title={
+            workspaceRoot
+              ? `Workspace: ${workspaceRoot}\nClique para abrir outra pasta`
+              : 'Workspace Pessoal (sem pasta). Clique para abrir pasta…'
+          }
+          onClick={() => void openWorkspaceFromDialog()}
+        >
+          📁 {workspaceName}
+        </button>
         <span className="tabular-nums">
           Ln {line}, Col {col}
         </span>

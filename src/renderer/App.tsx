@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Columns2, Maximize2, Minimize2, Settings } from 'lucide-react'
+import { Columns2, Maximize2, Minimize2, PanelLeft, Settings } from 'lucide-react'
 import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import SettingsModal from './components/SettingsModal'
@@ -7,6 +7,7 @@ import SearchAllTabsModal from './components/SearchAllTabsModal'
 import ExportPdfModal from './components/ExportPdfModal'
 import ToastStack from './components/ToastStack'
 import EditorWorkspace from './components/EditorWorkspace'
+import FileExplorerSidebar from './components/FileExplorerSidebar'
 import { dispatchEditorCommand } from './services/editorCommands'
 import { useTabsStore } from './store/useTabsStore'
 import { useSettingsStore } from './store/useSettingsStore'
@@ -39,6 +40,12 @@ import {
   requestCheckForUpdates,
   syncFocusModeToMain
 } from './services/updateBridge'
+import {
+  closeActiveWorkspace,
+  loadWorkspaceInfo,
+  openWorkspaceByPath,
+  openWorkspaceFromDialog
+} from './services/workspaceActions'
 import { applyThemeToDocument } from './utils/theme'
 import type { MenuCommand } from '../shared/session'
 
@@ -68,6 +75,8 @@ function App(): React.JSX.Element {
   const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
   const focusMode = useUiStore((state) => state.focusMode)
   const setFocusMode = useUiStore((state) => state.setFocusMode)
+  const sidebarOpen = useUiStore((state) => state.sidebarOpen)
+  const setSidebarOpen = useUiStore((state) => state.setSidebarOpen)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchTabsOpen, setSearchTabsOpen] = useState(false)
@@ -109,6 +118,12 @@ function App(): React.JSX.Element {
     applyFocusMode(!focusModeRef.current)
   }, [applyFocusMode])
 
+  const requestToggleSidebar = useCallback((): void => {
+    const next = !useUiStore.getState().sidebarOpen
+    setSidebarOpen(next)
+    void useSettingsStore.getState().updateSettings({ sidebarOpen: next })
+  }, [setSidebarOpen])
+
   const flushSession = useCallback(async (): Promise<boolean> => {
     const state = useTabsStore.getState()
     return persistSessionToMain(state.tabs, state.activeTabId)
@@ -138,6 +153,15 @@ function App(): React.JSX.Element {
           break
         case 'open-file':
           void openFilesFromDisk()
+          break
+        case 'open-workspace':
+          void openWorkspaceFromDialog()
+          break
+        case 'close-workspace':
+          void closeActiveWorkspace()
+          break
+        case 'toggle-sidebar':
+          requestToggleSidebar()
           break
         case 'save-file':
           void saveActiveTab()
@@ -213,6 +237,7 @@ function App(): React.JSX.Element {
       createNewTab,
       requestCloseActiveTab,
       requestToggleFocusMode,
+      requestToggleSidebar,
       splitOrientation,
       toggleActiveMarkdown,
       toggleSplitPreview,
@@ -236,7 +261,10 @@ function App(): React.JSX.Element {
       }
       // Prefetch snippets for Tab expansion
       void import('./services/snippetActions').then((m) => m.listSnippets())
+      await loadWorkspaceInfo()
+      if (cancelled) return
       const settings = useSettingsStore.getState()
+      setSidebarOpen(settings.sidebarOpen)
       if (settings.rememberFocusMode && settings.focusModeLast) {
         applyFocusMode(true)
       }
@@ -252,7 +280,7 @@ function App(): React.JSX.Element {
     return () => {
       cancelled = true
     }
-  }, [hydrateFromSession, loadSettings, applyFocusMode])
+  }, [hydrateFromSession, loadSettings, applyFocusMode, setSidebarOpen])
 
   // Theme
   useEffect(() => {
@@ -338,6 +366,24 @@ function App(): React.JSX.Element {
     })
   }, [])
 
+  // Recent workspaces (menu)
+  useEffect(() => {
+    if (!isElectronApiAvailable() || typeof window.api.onOpenRecentWorkspace !== 'function') return
+    return window.api.onOpenRecentWorkspace((rootPath) => {
+      void openWorkspaceByPath(rootPath)
+    })
+  }, [])
+
+  // Workspace changed from main (safety net)
+  useEffect(() => {
+    if (!isElectronApiAvailable() || typeof window.api.onWorkspaceChanged !== 'function') return
+    return window.api.onWorkspaceChanged((info) => {
+      void import('./store/useWorkspaceStore').then(({ useWorkspaceStore: store }) => {
+        store.getState().setFromInfo(info)
+      })
+    })
+  }, [])
+
   // Nova nota a partir de template (menu Arquivo)
   useEffect(() => {
     if (!isElectronApiAvailable() || typeof window.api.onNewFromTemplate !== 'function') return
@@ -393,6 +439,13 @@ function App(): React.JSX.Element {
       if (!mod) return
 
       const key = event.key.toLowerCase()
+
+      // Sidebar toggle: Ctrl/Cmd+B
+      if (key === 'b' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        requestToggleSidebar()
+        return
+      }
 
       if (key === ',' && !event.shiftKey && !event.altKey) {
         event.preventDefault()
@@ -474,6 +527,7 @@ function App(): React.JSX.Element {
     createNewTab,
     requestCloseActiveTab,
     requestToggleFocusMode,
+    requestToggleSidebar,
     switchTab,
     tabs,
     toggleActiveMarkdown,
@@ -585,6 +639,21 @@ function App(): React.JSX.Element {
               type="button"
               className={[
                 'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
+                sidebarOpen
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
+              ].join(' ')}
+              onClick={() => requestToggleSidebar()}
+              title="Explorador de arquivos (Ctrl/Cmd+B)"
+              aria-pressed={sidebarOpen}
+            >
+              <PanelLeft size={14} strokeWidth={2} aria-hidden />
+              <span className="hidden sm:inline">Arquivos</span>
+            </button>
+            <button
+              type="button"
+              className={[
+                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
                 splitPreview
                   ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
                   : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
@@ -637,8 +706,13 @@ function App(): React.JSX.Element {
 
       {!focusMode ? <TabBar /> : null}
 
-      <main className="flex min-h-0 flex-1 flex-col">
-        <EditorWorkspace />
+      <main className="flex min-h-0 flex-1 flex-row">
+        {!focusMode && sidebarOpen ? (
+          <FileExplorerSidebar onClose={() => requestToggleSidebar()} />
+        ) : null}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <EditorWorkspace />
+        </div>
       </main>
 
       {!focusMode ? (
