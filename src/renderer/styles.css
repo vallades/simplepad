@@ -69,6 +69,13 @@ body {
   height: auto;
 }
 
+/* Outline (TOC) — right of Preview; hide on very small windows */
+@media (max-width: 720px) {
+  .outline-panel {
+    display: none !important;
+  }
+}
+
 .markdown-preview > :first-child {
   margin-top: 0;
 }

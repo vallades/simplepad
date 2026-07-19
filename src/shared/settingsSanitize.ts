@@ -2,10 +2,12 @@ import {
   DEFAULT_SETTINGS,
   MAX_AUTO_SAVE_SECONDS,
   MAX_FONT_SIZE,
+  MAX_OUTLINE_WIDTH,
   MAX_RECENT_FILES,
   MAX_SPLIT_RATIO,
   MIN_AUTO_SAVE_SECONDS,
   MIN_FONT_SIZE,
+  MIN_OUTLINE_WIDTH,
   MIN_SPLIT_RATIO,
   type AppSettings,
   type SplitOrientation,
@@ -85,6 +87,14 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.showMarkdownOutline
       : DEFAULT_SETTINGS.showMarkdownOutline
 
+  const outlineWidth = clamp(
+    typeof candidate.outlineWidth === 'number'
+      ? Math.round(candidate.outlineWidth)
+      : DEFAULT_SETTINGS.outlineWidth,
+    MIN_OUTLINE_WIDTH,
+    MAX_OUTLINE_WIDTH
+  )
+
   const newTabDefaultMarkdown =
     typeof candidate.newTabDefaultMarkdown === 'boolean'
       ? candidate.newTabDefaultMarkdown
@@ -106,6 +116,7 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     markdownMathEnabled,
     markdownMermaidEnabled,
     showMarkdownOutline,
+    outlineWidth,
     newTabDefaultMarkdown,
     autoEnablePreviewOnMarkdown
   }

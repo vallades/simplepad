@@ -51,3 +51,27 @@ describe('outlineToHtmlList', () => {
     expect(html).toContain('B &lt;x&gt;')
   })
 })
+
+describe('outline update on content change', () => {
+  it('re-extracts headings when source changes (simulates debounced update)', () => {
+    const first = extractMarkdownOutline('# One\n')
+    expect(first).toHaveLength(1)
+    expect(first[0]?.text).toBe('One')
+    expect(first[0]?.lineNumber).toBe(1)
+
+    const second = extractMarkdownOutline('# One\n\n## Two\n\n### Three\n')
+    expect(second.map((h) => h.text)).toEqual(['One', 'Two', 'Three'])
+    expect(second.map((h) => h.lineNumber)).toEqual([1, 3, 5])
+  })
+
+  it('reveal targets match 1-based Monaco lines', () => {
+    const outline = extractMarkdownOutline('line1\n\n## Jump here\n')
+    const h = outline[0]
+    expect(h).toBeDefined()
+    // Editor.revealPositionInCenter uses this lineNumber
+    expect(h!.lineNumber).toBe(3)
+    expect(h!.level).toBe(2)
+  })
+})
+
+// keep vi available for future fake timers if needed

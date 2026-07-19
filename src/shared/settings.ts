@@ -21,8 +21,10 @@ export interface AppSettings {
   markdownMathEnabled: boolean
   /** Render ```mermaid blocks in Preview */
   markdownMermaidEnabled: boolean
-  /** Show Outline (headings) when Markdown + Preview are active */
+  /** Show Outline (TOC) to the right of Preview when Markdown + Split View */
   showMarkdownOutline: boolean
+  /** Outline panel width in px (clamped MIN_OUTLINE_WIDTH–MAX_OUTLINE_WIDTH) */
+  outlineWidth: number
   /**
    * When true, new "Sem título" tabs start as Markdown.
    * Default false → Plain Text until the user switches format.
@@ -45,12 +47,16 @@ export const DEFAULT_SETTINGS: AppSettings = {
   markdownMathEnabled: true,
   markdownMermaidEnabled: true,
   showMarkdownOutline: true,
+  outlineWidth: 220,
   newTabDefaultMarkdown: false,
   autoEnablePreviewOnMarkdown: true
 }
 
 export const MIN_SPLIT_RATIO = 0.2
 export const MAX_SPLIT_RATIO = 0.8
+export const MIN_OUTLINE_WIDTH = 140
+export const MAX_OUTLINE_WIDTH = 360
+export const DEFAULT_OUTLINE_WIDTH = 220
 
 /** Common monospaced faces for the settings picker */
 export const MONOSPACE_FONT_OPTIONS: readonly string[] = [

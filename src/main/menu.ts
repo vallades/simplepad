@@ -231,6 +231,11 @@ export function createAppMenu(recentFiles?: string[]): void {
           click: () => sendMenuCommand('toggle-split-orientation')
         },
         {
+          label: 'Outline Markdown (TOC)',
+          accelerator: 'CmdOrCtrl+Shift+O',
+          click: () => sendMenuCommand('toggle-outline')
+        },
+        {
           label: 'Modo Markdown',
           accelerator: 'CmdOrCtrl+Shift+M',
           click: () => sendMenuCommand('toggle-markdown')

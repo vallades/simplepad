@@ -187,6 +187,11 @@ function App(): React.JSX.Element {
             splitOrientation: splitOrientation === 'horizontal' ? 'vertical' : 'horizontal'
           })
           break
+        case 'toggle-outline':
+          void updateSettings({
+            showMarkdownOutline: !useSettingsStore.getState().showMarkdownOutline
+          })
+          break
         case 'quit':
           break
         default:

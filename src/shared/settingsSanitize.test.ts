@@ -51,6 +51,13 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings({}).markdownMathEnabled).toBe(DEFAULT_SETTINGS.markdownMathEnabled)
   })
 
+  it('clamps outline width', () => {
+    expect(sanitizeSettings({ outlineWidth: 50 }).outlineWidth).toBe(140)
+    expect(sanitizeSettings({ outlineWidth: 999 }).outlineWidth).toBe(360)
+    expect(sanitizeSettings({ outlineWidth: 220 }).outlineWidth).toBe(220)
+    expect(sanitizeSettings({}).outlineWidth).toBe(220)
+  })
+
   it('preserves new-tab format defaults', () => {
     const result = sanitizeSettings({
       newTabDefaultMarkdown: true,

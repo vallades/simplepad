@@ -1,13 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useUiStore } from '../store/useUiStore'
 import { useSettingsStore } from '../store/useSettingsStore'
-import { useTabsStore } from '../store/useTabsStore'
 import { EditorErrorBoundary } from './EditorErrorBoundary'
 import { MAX_SPLIT_RATIO, MIN_SPLIT_RATIO } from '../../shared/settings'
 
 const Editor = lazy(() => import('./Editor'))
 const PreviewPanel = lazy(() => import('./PreviewPanel'))
-const OutlinePanel = lazy(() => import('./OutlinePanel'))
 
 function EditorFallback(): React.JSX.Element {
   return (
@@ -18,20 +16,16 @@ function EditorFallback(): React.JSX.Element {
 }
 
 /**
- * Editor workspace with optional resizable split (Editor | Preview).
- * Ratio and orientation persist via settings store.
+ * Workspace layout:
+ *   [ Editor ] | [ Preview content | Outline (right of preview) ]
+ *
+ * Outline is owned by PreviewPanel so it stays anchored to the right of the Preview.
  */
 function EditorWorkspace(): React.JSX.Element {
   const splitPreview = useUiStore((state) => state.splitPreview)
   const splitRatio = useSettingsStore((state) => state.splitRatio)
   const splitOrientation = useSettingsStore((state) => state.splitOrientation)
-  const showMarkdownOutline = useSettingsStore((state) => state.showMarkdownOutline)
   const updateSettings = useSettingsStore((state) => state.updateSettings)
-  const isMarkdown = useTabsStore((state) => {
-    const tab = state.tabs.find((item) => item.id === state.activeTabId)
-    return tab?.isMarkdown ?? false
-  })
-  const showOutline = splitPreview && isMarkdown && showMarkdownOutline
 
   const containerRef = useRef<HTMLDivElement>(null)
   const draggingRef = useRef(false)
@@ -92,11 +86,9 @@ function EditorWorkspace(): React.JSX.Element {
       ].join(' ')}
     >
       <div
-        className={[
-          'flex min-h-0 min-w-0',
-          splitPreview ? 'flex-none' : 'flex-1',
-          showOutline ? 'flex-row' : 'flex-col'
-        ].join(' ')}
+        className={['flex min-h-0 min-w-0 flex-col', splitPreview ? 'flex-none' : 'flex-1'].join(
+          ' '
+        )}
         style={
           splitPreview
             ? isHorizontal
@@ -105,18 +97,11 @@ function EditorWorkspace(): React.JSX.Element {
             : undefined
         }
       >
-        {showOutline ? (
-          <Suspense fallback={null}>
-            <OutlinePanel />
+        <EditorErrorBoundary>
+          <Suspense fallback={<EditorFallback />}>
+            <Editor />
           </Suspense>
-        ) : null}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <EditorErrorBoundary>
-            <Suspense fallback={<EditorFallback />}>
-              <Editor />
-            </Suspense>
-          </EditorErrorBoundary>
-        </div>
+        </EditorErrorBoundary>
       </div>
 
       {splitPreview ? (

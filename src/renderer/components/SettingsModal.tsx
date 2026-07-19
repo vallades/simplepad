@@ -356,7 +356,8 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                   />
                 </label>
                 <span className="text-[11px] text-zinc-400">
-                  Outline e Preview só com Markdown + Split View ativos.
+                  Outline fica à <strong className="font-medium">direita do Preview</strong> (não do
+                  editor). Só com Markdown + Split View. Atalho ⌘⇧O. Largura arrastável (~220px).
                 </span>
               </div>
 

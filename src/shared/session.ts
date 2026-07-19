@@ -50,6 +50,7 @@ export type MenuCommand =
   | 'go-to-line'
   | 'find-in-tabs'
   | 'toggle-split-orientation'
+  | 'toggle-outline'
 
 /** Events pushed from main (auto-updater) to the renderer. */
 export type UpdateEventType =
