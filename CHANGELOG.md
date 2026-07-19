@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.4.1] — 2026-07-19
+
+**Outline no lugar certo** — TOC à direita do Preview (não mais à esquerda do editor).
+
+### Fixed
+
+- Outline/TOC ancorado à **direita do Preview** no Split View
+- Layout: Editor | Preview | Outline (colapsável, redimensionável)
+
+### Added
+
+- Largura do Outline persistida (`outlineWidth`, padrão 220px)
+- Toggle Outline: Status Bar, header do Preview (**TOC**), menu **Exibir**, atalho **⌘⇧O**
+- Outline colapsa em painéis estreitos / janelas pequenas
+
+### Changed
+
+- Versão **1.4.0 → 1.4.1**
+
 ## [1.4.0] — 2026-07-19
 
 **Formato Markdown antes de salvar** — mude Plain Text ↔ Markdown na aba e salve com a extensão certa.

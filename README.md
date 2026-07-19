@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [1.4.0](https://github.com/vallades/simplepad/releases/tag/v1.4.0) · **Licença:** [MIT](./LICENSE)
+**Versão:** [1.4.1](https://github.com/vallades/simplepad/releases/tag/v1.4.1) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · electron-updater
 

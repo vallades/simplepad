@@ -7,7 +7,7 @@ Histórico completo: [PROJETO.md](./PROJETO.md).
 
 | Campo            | Valor                                               |
 | ---------------- | --------------------------------------------------- |
-| Atual            | **1.4.0**                                           |
+| Atual            | **1.4.1**                                           |
 | Anterior estável | 1.3.0                                               |
 | Foco             | Alternar Plain Text ↔ Markdown e extensão ao salvar |
 
@@ -22,7 +22,7 @@ Histórico completo: [PROJETO.md](./PROJETO.md).
 ## Como testar
 
 ```bash
-git checkout feature/v1.4.0-markdown-format
+git checkout feature/v1.4.1-markdown-format
 npm install
 npm test && npm run lint && npm run typecheck
 npm run dev
@@ -41,8 +41,8 @@ Checklist:
 ## Release
 
 ```bash
-git tag -a v1.4.0 -m "SimplePad v1.4.0 - Formato Markdown antes de salvar"
-git push origin v1.4.0
+git tag -a v1.4.1 -m "SimplePad v1.4.1 - Formato Markdown antes de salvar"
+git push origin v1.4.1
 ```
 
 ## Links
