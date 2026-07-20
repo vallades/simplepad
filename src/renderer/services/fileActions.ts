@@ -3,6 +3,7 @@ import { isMarkdownFile, suggestedSaveFileName } from '../utils/fileUtils'
 import { isUntitledNotesPath } from '../../shared/untitledNotes'
 import { isElectronApiAvailable } from './sessionBridge'
 import { showToast } from '../store/useToastStore'
+import { refreshExplorerIfInWorkspace } from './explorerEvents'
 
 function fileNameFromPath(filePath: string): string {
   const parts = filePath.split(/[/\\]/)
@@ -105,6 +106,7 @@ export async function saveActiveTab(): Promise<boolean> {
     }
     if (result.canceled || !result.filePath) return false
     store.markAsSaved(tab.id, result.filePath)
+    refreshExplorerIfInWorkspace(result.filePath)
     return true
   }
 
@@ -134,6 +136,7 @@ export async function saveTabById(tabId: string): Promise<boolean> {
   if (result.canceled || !result.filePath) return false
 
   store.markAsSaved(tab.id, result.filePath)
+  refreshExplorerIfInWorkspace(result.filePath)
   return true
 }
 
@@ -203,6 +206,7 @@ export async function saveActiveTabAs(): Promise<boolean> {
 
   store.markAsSaved(tab.id, result.filePath)
   store.updateTabTitle(tab.id, fileNameFromPath(result.filePath))
+  refreshExplorerIfInWorkspace(result.filePath)
 
   if (previousPath && isUntitledNotesPath(previousPath) && previousPath !== result.filePath) {
     if (typeof window.api.removeUntitledNote === 'function') {
