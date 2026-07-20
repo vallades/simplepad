@@ -79,10 +79,31 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [boundRoot, setBoundRoot] = useState<string | null | undefined>(undefined)
+  /**
+   * Electron does not support window.prompt() (returns null immediately).
+   * Use an inline name field for create/rename instead.
+   */
+  const [namePrompt, setNamePrompt] = useState<{
+    mode: 'note' | 'folder' | 'rename'
+    parentDir?: string
+    entry?: DirEntryDTO
+    value: string
+  } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const refreshGen = useRef(0)
   const childrenKeysRef = useRef<string[]>([])
 
   const width = dragWidth ?? sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH
+
+  useEffect(() => {
+    if (!namePrompt) return
+    const t = window.setTimeout(() => {
+      nameInputRef.current?.focus()
+      nameInputRef.current?.select()
+    }, 0)
+    return () => window.clearTimeout(t)
+  }, [namePrompt])
 
   const reloadRoot = useCallback(async (): Promise<void> => {
     const root = useWorkspaceStore.getState().rootPath
@@ -219,48 +240,110 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
     else showToast('Formato não suportado no editor.', 'info')
   }
 
-  const handleNewNote = async (parentDir?: string): Promise<void> => {
-    const suggested = window.prompt('Nome da nota', 'Nova nota.md')
-    if (suggested === null) return
-    const path = await createWorkspaceNote(
-      parentDir ?? rootPath ?? undefined,
-      suggested || 'Nova nota.md'
-    )
-    if (path) {
-      if (parentDir) {
-        setExpanded((prev) => new Set(prev).add(parentDir))
+  const startNewNote = (parentDir?: string): void => {
+    if (!rootPath) {
+      showToast('Abra uma pasta como Workspace primeiro.', 'info')
+      return
+    }
+    setContextMenu(null)
+    setNamePrompt({
+      mode: 'note',
+      parentDir: parentDir ?? rootPath,
+      value: 'Nova nota.md'
+    })
+  }
+
+  const startNewFolder = (parentDir?: string): void => {
+    if (!rootPath) {
+      showToast('Abra uma pasta como Workspace primeiro.', 'info')
+      return
+    }
+    setContextMenu(null)
+    setNamePrompt({
+      mode: 'folder',
+      parentDir: parentDir ?? rootPath,
+      value: 'Nova pasta'
+    })
+  }
+
+  const startRename = (entry: DirEntryDTO): void => {
+    setContextMenu(null)
+    setNamePrompt({
+      mode: 'rename',
+      entry,
+      value: entry.name
+    })
+  }
+
+  const submitNamePrompt = async (): Promise<void> => {
+    if (!namePrompt || busy) return
+    const raw = namePrompt.value.trim()
+    if (!raw) {
+      showToast('Informe um nome.', 'error')
+      return
+    }
+
+    setBusy(true)
+    try {
+      if (namePrompt.mode === 'note') {
+        const parent = namePrompt.parentDir ?? rootPath ?? undefined
+        const path = await createWorkspaceNote(parent, raw)
+        if (path) {
+          if (parent) setExpanded((prev) => new Set(prev).add(parent))
+          setNamePrompt(null)
+          await reloadRoot()
+          void openRecentFile(path)
+          showToast('Nota criada.', 'success')
+        }
+      } else if (namePrompt.mode === 'folder') {
+        const parent = namePrompt.parentDir ?? rootPath ?? undefined
+        const path = await createWorkspaceFolder(parent, raw)
+        if (path) {
+          if (parent) setExpanded((prev) => new Set(prev).add(parent))
+          setNamePrompt(null)
+          await reloadRoot()
+          showToast('Pasta criada.', 'success')
+        }
+      } else if (namePrompt.mode === 'rename' && namePrompt.entry) {
+        if (raw === namePrompt.entry.name) {
+          setNamePrompt(null)
+          return
+        }
+        const newPath = await renameWorkspaceEntry(namePrompt.entry.path, raw)
+        if (newPath) {
+          setNamePrompt(null)
+          await reloadRoot()
+          showToast('Renomeado.', 'success')
+        }
       }
-      await reloadRoot()
-      void openRecentFile(path)
+    } finally {
+      setBusy(false)
     }
-  }
-
-  const handleNewFolder = async (parentDir?: string): Promise<void> => {
-    const suggested = window.prompt('Nome da pasta', 'Nova pasta')
-    if (suggested === null) return
-    const path = await createWorkspaceFolder(
-      parentDir ?? rootPath ?? undefined,
-      suggested || 'Nova pasta'
-    )
-    if (path) {
-      if (parentDir) setExpanded((prev) => new Set(prev).add(parentDir))
-      await reloadRoot()
-    }
-  }
-
-  const handleRename = async (entry: DirEntryDTO): Promise<void> => {
-    const next = window.prompt('Renomear', entry.name)
-    if (next === null || !next.trim() || next.trim() === entry.name) return
-    const newPath = await renameWorkspaceEntry(entry.path, next.trim())
-    if (newPath) await reloadRoot()
   }
 
   const handleDelete = async (entry: DirEntryDTO): Promise<void> => {
-    const ok = window.confirm(
-      entry.isDirectory
-        ? `Apagar a pasta "${entry.name}" e todo o conteúdo?`
-        : `Apagar "${entry.name}"?`
-    )
+    // Prefer native confirm when available; fall back to always-ask via showConfirm API
+    let ok = false
+    if (isElectronApiAvailable() && typeof window.api.showConfirm === 'function') {
+      const result = await window.api.showConfirm({
+        type: 'warning',
+        title: 'Excluir',
+        message: entry.isDirectory
+          ? `Apagar a pasta "${entry.name}" e todo o conteúdo?`
+          : `Apagar "${entry.name}"?`,
+        detail: 'Esta ação não pode ser desfeita.',
+        buttons: ['Cancelar', 'Excluir'],
+        defaultId: 0,
+        cancelId: 0
+      })
+      ok = result.response === 1
+    } else {
+      ok = window.confirm(
+        entry.isDirectory
+          ? `Apagar a pasta "${entry.name}" e todo o conteúdo?`
+          : `Apagar "${entry.name}"?`
+      )
+    }
     if (!ok) return
     const success = await deleteWorkspaceEntry(entry.path)
     if (success) {
@@ -270,6 +353,7 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
         return n
       })
       await reloadRoot()
+      showToast('Item excluído.', 'info')
     }
   }
 
@@ -464,10 +548,10 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
           type="button"
           className={toolBtn}
           title="Nova nota"
-          disabled={!rootPath}
+          disabled={!rootPath || busy}
           onClick={() => {
             const parent = resolveParentDir(selectedPath, rootPath, rootEntries, childrenMap)
-            void handleNewNote(parent)
+            startNewNote(parent)
           }}
         >
           <FilePlus size={14} />
@@ -476,10 +560,10 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
           type="button"
           className={toolBtn}
           title="Nova pasta"
-          disabled={!rootPath}
+          disabled={!rootPath || busy}
           onClick={() => {
             const parent = resolveParentDir(selectedPath, rootPath, rootEntries, childrenMap)
-            void handleNewFolder(parent)
+            startNewFolder(parent)
           }}
         >
           <FolderPlus size={14} />
@@ -527,6 +611,54 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
         </label>
       </div>
 
+      {namePrompt ? (
+        <div className="shrink-0 border-b border-zinc-100 px-2 py-2 dark:border-zinc-800">
+          <p className="mb-1 text-[10px] font-medium text-zinc-500">
+            {namePrompt.mode === 'note'
+              ? 'Nova nota'
+              : namePrompt.mode === 'folder'
+                ? 'Nova pasta'
+                : 'Renomear'}
+          </p>
+          <input
+            ref={nameInputRef}
+            type="text"
+            className="mb-1.5 w-full rounded-md border border-zinc-200 bg-white px-2 py-1 font-mono text-[11px] text-zinc-800 outline-none focus:border-blue-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"
+            value={namePrompt.value}
+            disabled={busy}
+            onChange={(e) => setNamePrompt({ ...namePrompt, value: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void submitNamePrompt()
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                setNamePrompt(null)
+              }
+            }}
+          />
+          <div className="flex justify-end gap-1">
+            <button
+              type="button"
+              className="rounded px-2 py-0.5 text-[11px] text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+              disabled={busy}
+              onClick={() => setNamePrompt(null)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="rounded bg-zinc-900 px-2 py-0.5 text-[11px] text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+              disabled={busy}
+              onClick={() => void submitNamePrompt()}
+            >
+              {busy ? '…' : namePrompt.mode === 'rename' ? 'Salvar' : 'Criar'}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div
         className={[
           'min-h-0 flex-1 overflow-y-auto py-1',
@@ -568,13 +700,12 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
             type="button"
             className="block w-full px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
             onClick={() => {
-              setContextMenu(null)
               const parent = contextMenu.entry?.isDirectory
                 ? contextMenu.entry.path
                 : contextMenu.entry
                   ? contextMenu.entry.path.replace(/[/\\][^/\\]+$/, '')
                   : (rootPath ?? undefined)
-              void handleNewNote(parent)
+              startNewNote(parent)
             }}
           >
             Nova nota
@@ -583,11 +714,10 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
             type="button"
             className="block w-full px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
             onClick={() => {
-              setContextMenu(null)
               const parent = contextMenu.entry?.isDirectory
                 ? contextMenu.entry.path
                 : (rootPath ?? undefined)
-              void handleNewFolder(parent)
+              startNewFolder(parent)
             }}
           >
             Nova pasta
@@ -599,8 +729,7 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
                 type="button"
                 className="block w-full px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 onClick={() => {
-                  setContextMenu(null)
-                  if (contextMenu.entry) void handleRename(contextMenu.entry)
+                  if (contextMenu.entry) startRename(contextMenu.entry)
                 }}
               >
                 Renomear
