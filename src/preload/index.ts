@@ -156,6 +156,42 @@ const api = {
   listWorkspaceDir: (dirPath?: string): Promise<IpcResult<ListDirResult>> =>
     ipcRenderer.invoke('workspace:list-dir', dirPath),
 
+  createWorkspaceNote: (request: {
+    parentDir?: string
+    fileName?: string
+    content?: string
+  }): Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>> =>
+    ipcRenderer.invoke('workspace:create-note', request),
+
+  createWorkspaceFolder: (request: {
+    parentDir?: string
+    folderName?: string
+  }): Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>> =>
+    ipcRenderer.invoke('workspace:create-folder', request),
+
+  renameWorkspaceEntry: (request: {
+    path: string
+    newName: string
+  }): Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>> =>
+    ipcRenderer.invoke('workspace:rename', request),
+
+  deleteWorkspaceEntry: (path: string): Promise<IpcResult> =>
+    ipcRenderer.invoke('workspace:delete', path),
+
+  importFileIntoWorkspace: (request: {
+    sourcePath: string
+    destDir?: string
+  }): Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>> =>
+    ipcRenderer.invoke('workspace:import-file', request),
+
+  onWorkspaceFsChanged: (callback: (payload: { rootPath: string }) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, payload: { rootPath: string }): void => {
+      callback(payload)
+    }
+    ipcRenderer.on('workspace:fs-changed', listener)
+    return () => ipcRenderer.removeListener('workspace:fs-changed', listener)
+  },
+
   listTemplates: (): Promise<IpcResult<NoteTemplate[]>> => ipcRenderer.invoke('templates:list'),
 
   saveAllTemplates: (templates: NoteTemplate[]): Promise<IpcResult<NoteTemplate[]>> =>

@@ -24,6 +24,7 @@ import {
   rebindUntitledNotesManager,
   resetUntitledNotesManagerForTests
 } from './untitledNotesManager'
+import { startWorkspaceWatcher } from './workspaceWatcher'
 
 interface RegistryStore {
   path: string
@@ -84,6 +85,7 @@ export class WorkspaceManager {
     }
 
     this.rebindManagers()
+    void startWorkspaceWatcher(this.activeRoot)
     log.info('[workspace] ready', this.getInfo())
   }
 
@@ -162,6 +164,7 @@ export class WorkspaceManager {
       recentWorkspaces: pushRecentWorkspace(registry.recentWorkspaces, resolved)
     })
     this.rebindManagers()
+    void startWorkspaceWatcher(resolved)
     this.broadcastChanged()
     return this.getInfo()
   }
@@ -172,6 +175,7 @@ export class WorkspaceManager {
     const registry = this.readRegistry()
     this.writeRegistry({ ...registry, activeRoot: null })
     this.rebindManagers()
+    void startWorkspaceWatcher(null)
     this.broadcastChanged()
     return this.getInfo()
   }
@@ -245,7 +249,7 @@ export class WorkspaceManager {
   }
 }
 
-function isPathInsideRoot(root: string, candidate: string): boolean {
+export function isPathInsideRoot(root: string, candidate: string): boolean {
   const rootResolved = resolve(root)
   const candResolved = resolve(candidate)
   if (candResolved === rootResolved) return true

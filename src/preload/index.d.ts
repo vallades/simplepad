@@ -58,6 +58,25 @@ export interface SimplePadApi {
   openWorkspacePath: (rootPath: string) => Promise<IpcResult<WorkspaceInfo>>
   closeWorkspace: () => Promise<IpcResult<WorkspaceInfo>>
   listWorkspaceDir: (dirPath?: string) => Promise<IpcResult<ListDirResult>>
+  createWorkspaceNote: (request: {
+    parentDir?: string
+    fileName?: string
+    content?: string
+  }) => Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>>
+  createWorkspaceFolder: (request: {
+    parentDir?: string
+    folderName?: string
+  }) => Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>>
+  renameWorkspaceEntry: (request: {
+    path: string
+    newName: string
+  }) => Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>>
+  deleteWorkspaceEntry: (path: string) => Promise<IpcResult>
+  importFileIntoWorkspace: (request: {
+    sourcePath: string
+    destDir?: string
+  }) => Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>>
+  onWorkspaceFsChanged: (callback: (payload: { rootPath: string }) => void) => () => void
   listTemplates: () => Promise<IpcResult<NoteTemplate[]>>
   saveAllTemplates: (templates: NoteTemplate[]) => Promise<IpcResult<NoteTemplate[]>>
   upsertTemplate: (template: NoteTemplate) => Promise<IpcResult<NoteTemplate[]>>
