@@ -184,6 +184,17 @@ const api = {
   }): Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>> =>
     ipcRenderer.invoke('workspace:import-file', request),
 
+  duplicateWorkspaceFile: (
+    sourcePath: string
+  ): Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>> =>
+    ipcRenderer.invoke('workspace:duplicate', sourcePath),
+
+  showItemInFolder: (targetPath: string): Promise<IpcResult> =>
+    ipcRenderer.invoke('shell:show-item-in-folder', targetPath),
+
+  openPathInOs: (targetPath: string): Promise<IpcResult> =>
+    ipcRenderer.invoke('shell:open-path', targetPath),
+
   onWorkspaceFsChanged: (callback: (payload: { rootPath: string }) => void): (() => void) => {
     const listener = (_event: IpcRendererEvent, payload: { rootPath: string }): void => {
       callback(payload)

@@ -250,5 +250,46 @@ export async function importFileIntoWorkspace(
   return result.data.path
 }
 
+export async function duplicateWorkspaceFile(sourcePath: string): Promise<string | null> {
+  if (!isElectronApiAvailable() || typeof window.api.duplicateWorkspaceFile !== 'function') {
+    reportApiMissing()
+    return null
+  }
+  const result = await window.api.duplicateWorkspaceFile(sourcePath)
+  if (!result.ok || !result.data) {
+    if (result.error) showToast(result.error, 'error')
+    return null
+  }
+  requestExplorerRefresh('duplicate')
+  return result.data.path
+}
+
+export async function showItemInFolder(targetPath: string): Promise<void> {
+  if (!isElectronApiAvailable() || typeof window.api.showItemInFolder !== 'function') {
+    reportApiMissing()
+    return
+  }
+  const result = await window.api.showItemInFolder(targetPath)
+  if (!result.ok && result.error) showToast(result.error, 'error')
+}
+
+export async function openPathInOs(targetPath: string): Promise<void> {
+  if (!isElectronApiAvailable() || typeof window.api.openPathInOs !== 'function') {
+    reportApiMissing()
+    return
+  }
+  const result = await window.api.openPathInOs(targetPath)
+  if (!result.ok && result.error) showToast(result.error, 'error')
+}
+
+export async function copyTextToClipboard(text: string, toastLabel = 'Copiado'): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text)
+    showToast(toastLabel, 'success')
+  } catch {
+    showToast('Não foi possível copiar.', 'error')
+  }
+}
+
 // re-export for tests
 export { extractPortableTabs, dtoToTab }

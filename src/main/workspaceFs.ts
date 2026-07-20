@@ -149,3 +149,20 @@ export function importFileIntoWorkspace(sourcePath: string, destDir?: string): W
   log.info('[workspaceFs] import', sourcePath, '→', target)
   return { path: target, name: basename(target), isDirectory: false }
 }
+
+/** Duplicate a file next to the original (name copy / name 2.ext). */
+export function duplicateFile(sourcePath: string): WorkspaceFsResult {
+  const root = getRoot()
+  const from = assertInside(root, sourcePath)
+  if (!existsSync(from) || !statSync(from).isFile()) {
+    throw new Error('Arquivo inválido para duplicar')
+  }
+  const dir = dirname(from)
+  const base = basename(from)
+  const ext = extname(base)
+  const stem = ext ? base.slice(0, -ext.length) : base
+  const target = uniquePath(dir, `${stem} copy${ext}`)
+  copyFileSync(from, target)
+  log.info('[workspaceFs] duplicate', from, '→', target)
+  return { path: target, name: basename(target), isDirectory: false }
+}

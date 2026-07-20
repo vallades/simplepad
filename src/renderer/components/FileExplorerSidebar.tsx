@@ -18,18 +18,23 @@ import type { DirEntryDTO } from '../../shared/workspace'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import {
+  copyTextToClipboard,
   createWorkspaceFolder,
   createWorkspaceNote,
   deleteWorkspaceEntry,
+  duplicateWorkspaceFile,
   importFileIntoWorkspace,
   listWorkspaceDir,
-  renameWorkspaceEntry
+  openPathInOs,
+  renameWorkspaceEntry,
+  showItemInFolder
 } from '../services/workspaceActions'
 import { openRecentFile, isDroppableTextPath } from '../services/fileActions'
 import { isElectronApiAvailable } from '../services/sessionBridge'
 import { requestExplorerRefresh, subscribeExplorerRefresh } from '../services/explorerEvents'
 import { showToast } from '../store/useToastStore'
 import { DEFAULT_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH, MIN_SIDEBAR_WIDTH } from '../../shared/settings'
+import ContextMenu, { type ContextMenuItem } from './ContextMenu'
 
 interface ContextMenuState {
   x: number
@@ -76,6 +81,7 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
   const [childrenMap, setChildrenMap] = useState<Record<string, DirEntryDTO[]>>({})
   const [dragWidth, setDragWidth] = useState<number | null>(null)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [contextItems, setContextItems] = useState<ContextMenuItem[]>([])
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [boundRoot, setBoundRoot] = useState<string | null | undefined>(undefined)
@@ -177,7 +183,10 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
   // Close context menu on outside click
   useEffect(() => {
     if (!contextMenu) return
-    const close = (): void => setContextMenu(null)
+    const close = (): void => {
+      setContextMenu(null)
+      setContextItems([])
+    }
     window.addEventListener('click', close)
     window.addEventListener('blur', close)
     return () => {
@@ -440,7 +449,12 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
               e.preventDefault()
               e.stopPropagation()
               setSelectedPath(entry.path)
-              setContextMenu({ x: e.clientX, y: e.clientY, entry, onRoot: false })
+              openExplorerContextMenu({
+                x: e.clientX,
+                y: e.clientY,
+                entry,
+                onRoot: false
+              })
             }}
             onDragOver={
               entry.isDirectory
@@ -500,6 +514,121 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
   const toolBtn =
     'rounded p-1 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
 
+  const openExplorerContextMenu = (state: ContextMenuState): void => {
+    const root = useWorkspaceStore.getState().rootPath
+    if (!root) return
+
+    const entry = state.entry
+    const parentForCreate = entry
+      ? entry.isDirectory
+        ? entry.path
+        : entry.path.replace(/[/\\][^/\\]+$/, '') || root
+      : root
+
+    const revealLabel =
+      typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+        ? 'Revelar no Finder'
+        : 'Revelar no Explorer'
+
+    const items: ContextMenuItem[] = []
+
+    if (entry && !entry.isDirectory) {
+      items.push({
+        id: 'open',
+        label: 'Abrir',
+        onSelect: () => openFile(entry.path)
+      })
+      items.push({
+        id: 'open-os',
+        label: 'Abrir com app padrão',
+        onSelect: () => void openPathInOs(entry.path)
+      })
+      items.push({ id: 'sep-open', label: '', separator: true })
+    }
+
+    if (entry?.isDirectory) {
+      const isOpen = expanded.has(entry.path)
+      items.push({
+        id: 'toggle',
+        label: isOpen ? 'Recolher' : 'Expandir',
+        onSelect: () => toggleDir(entry.path)
+      })
+      items.push({ id: 'sep-dir', label: '', separator: true })
+    }
+
+    items.push({
+      id: 'new-note',
+      label: entry?.isDirectory ? 'Nova nota aqui' : 'Nova nota',
+      onSelect: () => startNewNote(parentForCreate)
+    })
+    items.push({
+      id: 'new-folder',
+      label: entry?.isDirectory ? 'Nova pasta aqui' : 'Nova pasta',
+      onSelect: () => startNewFolder(parentForCreate)
+    })
+
+    if (entry) {
+      items.push({ id: 'sep-edit', label: '', separator: true })
+      items.push({
+        id: 'rename',
+        label: 'Renomear',
+        onSelect: () => startRename(entry)
+      })
+      if (!entry.isDirectory) {
+        items.push({
+          id: 'duplicate',
+          label: 'Duplicar',
+          onSelect: () => {
+            void (async () => {
+              const path = await duplicateWorkspaceFile(entry.path)
+              if (path) {
+                await reloadRoot()
+                void openRecentFile(path)
+              }
+            })()
+          }
+        })
+      }
+      items.push({
+        id: 'copy-path',
+        label: 'Copiar caminho',
+        onSelect: () => void copyTextToClipboard(entry.path, 'Caminho copiado')
+      })
+      items.push({
+        id: 'copy-name',
+        label: 'Copiar nome',
+        onSelect: () => void copyTextToClipboard(entry.name, 'Nome copiado')
+      })
+      items.push({
+        id: 'reveal',
+        label: revealLabel,
+        onSelect: () => void showItemInFolder(entry.path)
+      })
+      items.push({ id: 'sep-del', label: '', separator: true })
+      items.push({
+        id: 'delete',
+        label: 'Excluir',
+        danger: true,
+        onSelect: () => void handleDelete(entry)
+      })
+    } else {
+      items.push({ id: 'sep-root', label: '', separator: true })
+      items.push({
+        id: 'refresh',
+        label: 'Atualizar',
+        onSelect: () => void reloadRoot()
+      })
+      items.push({
+        id: 'reveal-root',
+        label: revealLabel,
+        onSelect: () => void showItemInFolder(root)
+      })
+    }
+
+    setContextItems(items)
+    setContextMenu(state)
+  }
+
   return (
     <aside
       className="relative flex h-full shrink-0 flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/60"
@@ -510,7 +639,7 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
         // only empty area
         if ((e.target as HTMLElement).closest('button')) return
         e.preventDefault()
-        setContextMenu({ x: e.clientX, y: e.clientY, entry: null, onRoot: true })
+        openExplorerContextMenu({ x: e.clientX, y: e.clientY, entry: null, onRoot: true })
       }}
       onDragOver={(e) => {
         if (!rootPath || ![...e.dataTransfer.types].includes('Files')) return
@@ -690,63 +819,16 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
         </div>
       ) : null}
 
-      {contextMenu ? (
-        <div
-          className="fixed z-[100] min-w-[160px] rounded-md border border-zinc-200 bg-white py-1 text-[12px] shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="block w-full px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            onClick={() => {
-              const parent = contextMenu.entry?.isDirectory
-                ? contextMenu.entry.path
-                : contextMenu.entry
-                  ? contextMenu.entry.path.replace(/[/\\][^/\\]+$/, '')
-                  : (rootPath ?? undefined)
-              startNewNote(parent)
-            }}
-          >
-            Nova nota
-          </button>
-          <button
-            type="button"
-            className="block w-full px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            onClick={() => {
-              const parent = contextMenu.entry?.isDirectory
-                ? contextMenu.entry.path
-                : (rootPath ?? undefined)
-              startNewFolder(parent)
-            }}
-          >
-            Nova pasta
-          </button>
-          {contextMenu.entry ? (
-            <>
-              <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
-              <button
-                type="button"
-                className="block w-full px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                onClick={() => {
-                  if (contextMenu.entry) startRename(contextMenu.entry)
-                }}
-              >
-                Renomear
-              </button>
-              <button
-                type="button"
-                className="block w-full px-3 py-1.5 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-                onClick={() => {
-                  setContextMenu(null)
-                  if (contextMenu.entry) void handleDelete(contextMenu.entry)
-                }}
-              >
-                Excluir
-              </button>
-            </>
-          ) : null}
-        </div>
+      {contextMenu && contextItems.length > 0 ? (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextItems}
+          onClose={() => {
+            setContextMenu(null)
+            setContextItems([])
+          }}
+        />
       ) : null}
 
       <div

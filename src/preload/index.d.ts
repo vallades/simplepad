@@ -76,6 +76,11 @@ export interface SimplePadApi {
     sourcePath: string
     destDir?: string
   }) => Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>>
+  duplicateWorkspaceFile: (
+    sourcePath: string
+  ) => Promise<IpcResult<{ path: string; name: string; isDirectory: boolean }>>
+  showItemInFolder: (targetPath: string) => Promise<IpcResult>
+  openPathInOs: (targetPath: string) => Promise<IpcResult>
   onWorkspaceFsChanged: (callback: (payload: { rootPath: string }) => void) => () => void
   listTemplates: () => Promise<IpcResult<NoteTemplate[]>>
   saveAllTemplates: (templates: NoteTemplate[]) => Promise<IpcResult<NoteTemplate[]>>

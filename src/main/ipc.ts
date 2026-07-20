@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
 import log from 'electron-log/main'
 import { getSessionManager } from './sessionManager'
 import { getFileManager } from './fileManager'
@@ -310,6 +310,49 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+
+  ipcMain.handle(
+    'workspace:duplicate',
+    (_event, sourcePath: string): IpcResult<WorkspaceFsResult> => {
+      try {
+        if (typeof sourcePath !== 'string' || !sourcePath.trim()) {
+          return { ok: false, error: 'Caminho inválido' }
+        }
+        const data = workspaceFs.duplicateFile(sourcePath.trim())
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:duplicate', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle('shell:show-item-in-folder', (_event, targetPath: string): IpcResult => {
+    try {
+      if (typeof targetPath !== 'string' || !targetPath.trim()) {
+        return { ok: false, error: 'Caminho inválido' }
+      }
+      shell.showItemInFolder(targetPath.trim())
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] shell:show-item-in-folder', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle('shell:open-path', async (_event, targetPath: string): Promise<IpcResult> => {
+    try {
+      if (typeof targetPath !== 'string' || !targetPath.trim()) {
+        return { ok: false, error: 'Caminho inválido' }
+      }
+      const err = await shell.openPath(targetPath.trim())
+      if (err) return { ok: false, error: err }
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] shell:open-path', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
 
   ipcMain.handle(
     'dialog:confirm',
