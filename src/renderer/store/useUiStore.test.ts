@@ -28,4 +28,12 @@ describe('useUiStore', () => {
     useUiStore.getState().setEditorScrollRatio(-0.2)
     expect(useUiStore.getState().editorScrollRatio).toBe(0)
   })
+
+  it('toggles sidebar open', () => {
+    expect(useUiStore.getState().sidebarOpen).toBe(false)
+    useUiStore.getState().toggleSidebar()
+    expect(useUiStore.getState().sidebarOpen).toBe(true)
+    useUiStore.getState().setSidebarOpen(false)
+    expect(useUiStore.getState().sidebarOpen).toBe(false)
+  })
 })

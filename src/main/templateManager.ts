@@ -108,6 +108,12 @@ export function getTemplateManager(): TemplateManager {
   return singleton
 }
 
+/** Rebind singleton to a workspace (or global) data directory. */
+export function rebindTemplateManager(dataPath: string): TemplateManager {
+  singleton = new TemplateManager(dataPath)
+  return singleton
+}
+
 /** Test helper */
 export function resetTemplateManagerForTests(): void {
   singleton = null

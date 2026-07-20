@@ -60,12 +60,12 @@ const Store = resolveStoreConstructor()
 export class SessionManager {
   private readonly store: SessionStore
 
-  constructor(store?: SessionStore) {
+  constructor(store?: SessionStore, dataPath?: string) {
     this.store =
       store ??
       new Store({
         name: 'session',
-        cwd: app.getPath('userData'),
+        cwd: dataPath ?? app.getPath('userData'),
         defaults: {
           session: null
         },

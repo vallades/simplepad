@@ -46,6 +46,10 @@ export interface AppSettings {
   rememberFocusMode: boolean
   /** Last known focus-mode state (when rememberFocusMode is true) */
   focusModeLast: boolean
+  /** File explorer sidebar open (persisted per workspace preferences) */
+  sidebarOpen: boolean
+  /** Explorer sidebar width in px */
+  sidebarWidth: number
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -67,8 +71,14 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoEnablePreviewOnMarkdown: true,
   showMarkdownProperties: true,
   rememberFocusMode: true,
-  focusModeLast: false
+  focusModeLast: false,
+  sidebarOpen: false,
+  sidebarWidth: 240
 }
+
+export const MIN_SIDEBAR_WIDTH = 160
+export const MAX_SIDEBAR_WIDTH = 480
+export const DEFAULT_SIDEBAR_WIDTH = 240
 
 export const MIN_MERMAID_FONT_SIZE = 10
 export const MAX_MERMAID_FONT_SIZE = 24

@@ -43,10 +43,18 @@ test: ...
 
 ## Princípios
 
-- UI minimalista — evite chrome e opções demais
-- Preferir arquivos locais e offline-first
+- UI minimalista — evite chrome e opções demais (sidebar e Preview são opt-in)
+- Preferir arquivos locais e offline-first (workspaces = pastas locais)
 - TypeScript strict; não enfraquecer a segurança do Electron
-- Testes para lógica pura (utils, stores, sanitize)
+- Listagens de FS no main devem validar path **dentro** do workspace root
+- Testes para lógica pura (utils, stores, sanitize, workspace registry)
+
+## Workspaces (v2+)
+
+- Dados por pasta: `userData/workspaces/<id>/` (session, preferences, templates, untitled)
+- Registry global: `userData/workspaces-registry.json`
+- Snippets permanecem globais
+- Explorer: listagem **lazy** (um diretório por IPC); não varrer a árvore inteira no open
 
 ## Docs úteis
 

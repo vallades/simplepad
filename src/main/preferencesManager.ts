@@ -51,12 +51,12 @@ const Store = resolveStoreConstructor()
 export class PreferencesManager {
   private readonly store: PreferencesStore
 
-  constructor(store?: PreferencesStore) {
+  constructor(store?: PreferencesStore, dataPath?: string) {
     this.store =
       store ??
       new Store({
         name: 'preferences',
-        cwd: app.getPath('userData'),
+        cwd: dataPath ?? app.getPath('userData'),
         defaults: {
           settings: { ...DEFAULT_SETTINGS },
           recentFiles: []

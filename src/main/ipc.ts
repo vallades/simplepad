@@ -22,7 +22,9 @@ import { checkForUpdates, quitAndInstallUpdate } from './updater'
 import { getTemplateManager } from './templateManager'
 import { getUntitledNotesManager } from './untitledNotesManager'
 import { getSnippetsManager } from './snippetsManager'
+import { getWorkspaceManager } from './workspaceManager'
 import type { TextSnippet } from '../shared/snippets'
+import type { ListDirResult, WorkspaceInfo } from '../shared/workspace'
 import type {
   AppSettings,
   ConfirmDialogRequest,
@@ -51,15 +53,13 @@ function trackRecent(filePath: string): void {
  * Registers all IPC handlers used by the renderer via contextBridge.
  */
 export function registerIpcHandlers(): void {
-  const sessions = getSessionManager()
   const files = getFileManager()
-  const prefs = getPreferencesManager()
 
   ipcMain.handle('app:get-version', (): string => app.getVersion())
 
   ipcMain.handle('session:load', (): IpcResult<SessionLoadResult> => {
     try {
-      const result = sessions.loadSessionDetailed()
+      const result = getSessionManager().loadSessionDetailed()
       return { ok: true, data: result }
     } catch (error) {
       log.error('[ipc] session:load', error)
@@ -73,7 +73,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('session:save', (_event, session: AppSession): IpcResult => {
     try {
-      sessions.saveSession(session)
+      getSessionManager().saveSession(session)
       return { ok: true }
     } catch (error) {
       log.error('[ipc] session:save', error)
@@ -83,7 +83,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('session:clear', (): IpcResult => {
     try {
-      sessions.clearSession()
+      getSessionManager().clearSession()
       return { ok: true }
     } catch (error) {
       log.error('[ipc] session:clear', error)
@@ -93,7 +93,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('settings:get', (): IpcResult<AppSettings> => {
     try {
-      return { ok: true, data: prefs.getSettings() }
+      return { ok: true, data: getPreferencesManager().getSettings() }
     } catch (error) {
       log.error('[ipc] settings:get', error)
       return { ok: false, error: errorMessage(error), data: { ...DEFAULT_SETTINGS } }
@@ -104,6 +104,7 @@ export function registerIpcHandlers(): void {
     'settings:set',
     (_event, partial: Partial<AppSettings>): IpcResult<AppSettings> => {
       try {
+        const prefs = getPreferencesManager()
         const next = prefs.setSettings(sanitizeSettings({ ...prefs.getSettings(), ...partial }))
         return { ok: true, data: next }
       } catch (error) {
@@ -115,7 +116,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('recent:list', (): IpcResult<string[]> => {
     try {
-      return { ok: true, data: prefs.getRecentFiles() }
+      return { ok: true, data: getPreferencesManager().getRecentFiles() }
     } catch (error) {
       log.error('[ipc] recent:list', error)
       return { ok: false, error: errorMessage(error), data: [] }
@@ -124,6 +125,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('recent:add', (_event, filePath: string): IpcResult<string[]> => {
     try {
+      const prefs = getPreferencesManager()
       if (typeof filePath !== 'string' || filePath.trim().length === 0) {
         return { ok: true, data: prefs.getRecentFiles() }
       }
@@ -138,12 +140,93 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('recent:clear', (): IpcResult => {
     try {
-      prefs.clearRecentFiles()
+      getPreferencesManager().clearRecentFiles()
       refreshAppMenu()
       return { ok: true }
     } catch (error) {
       log.error('[ipc] recent:clear', error)
       return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  // ——— Workspaces ———
+  ipcMain.handle('workspace:get', (): IpcResult<WorkspaceInfo> => {
+    try {
+      return { ok: true, data: getWorkspaceManager().getInfo() }
+    } catch (error) {
+      log.error('[ipc] workspace:get', error)
+      return {
+        ok: false,
+        error: errorMessage(error),
+        data: {
+          rootPath: null,
+          name: 'Pessoal',
+          dataPath: app.getPath('userData'),
+          id: 'global'
+        }
+      }
+    }
+  })
+
+  ipcMain.handle('workspace:list-recent', (): IpcResult<string[]> => {
+    try {
+      return { ok: true, data: getWorkspaceManager().listRecent() }
+    } catch (error) {
+      log.error('[ipc] workspace:list-recent', error)
+      return { ok: false, error: errorMessage(error), data: [] }
+    }
+  })
+
+  ipcMain.handle('workspace:open-dialog', async (): Promise<IpcResult<WorkspaceInfo | null>> => {
+    try {
+      // Session flush is done by renderer before invoking switch helpers
+      const info = await getWorkspaceManager().showOpenFolderDialog()
+      refreshAppMenu()
+      return { ok: true, data: info }
+    } catch (error) {
+      log.error('[ipc] workspace:open-dialog', error)
+      return { ok: false, error: errorMessage(error), data: null }
+    }
+  })
+
+  ipcMain.handle('workspace:open-path', (_event, rootPath: string): IpcResult<WorkspaceInfo> => {
+    try {
+      if (typeof rootPath !== 'string' || !rootPath.trim()) {
+        return { ok: false, error: 'Caminho inválido' }
+      }
+      const info = getWorkspaceManager().openRoot(rootPath.trim())
+      refreshAppMenu()
+      return { ok: true, data: info }
+    } catch (error) {
+      log.error('[ipc] workspace:open-path', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle('workspace:close', (): IpcResult<WorkspaceInfo> => {
+    try {
+      const info = getWorkspaceManager().closeWorkspace()
+      refreshAppMenu()
+      return { ok: true, data: info }
+    } catch (error) {
+      log.error('[ipc] workspace:close', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle('workspace:list-dir', (_event, dirPath?: string): IpcResult<ListDirResult> => {
+    try {
+      const data = getWorkspaceManager().listDir(
+        typeof dirPath === 'string' && dirPath.length > 0 ? dirPath : undefined
+      )
+      return { ok: true, data }
+    } catch (error) {
+      log.error('[ipc] workspace:list-dir', error)
+      return {
+        ok: false,
+        error: errorMessage(error),
+        data: { path: '', entries: [] }
+      }
     }
   })
 
