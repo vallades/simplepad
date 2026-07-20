@@ -45,6 +45,11 @@ function Editor(): React.JSX.Element {
     const tab = state.tabs.find((item) => item.id === state.activeTabId)
     return tab?.isMarkdown ?? false
   })
+  /** Disk reloads bump this without changing activeTabId — force model re-sync */
+  const contentRevision = useTabsStore((state) => {
+    const tab = state.tabs.find((item) => item.id === state.activeTabId)
+    return tab?.contentRevision ?? 0
+  })
 
   const fontSize = useSettingsStore((state) => state.fontSize)
   const fontFamily = useSettingsStore((state) => state.fontFamily)
@@ -182,24 +187,32 @@ function Editor(): React.JSX.Element {
     editor.updateOptions({ fontSize, fontFamily })
   }, [fontSize, fontFamily])
 
-  // Update Monaco language + body-only document when Markdown mode is toggled
+  // Update language + body-only text when Markdown mode is toggled on the *current* tab.
+  // Do NOT depend on activeTabId — that race used to write the new tab's content into the old model.
   useEffect(() => {
     if (boot !== 'ready') return
     const monacoApi = monacoRef.current
     const editor = editorRef.current
-    if (!monacoApi || !editor || !activeTabId) return
-    const tab = useTabsStore.getState().tabs.find((item) => item.id === activeTabId)
+    if (!monacoApi || !editor) return
+    const tabId = activeTabIdRef.current
+    if (!tabId) return
+    const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
     if (!tab) return
-    const model = editor.getModel()
-    if (!model) return
-    const language = getLanguageForTab(tab)
     beginApplying()
-    if (model.getLanguageId() !== language) {
-      monacoApi.editor.setModelLanguage(model, language)
+    try {
+      const model = getOrCreateTabModel(monacoApi, tab)
+      if (editor.getModel() !== model) {
+        editor.setModel(model)
+      }
+      const language = getLanguageForTab(tab)
+      if (model.getLanguageId() !== language) {
+        monacoApi.editor.setModelLanguage(model, language)
+      }
+      syncModelContentFromTab(monacoApi, model, tab)
+    } catch (error) {
+      console.error('[SimplePad] failed to apply markdown mode:', error)
     }
-    // Switching to/from Markdown must refresh body vs full content
-    syncModelContentFromTab(monacoApi, model, tab)
-  }, [isMarkdown, activeTabId, boot])
+  }, [isMarkdown, boot])
 
   useEffect(() => {
     if (boot !== 'ready') return
@@ -207,6 +220,7 @@ function Editor(): React.JSX.Element {
     disposeModelsExcept(openIds)
   }, [openTabKey, boot])
 
+  // Bind the Monaco model for the active tab (source of truth = tab store content).
   useEffect(() => {
     if (boot !== 'ready') return
     const editor = editorRef.current
@@ -235,35 +249,37 @@ function Editor(): React.JSX.Element {
       return
     }
 
-    if (prevId === nextId && editor.getModel()) {
-      return
-    }
-
     const tab = useTabsStore.getState().tabs.find((item) => item.id === nextId)
     if (!tab) return
 
     beginApplying()
     try {
       const model = getOrCreateTabModel(monacoApi, tab)
+      // Always sync from store so explorer/tab switches show the correct document
+      // (existing models may be stale after a previous race or external reload).
+      syncModelContentFromTab(monacoApi, model, tab)
       if (editor.getModel() !== model) {
         editor.setModel(model)
       }
 
-      const restored = restoreViewState(nextId, editor)
-      if (!restored) {
-        editor.setPosition({
-          lineNumber: tab.cursorPosition.lineNumber,
-          column: tab.cursorPosition.column
-        })
-        editor.setScrollTop(tab.scrollPosition)
+      const sameTab = prevId === nextId
+      if (!sameTab) {
+        const restored = restoreViewState(nextId, editor)
+        if (!restored) {
+          editor.setPosition({
+            lineNumber: tab.cursorPosition.lineNumber,
+            column: tab.cursorPosition.column
+          })
+          editor.setScrollTop(tab.scrollPosition)
+        }
+        editor.focus()
       }
-      editor.focus()
     } catch (error) {
       console.error('[SimplePad] failed to bind tab model:', error)
     }
 
     previousTabIdRef.current = nextId
-  }, [activeTabId, boot])
+  }, [activeTabId, contentRevision, boot])
 
   const handleMount: OnMount = (editor, monacoApi) => {
     for (const d of disposablesRef.current) {

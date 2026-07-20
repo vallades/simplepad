@@ -18,6 +18,11 @@ interface TabsState {
   switchTab: (id: string) => void
   updateTabContent: (id: string, content: string) => void
   updateTabTitle: (id: string, title: string) => void
+  /**
+   * Replace tab content from disk without marking dirty (explorer re-open / reload).
+   * Bumps `contentRevision` so the editor re-binds even if the tab is already active.
+   */
+  applyDiskContent: (id: string, content: string, filePath?: string) => void
   markAsSaved: (id: string, filePath?: string) => void
   setMarkdownMode: (id: string, isMarkdown: boolean) => void
   toggleMarkdownMode: (id: string) => void
@@ -163,6 +168,25 @@ export const useTabsStore = create<TabsState>()((set, get) => ({
       tabs: state.tabs.map((tab) =>
         tab.id === id ? { ...tab, title, lastModified: new Date() } : tab
       )
+    }))
+  },
+
+  applyDiskContent: (id, content, filePath) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) => {
+        if (tab.id !== id) return tab
+        const nextPath = filePath ?? tab.filePath
+        return {
+          ...tab,
+          content,
+          isDirty: false,
+          filePath: nextPath,
+          title: nextPath ? fileNameFromPath(nextPath) : tab.title,
+          isMarkdown: nextPath ? isMarkdownPath(nextPath) : tab.isMarkdown,
+          contentRevision: (tab.contentRevision ?? 0) + 1,
+          lastModified: new Date()
+        }
+      })
     }))
   },
 

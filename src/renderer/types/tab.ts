@@ -25,6 +25,11 @@ export interface Tab {
   scrollPosition: number
   /** Last time content or metadata changed */
   lastModified: Date
+  /**
+   * Bumped when content is loaded from disk (not on keystrokes).
+   * Lets the editor re-bind when re-opening the same file from the explorer.
+   */
+  contentRevision?: number
 }
 
 export type TabCreateInput = Partial<
