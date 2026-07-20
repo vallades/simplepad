@@ -3,6 +3,7 @@ import { isMarkdownFile, suggestedSaveFileName } from '../utils/fileUtils'
 import { isUntitledNotesPath } from '../../shared/untitledNotes'
 import { isElectronApiAvailable } from './sessionBridge'
 import { showToast } from '../store/useToastStore'
+import { refreshExplorerIfInWorkspace } from './explorerEvents'
 
 function fileNameFromPath(filePath: string): string {
   const parts = filePath.split(/[/\\]/)
@@ -35,18 +36,23 @@ export async function openFilesFromDisk(): Promise<void> {
   }
 }
 
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, '/').replace(/\/+$/, '')
+}
+
+function findTabByPath(filePath: string): import('../types/tab').Tab | undefined {
+  const target = normalizePath(filePath)
+  return useTabsStore
+    .getState()
+    .tabs.find((tab) => tab.filePath && normalizePath(tab.filePath) === target)
+}
+
 /**
- * Opens a known path (recent files). Focuses if already open.
+ * Opens a known path (recent files / explorer). Always loads from disk so the
+ * editor shows the file content; focuses an existing tab when the path matches.
  */
 export async function openRecentFile(filePath: string): Promise<void> {
   if (!filePath) return
-
-  const store = useTabsStore.getState()
-  const existing = store.tabs.find((tab) => tab.filePath === filePath)
-  if (existing) {
-    store.switchTab(existing.id)
-    return
-  }
 
   if (!isElectronApiAvailable()) {
     reportApiMissing()
@@ -65,8 +71,12 @@ export async function openRecentFile(filePath: string): Promise<void> {
 
 function openOrFocusFile(filePath: string, fileName: string, content: string): void {
   const store = useTabsStore.getState()
-  const existing = store.tabs.find((tab) => tab.filePath === filePath)
+  const existing = findTabByPath(filePath)
   if (existing) {
+    // Preserve unsaved edits; otherwise refresh buffer from disk and re-bind editor
+    if (!existing.isDirty) {
+      store.applyDiskContent(existing.id, content, filePath)
+    }
     store.switchTab(existing.id)
     return
   }
@@ -105,6 +115,7 @@ export async function saveActiveTab(): Promise<boolean> {
     }
     if (result.canceled || !result.filePath) return false
     store.markAsSaved(tab.id, result.filePath)
+    refreshExplorerIfInWorkspace(result.filePath)
     return true
   }
 
@@ -134,6 +145,7 @@ export async function saveTabById(tabId: string): Promise<boolean> {
   if (result.canceled || !result.filePath) return false
 
   store.markAsSaved(tab.id, result.filePath)
+  refreshExplorerIfInWorkspace(result.filePath)
   return true
 }
 
@@ -203,6 +215,7 @@ export async function saveActiveTabAs(): Promise<boolean> {
 
   store.markAsSaved(tab.id, result.filePath)
   store.updateTabTitle(tab.id, fileNameFromPath(result.filePath))
+  refreshExplorerIfInWorkspace(result.filePath)
 
   if (previousPath && isUntitledNotesPath(previousPath) && previousPath !== result.filePath) {
     if (typeof window.api.removeUntitledNote === 'function') {

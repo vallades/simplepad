@@ -2,7 +2,7 @@
 
 Guia operacional para publicar o **SimplePad** (v2.x e posteriores).
 
-**Versão de referência:** ver `package.json` (ex.: **2.0.0**).  
+**Versão de referência:** ver `package.json` (ex.: **2.1.0**).  
 Fluxo de auto-update detalhado: [AUTO_UPDATE.md](./AUTO_UPDATE.md).
 
 ### Dados do usuário (v2.0)

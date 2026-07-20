@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.1.0] — 2026-07-19
+
+**File Explorer avançado + correções de workspace.**
+
+### Fixed
+
+- Rascunhos **untitled / não salvos** permanecem abertos ao trocar de workspace (sessão Pessoal/global continua salva em separado)
+- Árvore do explorador **atualiza** ao criar/salvar notas no workspace (eventos + chokidar)
+
+### Added
+
+- Toolbar da sidebar: Nova nota, Nova pasta, Atualizar, Expandir, Recolher
+- Menu de contexto: renomear, excluir, nova nota/pasta
+- Drag & drop de arquivos de texto para dentro da sidebar (copia para a pasta)
+- Watcher de arquivos no workspace (`chokidar`) com refresh debounced
+- Indicador de loading ao atualizar a árvore
+
+### Changed
+
+- Versão **2.0.0 → 2.1.0**
+
 ## [2.0.0] — 2026-07-19
 
 **Workspaces + File Explorer** — vaults leves por pasta e sidebar de arquivos.

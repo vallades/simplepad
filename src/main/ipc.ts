@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
 import log from 'electron-log/main'
 import { getSessionManager } from './sessionManager'
 import { getFileManager } from './fileManager'
@@ -23,8 +23,10 @@ import { getTemplateManager } from './templateManager'
 import { getUntitledNotesManager } from './untitledNotesManager'
 import { getSnippetsManager } from './snippetsManager'
 import { getWorkspaceManager } from './workspaceManager'
+import * as workspaceFs from './workspaceFs'
 import type { TextSnippet } from '../shared/snippets'
 import type { ListDirResult, WorkspaceInfo } from '../shared/workspace'
+import type { WorkspaceFsResult } from './workspaceFs'
 import type {
   AppSettings,
   ConfirmDialogRequest,
@@ -227,6 +229,128 @@ export function registerIpcHandlers(): void {
         error: errorMessage(error),
         data: { path: '', entries: [] }
       }
+    }
+  })
+
+  ipcMain.handle(
+    'workspace:create-note',
+    (
+      _event,
+      request: { parentDir?: string; fileName?: string; content?: string }
+    ): IpcResult<WorkspaceFsResult> => {
+      try {
+        const data = workspaceFs.createNote(
+          request?.parentDir,
+          request?.fileName,
+          typeof request?.content === 'string' ? request.content : ''
+        )
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:create-note', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'workspace:create-folder',
+    (
+      _event,
+      request: { parentDir?: string; folderName?: string }
+    ): IpcResult<WorkspaceFsResult> => {
+      try {
+        const data = workspaceFs.createFolder(request?.parentDir, request?.folderName)
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:create-folder', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'workspace:rename',
+    (_event, request: { path: string; newName: string }): IpcResult<WorkspaceFsResult> => {
+      try {
+        if (!request?.path || !request?.newName) {
+          return { ok: false, error: 'Parâmetros inválidos' }
+        }
+        const data = workspaceFs.renameEntry(request.path, request.newName)
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:rename', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle('workspace:delete', (_event, targetPath: string): IpcResult => {
+    try {
+      if (typeof targetPath !== 'string' || !targetPath.trim()) {
+        return { ok: false, error: 'Caminho inválido' }
+      }
+      workspaceFs.deleteEntry(targetPath.trim())
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] workspace:delete', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle(
+    'workspace:import-file',
+    (_event, request: { sourcePath: string; destDir?: string }): IpcResult<WorkspaceFsResult> => {
+      try {
+        if (!request?.sourcePath) return { ok: false, error: 'Origem inválida' }
+        const data = workspaceFs.importFileIntoWorkspace(request.sourcePath, request.destDir)
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:import-file', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'workspace:duplicate',
+    (_event, sourcePath: string): IpcResult<WorkspaceFsResult> => {
+      try {
+        if (typeof sourcePath !== 'string' || !sourcePath.trim()) {
+          return { ok: false, error: 'Caminho inválido' }
+        }
+        const data = workspaceFs.duplicateFile(sourcePath.trim())
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:duplicate', error)
+        return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle('shell:show-item-in-folder', (_event, targetPath: string): IpcResult => {
+    try {
+      if (typeof targetPath !== 'string' || !targetPath.trim()) {
+        return { ok: false, error: 'Caminho inválido' }
+      }
+      shell.showItemInFolder(targetPath.trim())
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] shell:show-item-in-folder', error)
+      return { ok: false, error: errorMessage(error) }
+    }
+  })
+
+  ipcMain.handle('shell:open-path', async (_event, targetPath: string): Promise<IpcResult> => {
+    try {
+      if (typeof targetPath !== 'string' || !targetPath.trim()) {
+        return { ok: false, error: 'Caminho inválido' }
+      }
+      const err = await shell.openPath(targetPath.trim())
+      if (err) return { ok: false, error: err }
+      return { ok: true }
+    } catch (error) {
+      log.error('[ipc] shell:open-path', error)
+      return { ok: false, error: errorMessage(error) }
     }
   })
 

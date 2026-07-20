@@ -1,8 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MoreHorizontal, Plus, X } from 'lucide-react'
 import { useTabsStore, type Tab } from '../store/useTabsStore'
-import { confirmCloseTab } from '../services/fileActions'
+import {
+  confirmCloseTab,
+  saveActiveTab,
+  saveActiveTabAs,
+  openRecentFile
+} from '../services/fileActions'
 import { applyMarkdownMode } from '../services/markdownMode'
+import { copyTextToClipboard, showItemInFolder } from '../services/workspaceActions'
+import { isUntitledNotesPath } from '../../shared/untitledNotes'
+import { isElectronApiAvailable } from '../services/sessionBridge'
+import ContextMenu, { type ContextMenuItem } from './ContextMenu'
 
 /** Show overflow "…" when more than this many tabs. */
 export const TAB_OVERFLOW_THRESHOLD = 6
@@ -15,7 +24,7 @@ interface TabContextMenuState {
 
 /**
  * Horizontal tab strip with dirty indicators, close confirm, HTML5 drag reorder,
- * overflow menu, and right-click context menu (Markdown format).
+ * overflow menu, and rich right-click context menu.
  */
 function TabBar(): React.JSX.Element {
   const tabs = useTabsStore((state) => state.tabs)
@@ -72,6 +81,59 @@ function TabBar(): React.JSX.Element {
     [closeTab]
   )
 
+  const closeOthers = useCallback((keepId: string) => {
+    void (async () => {
+      const list = useTabsStore.getState().tabs
+      for (const tab of list) {
+        if (tab.id === keepId) continue
+        if (tab.isDirty) {
+          const ok = await confirmCloseTab(tab.title)
+          if (!ok) continue
+        }
+        useTabsStore.getState().closeTab(tab.id)
+      }
+      useTabsStore.getState().switchTab(keepId)
+    })()
+  }, [])
+
+  const closeToTheRight = useCallback((fromId: string) => {
+    void (async () => {
+      const list = useTabsStore.getState().tabs
+      const idx = list.findIndex((t) => t.id === fromId)
+      if (idx === -1) return
+      const toClose = list.slice(idx + 1)
+      for (const tab of toClose) {
+        if (tab.isDirty) {
+          const ok = await confirmCloseTab(tab.title)
+          if (!ok) continue
+        }
+        useTabsStore.getState().closeTab(tab.id)
+      }
+    })()
+  }, [])
+
+  const closeAll = useCallback(() => {
+    void (async () => {
+      const list = [...useTabsStore.getState().tabs]
+      for (const tab of list) {
+        if (tab.isDirty) {
+          const ok = await confirmCloseTab(tab.title)
+          if (!ok) continue
+        }
+        useTabsStore.getState().closeTab(tab.id)
+      }
+    })()
+  }, [])
+
+  const duplicateTab = useCallback((tab: Tab) => {
+    useTabsStore.getState().createNewTab({
+      title: `${tab.title} (cópia)`,
+      content: tab.content,
+      isMarkdown: tab.isMarkdown,
+      isDirty: true
+    })
+  }, [])
+
   const onDragStart = (event: React.DragEvent<HTMLDivElement>, id: string): void => {
     dragIdRef.current = id
     event.dataTransfer.effectAllowed = 'move'
@@ -111,6 +173,119 @@ function TabBar(): React.JSX.Element {
     next.splice(toIndex, 0, moved)
     reorderTabs(next)
   }
+
+  const contextItems = useMemo((): ContextMenuItem[] => {
+    if (!contextMenu) return []
+    const tab = tabs.find((t) => t.id === contextMenu.tabId)
+    if (!tab) return []
+
+    const hasRealPath = Boolean(tab.filePath) && !isUntitledNotesPath(tab.filePath)
+    const idx = tabs.findIndex((t) => t.id === tab.id)
+    const hasToRight = idx >= 0 && idx < tabs.length - 1
+    const revealLabel =
+      typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+        ? 'Revelar no Finder'
+        : 'Revelar no Explorer'
+
+    const items: ContextMenuItem[] = [
+      {
+        id: 'close',
+        label: 'Fechar',
+        onSelect: () => requestClose(tab)
+      },
+      {
+        id: 'close-others',
+        label: 'Fechar outras',
+        disabled: tabs.length <= 1,
+        onSelect: () => closeOthers(tab.id)
+      },
+      {
+        id: 'close-right',
+        label: 'Fechar à direita',
+        disabled: !hasToRight,
+        onSelect: () => closeToTheRight(tab.id)
+      },
+      {
+        id: 'close-all',
+        label: 'Fechar todas',
+        onSelect: () => closeAll()
+      },
+      { id: 'sep-1', label: '', separator: true },
+      {
+        id: 'save',
+        label: 'Salvar',
+        onSelect: () => {
+          switchTab(tab.id)
+          void saveActiveTab()
+        }
+      },
+      {
+        id: 'save-as',
+        label: 'Salvar como…',
+        onSelect: () => {
+          switchTab(tab.id)
+          void saveActiveTabAs()
+        }
+      },
+      {
+        id: 'reload',
+        label: 'Recarregar do disco',
+        disabled: !hasRealPath || tab.isDirty,
+        onSelect: () => {
+          if (tab.filePath) void openRecentFile(tab.filePath)
+        }
+      },
+      { id: 'sep-2', label: '', separator: true },
+      {
+        id: 'copy-path',
+        label: 'Copiar caminho',
+        disabled: !hasRealPath,
+        onSelect: () => {
+          if (tab.filePath) void copyTextToClipboard(tab.filePath, 'Caminho copiado')
+        }
+      },
+      {
+        id: 'copy-name',
+        label: 'Copiar nome',
+        onSelect: () => void copyTextToClipboard(tab.title, 'Nome copiado')
+      },
+      {
+        id: 'reveal',
+        label: revealLabel,
+        disabled: !hasRealPath || !isElectronApiAvailable(),
+        onSelect: () => {
+          if (tab.filePath) void showItemInFolder(tab.filePath)
+        }
+      },
+      { id: 'sep-3', label: '', separator: true },
+      {
+        id: 'format',
+        label: tab.isMarkdown ? 'Formato: Plain Text' : 'Formato: Markdown',
+        onSelect: () => applyMarkdownMode(tab.id, !tab.isMarkdown)
+      },
+      {
+        id: 'duplicate',
+        label: 'Duplicar aba',
+        onSelect: () => duplicateTab(tab)
+      },
+      {
+        id: 'new',
+        label: 'Nova aba',
+        onSelect: () => createNewTab()
+      }
+    ]
+    return items
+  }, [
+    contextMenu,
+    tabs,
+    requestClose,
+    closeOthers,
+    closeToTheRight,
+    closeAll,
+    switchTab,
+    duplicateTab,
+    createNewTab
+  ])
 
   const renderTab = (tab: Tab): React.JSX.Element => {
     const isActive = tab.id === activeTabId
@@ -228,6 +403,12 @@ function TabBar(): React.JSX.Element {
                         switchTab(tab.id)
                         setOverflowOpen(false)
                       }}
+                      onContextMenu={(event) => {
+                        event.preventDefault()
+                        switchTab(tab.id)
+                        setOverflowOpen(false)
+                        setContextMenu({ tabId: tab.id, x: event.clientX, y: event.clientY })
+                      }}
                     >
                       <span className="min-w-0 flex-1 truncate" title={tab.filePath ?? tab.title}>
                         {tab.title}
@@ -259,45 +440,15 @@ function TabBar(): React.JSX.Element {
         <Plus size={14} />
       </button>
 
-      {contextMenu
-        ? (() => {
-            const tab = tabs.find((t) => t.id === contextMenu.tabId)
-            if (!tab) return null
-            return (
-              <div
-                ref={contextRef}
-                role="menu"
-                className="fixed z-[60] min-w-[200px] rounded-md border border-zinc-200 bg-white py-1 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
-                style={{ left: contextMenu.x, top: contextMenu.y }}
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="flex w-full px-3 py-1.5 text-left text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                  onClick={() => {
-                    applyMarkdownMode(tab.id, !tab.isMarkdown)
-                    setContextMenu(null)
-                  }}
-                >
-                  {tab.isMarkdown
-                    ? 'Alterar formato para Plain Text'
-                    : 'Alterar formato para Markdown'}
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="flex w-full px-3 py-1.5 text-left text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                  onClick={() => {
-                    setContextMenu(null)
-                    requestClose(tab)
-                  }}
-                >
-                  Fechar aba
-                </button>
-              </div>
-            )
-          })()
-        : null}
+      {contextMenu && contextItems.length > 0 ? (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextItems}
+          onClose={() => setContextMenu(null)}
+          menuRef={contextRef}
+        />
+      ) : null}
     </div>
   )
 }
