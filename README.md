@@ -2,7 +2,7 @@
 
 Editor de texto multiplataforma **minimalista** com abas — inspirado no Bloco de Notas e TextEdit.
 
-**Versão:** [2.0.0](https://github.com/vallades/simplepad/releases/tag/v2.0.0) · **Licença:** [MIT](./LICENSE)
+**Versão:** [2.1.0](https://github.com/vallades/simplepad/releases/tag/v2.1.0) · **Licença:** [MIT](./LICENSE)
 
 **Stack:** Electron · Vite · React · TypeScript · Monaco · Zustand · Tailwind CSS · electron-store · react-markdown · KaTeX · Mermaid · electron-updater
 
@@ -68,11 +68,13 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | **v1.7**            | YAML Frontmatter + Properties no Preview (editor body-only)                                        |
 | **v1.8**            | Snippets, DnD multi-arquivo, modo foco persistente, split/outline polidos                          |
 | **v2.0**            | Workspaces (vaults leves) + File Explorer (sidebar colapsável)                                     |
+| **v2.1**            | Explorer avançado (toolbar, contexto, DnD, watcher) + rascunhos portáteis entre workspaces         |
 
 ### Funcionalidades
 
 - **Workspaces** — abrir pasta como vault leve; sessão/prefs/templates/untitled por workspace; recentes (5)
-- **File Explorer** — sidebar esquerda (⌘B), árvore lazy, busca, clique abre nota; fechada por padrão
+- **Rascunhos portáteis** — untitled/não salvos permanecem abertos ao trocar de workspace
+- **File Explorer** — sidebar (⌘B): árvore lazy, busca, nova nota/pasta, renomear/excluir, DnD, refresh automático
 - **Abas** com drag & drop (reordenar), indicador dirty (`*`), undo/redo isolado por aba (Monaco)
 - **Formato da aba** — **Plain Text** ou **Markdown** (Status Bar / menu da aba / ⌘⇧M); salva em `.txt` ou `.md`
 - **YAML Frontmatter** — bloco `---` no arquivo; **Properties** no Preview; editor edita só o corpo
@@ -96,7 +98,7 @@ Se estiver em Downloads ou no volume do `.dmg`, use o caminho real do `.app`.
 | Documento                                                      | Conteúdo                                             |
 | -------------------------------------------------------------- | ---------------------------------------------------- |
 | [docs/PROJETO.md](./docs/PROJETO.md)                           | Histórico completo, arquitetura, melhorias e roadmap |
-| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md)         | Overview atual (**v2.0**)                            |
+| [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md)         | Overview atual (**v2.1**)                            |
 | [docs/AUTO_UPDATE.md](./docs/AUTO_UPDATE.md)                   | Como publicar versão e o que o usuário recebe        |
 | [docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)                 | Build, signing, notarização, CI                      |
 | [docs/RELEASE_NOTES_v1.4.1.md](./docs/RELEASE_NOTES_v1.4.1.md) | Notas da release 1.4.1                               |
