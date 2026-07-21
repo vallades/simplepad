@@ -516,28 +516,22 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                 </label>
                 <label className="flex flex-col gap-1 pt-2">
                   <span className="text-xs font-medium text-zinc-500">
-                    Backlinks (links [[Nota]])
+                    Backlinks também no Outline
                   </span>
                   <select
                     className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-950"
                     value={backlinksPlacement}
                     onChange={(event) => {
                       const value = event.target.value === 'panel' ? 'panel' : 'outline'
-                      void updateSettings({
-                        backlinksPlacement: value,
-                        ...(value === 'outline' &&
-                        useSettingsStore.getState().activeView === 'backlinks'
-                          ? { activeView: 'outline' as const }
-                          : {})
-                      })
+                      void updateSettings({ backlinksPlacement: value })
                     }}
                   >
-                    <option value="outline">Dentro do Outline</option>
-                    <option value="panel">Painel separado (Activity Bar)</option>
+                    <option value="outline">Sim — seção no Outline + ícone na barra</option>
+                    <option value="panel">Não — só o painel da Activity Bar</option>
                   </select>
                   <span className="text-[11px] text-zinc-400">
-                    Notas que apontam para a aba atual via{' '}
-                    <code className="text-[10px]">[[…]]</code>
+                    O ícone Backlinks na Activity Bar fica sempre disponível. Use{' '}
+                    <code className="text-[10px]">[[…]]</code> para criar links.
                   </span>
                 </label>
               </div>
