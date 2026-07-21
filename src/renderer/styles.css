@@ -244,3 +244,178 @@ button:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 1px;
 }
+
+/* ——— VS Code–style Activity Bar + Side Panel (v2.2) ——— */
+:root {
+  --activity-bar-width: 48px;
+  --side-panel-width: 240px;
+  --side-panel-transition: 300ms ease-in-out;
+}
+
+.activity-bar {
+  display: flex;
+  flex-direction: column;
+  width: var(--activity-bar-width);
+  min-width: var(--activity-bar-width);
+  flex-shrink: 0;
+  background: #f4f4f5;
+  border-right: 1px solid #e4e4e7;
+  z-index: 5;
+}
+
+.dark .activity-bar {
+  background: #18181b;
+  border-right-color: #27272a;
+}
+
+.activity-bar__top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0;
+}
+
+.activity-bar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+  transition:
+    color var(--side-panel-transition),
+    background-color var(--side-panel-transition);
+}
+
+.activity-bar-item:hover {
+  color: #18181b;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.dark .activity-bar-item {
+  color: #a1a1aa;
+}
+
+.dark .activity-bar-item:hover {
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.activity-bar-item--active {
+  color: #18181b;
+}
+
+.dark .activity-bar-item--active {
+  color: #fafafa;
+}
+
+.activity-bar-item__indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 0;
+  border-radius: 0 2px 2px 0;
+  background: #3b82f6;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition:
+    height var(--side-panel-transition),
+    opacity var(--side-panel-transition);
+}
+
+.activity-bar-item--active .activity-bar-item__indicator {
+  height: 22px;
+  opacity: 1;
+}
+
+.activity-bar-item--soon {
+  opacity: 0.55;
+}
+
+.side-panel {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #fafafa;
+  border-right: 1px solid #e4e4e7;
+  width: var(--side-panel-width);
+  transition:
+    width var(--side-panel-transition),
+    border-color var(--side-panel-transition);
+  will-change: width;
+}
+
+.dark .side-panel {
+  background: #09090b;
+  border-right-color: #27272a;
+}
+
+.side-panel--collapsed {
+  width: 0 !important;
+  border-right-width: 0;
+}
+
+.side-panel--resizing {
+  transition: none;
+}
+
+.side-panel__inner {
+  display: flex;
+  flex-direction: column;
+  width: var(--side-panel-width);
+  min-width: var(--side-panel-width);
+  height: 100%;
+  opacity: 1;
+  transition: opacity var(--side-panel-transition);
+}
+
+.side-panel--collapsed .side-panel__inner {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.side-panel__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.side-panel__resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 6;
+  background: transparent;
+  transition: background-color 150ms ease;
+}
+
+.side-panel__resizer:hover,
+.side-panel__resizer:active {
+  background: rgba(59, 130, 246, 0.45);
+}
+
+/* Keep Activity Bar on small screens; panel still collapses via UI */
+@media (max-width: 640px) {
+  .activity-bar {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .activity-bar-item {
+    width: 34px;
+    height: 34px;
+  }
+}

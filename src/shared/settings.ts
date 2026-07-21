@@ -46,11 +46,21 @@ export interface AppSettings {
   rememberFocusMode: boolean
   /** Last known focus-mode state (when rememberFocusMode is true) */
   focusModeLast: boolean
-  /** File explorer sidebar open (persisted per workspace preferences) */
+  /**
+   * @deprecated Prefer sidePanelCollapsed (inverted). Kept for migration.
+   * When true, side panel is open (not collapsed).
+   */
   sidebarOpen: boolean
-  /** Explorer sidebar width in px */
+  /** Side panel width in px (Activity Bar companion column) */
   sidebarWidth: number
+  /** Active Activity Bar view id */
+  activeView: SidePanelViewId
+  /** When true, only Activity Bar is visible (side panel hidden) */
+  sidePanelCollapsed: boolean
 }
+
+/** Activity Bar / Side Panel views (order: Explorer first) */
+export type SidePanelViewId = 'explorer' | 'outline' | 'timeline' | 'search'
 
 export const DEFAULT_SETTINGS: AppSettings = {
   fontFamily: 'Menlo, Monaco, Consolas, monospace',
@@ -72,13 +82,24 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showMarkdownProperties: true,
   rememberFocusMode: true,
   focusModeLast: false,
-  sidebarOpen: false,
-  sidebarWidth: 240
+  sidebarOpen: true,
+  sidebarWidth: 240,
+  activeView: 'explorer',
+  sidePanelCollapsed: false
 }
 
 export const MIN_SIDEBAR_WIDTH = 160
 export const MAX_SIDEBAR_WIDTH = 480
 export const DEFAULT_SIDEBAR_WIDTH = 240
+export const ACTIVITY_BAR_WIDTH = 48
+export const SIDE_PANEL_TRANSITION_MS = 300
+
+export const SIDE_PANEL_VIEWS: readonly SidePanelViewId[] = [
+  'explorer',
+  'outline',
+  'timeline',
+  'search'
+] as const
 
 export const MIN_MERMAID_FONT_SIZE = 10
 export const MAX_MERMAID_FONT_SIZE = 24

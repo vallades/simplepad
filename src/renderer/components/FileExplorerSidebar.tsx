@@ -68,7 +68,16 @@ function resolveParentDir(
   return parent || rootPath
 }
 
-function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.Element {
+interface FileExplorerSidebarProps {
+  onClose?: () => void
+  /** When true, fill Side Panel (no own width / resizer) */
+  embedded?: boolean
+}
+
+function FileExplorerSidebar({
+  onClose,
+  embedded = false
+}: FileExplorerSidebarProps): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
   const name = useWorkspaceStore((s) => s.name)
   const sidebarWidth = useSettingsStore((s) => s.sidebarWidth)
@@ -631,8 +640,13 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
 
   return (
     <aside
-      className="relative flex h-full shrink-0 flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/60"
-      style={{ width }}
+      className={[
+        'relative flex h-full min-h-0 flex-col bg-transparent',
+        embedded
+          ? 'w-full min-w-0 flex-1'
+          : 'shrink-0 border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/60'
+      ].join(' ')}
+      style={embedded ? undefined : { width }}
       aria-label="Explorador de arquivos"
       onContextMenu={(e) => {
         if (!rootPath) return
@@ -831,14 +845,16 @@ function FileExplorerSidebar({ onClose }: { onClose?: () => void }): React.JSX.E
         />
       ) : null}
 
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Redimensionar explorador"
-        title="Arraste para redimensionar"
-        className="absolute top-0 right-0 bottom-0 z-10 w-1 cursor-col-resize hover:bg-blue-400/50"
-        onPointerDown={onResizePointerDown}
-      />
+      {!embedded ? (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Redimensionar explorador"
+          title="Arraste para redimensionar"
+          className="absolute top-0 right-0 bottom-0 z-10 w-1 cursor-col-resize hover:bg-blue-400/50"
+          onPointerDown={onResizePointerDown}
+        />
+      ) : null}
     </aside>
   )
 }

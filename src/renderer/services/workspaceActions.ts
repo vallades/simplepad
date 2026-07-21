@@ -36,7 +36,7 @@ function capturePortableTabs(): Tab[] {
 async function rehydrateAfterWorkspaceSwitch(portable: Tab[]): Promise<void> {
   await useSettingsStore.getState().loadFromMain()
   const settings = useSettingsStore.getState()
-  useUiStore.getState().setSidebarOpen(settings.sidebarOpen)
+  useUiStore.getState().setSidebarOpen(!settings.sidePanelCollapsed)
 
   try {
     const { session } = await loadSessionFromMain()

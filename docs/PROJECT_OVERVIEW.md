@@ -1,81 +1,62 @@
-# SimplePad — Project Overview (v2.1)
+# SimplePad — Project Overview (v2.2)
 
-Visão da linha **v2.1 “File Explorer avançado + correções de workspace”**.  
+Visão da linha **v2.2 “Layout Visual Studio Code”**.  
 Histórico: [PROJETO.md](./PROJETO.md).
 
 ## Versão
 
-| Campo     | Valor                                       |
-| --------- | ------------------------------------------- |
-| **Atual** | **2.1.0**                                   |
-| Anterior  | 2.0.0 (Workspaces + explorer básico)        |
-| Foco      | Explorer, abas portáteis, menus de contexto |
-| Tag       | `v2.1.0`                                    |
-| Branch    | `feature/v2.1-file-explorer-fixes` → `main` |
+| Campo     | Valor                                     |
+| --------- | ----------------------------------------- |
+| **Atual** | **2.2.0**                                 |
+| Anterior  | 2.1.0 (File Explorer avançado + menus)    |
+| Foco      | Activity Bar + Side Panel + animações CSS |
+| Tag       | `v2.2.0`                                  |
 
-## O que entra na v2.1
-
-### Correções
-
-1. **Abas portáteis** — rascunhos sem path / `untitled-notes` viajam ao trocar workspace
-2. **Refresh da árvore** — save/create + chokidar
-3. **Input inline** no explorador (create/rename) — Electron não tem `window.prompt`
-4. **Editor sincroniza** ao abrir arquivo pelo explorador (Monaco model + disco)
-
-### File Explorer avançado
-
-- Toolbar: nova nota, nova pasta, refresh, expandir, recolher
-- Menus de contexto ricos (arquivo, pasta, raiz)
-- Busca, DnD, loading, `⌘B`
-
-### Menus de contexto (abas)
-
-- Fechar / outras / à direita / todas
-- Salvar, recarregar, copiar path/nome, revelar no SO
-- Formato Markdown/Plain Text, duplicar, nova aba
-
-## Arquitetura
+## Layout v2.2
 
 ```
-workspace switch:
-  1. capture portable tabs (untitled)
-  2. flush full session → current data dir
-  3. rebind managers + open root
-  4. load destination session
-  5. merge portable drafts into open tabs
-
-explorer refresh:
-  save/create → requestExplorerRefresh
-  chokidar → workspace:fs-changed → same
+┌──────────────────────────────────────────────────────────┐
+│ Header                                                   │
+├──────────────────────────────────────────────────────────┤
+│ TabBar                                                   │
+├────┬──────────┬──────────────────────────────────────────┤
+│ AB │ Side     │ Editor  [ | Preview | Outline right ]    │
+│ 48 │ Panel    │                                          │
+│ px │ 240px    │                                          │
+├────┴──────────┴──────────────────────────────────────────┤
+│ StatusBar                                                │
+└──────────────────────────────────────────────────────────┘
 ```
 
-| Área     | Path                                      |
-| -------- | ----------------------------------------- |
-| Portable | `src/shared/workspacePortable.ts`         |
-| FS ops   | `src/main/workspaceFs.ts`                 |
-| Watcher  | `src/main/workspaceWatcher.ts` (chokidar) |
-| Events   | `src/renderer/services/explorerEvents.ts` |
-| UI       | `FileExplorerSidebar.tsx`, `TabBar.tsx`   |
-| Menu UI  | `ContextMenu.tsx`                         |
+- **Activity Bar:** Explorador · Outline · Timeline · Busca (últimos dois em breve)
+- **Side Panel:** conteúdo da view ativa; colapsável (duplo clique / ⌘B)
+- **Editor:** centro; Split View inalterado
+
+## Componentes
+
+| Peça        | Path                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------- |
+| ActivityBar | `src/renderer/components/ActivityBar.tsx`                                              |
+| SidePanel   | `src/renderer/components/SidePanel.tsx`                                                |
+| CSS vars    | `styles.css` (`--activity-bar-width`, `--side-panel-width`, `--side-panel-transition`) |
 
 ## Como testar
 
 ```bash
-git checkout feature/v2.1-file-explorer-fixes
-npm install
-npm test && npm run lint && npm run typecheck
+git checkout feature/v2.2-vscode-layout
+npm install && npm test && npm run lint && npm run typecheck
 npm run dev
 ```
 
-1. Rascunho em Pessoal → abrir workspace → rascunho continua
-2. Nova nota (input inline) → abre no editor
-3. Clique em várias notas no explorador → editor atualiza
-4. Contexto na aba e no explorador (fechar outras, revelar, duplicar…)
-5. Chokidar: criar arquivo no Finder → árvore atualiza
+1. Ícone de pastas (1º) abre o Explorador
+2. Clique em Outline → TOC no painel esquerdo
+3. Duplo clique no ícone ativo → painel some (só Activity Bar)
+4. Arraste a borda do painel → largura persiste ao reabrir
+5. Timeline / Busca → placeholder “em breve”
 
 ## Release
 
 ```bash
-git tag -a v2.1.0 -m "SimplePad v2.1.0 - Advanced File Explorer and workspace fixes"
-git push origin v2.1.0
+git tag -a v2.2.0 -m "SimplePad v2.2.0 - VS Code style layout"
+git push origin v2.2.0
 ```

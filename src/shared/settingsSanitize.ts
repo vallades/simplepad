@@ -16,8 +16,10 @@ import {
   MIN_SIDEBAR_WIDTH,
   MIN_SPLIT_RATIO,
   type AppSettings,
+  type SidePanelViewId,
   type SplitOrientation,
-  type ThemePreference
+  type ThemePreference,
+  SIDE_PANEL_VIEWS
 } from './settings'
 
 function clamp(value: number, min: number, max: number): number {
@@ -150,11 +152,6 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.focusModeLast
       : DEFAULT_SETTINGS.focusModeLast
 
-  const sidebarOpen =
-    typeof candidate.sidebarOpen === 'boolean'
-      ? candidate.sidebarOpen
-      : DEFAULT_SETTINGS.sidebarOpen
-
   const sidebarWidth = clamp(
     typeof candidate.sidebarWidth === 'number'
       ? Math.round(candidate.sidebarWidth)
@@ -162,6 +159,24 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     MIN_SIDEBAR_WIDTH,
     MAX_SIDEBAR_WIDTH
   )
+
+  const activeView: SidePanelViewId =
+    typeof candidate.activeView === 'string' &&
+    (SIDE_PANEL_VIEWS as readonly string[]).includes(candidate.activeView)
+      ? (candidate.activeView as SidePanelViewId)
+      : DEFAULT_SETTINGS.activeView
+
+  // Prefer explicit sidePanelCollapsed; migrate from legacy sidebarOpen
+  let sidePanelCollapsed: boolean
+  if (typeof candidate.sidePanelCollapsed === 'boolean') {
+    sidePanelCollapsed = candidate.sidePanelCollapsed
+  } else if (typeof candidate.sidebarOpen === 'boolean') {
+    sidePanelCollapsed = !candidate.sidebarOpen
+  } else {
+    sidePanelCollapsed = DEFAULT_SETTINGS.sidePanelCollapsed
+  }
+
+  const sidebarOpen = !sidePanelCollapsed
 
   return {
     fontFamily,
@@ -184,7 +199,9 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     rememberFocusMode,
     focusModeLast,
     sidebarOpen,
-    sidebarWidth
+    sidebarWidth,
+    activeView,
+    sidePanelCollapsed
   }
 }
 
