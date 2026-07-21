@@ -156,6 +156,30 @@ const api = {
   listWorkspaceDir: (dirPath?: string): Promise<IpcResult<ListDirResult>> =>
     ipcRenderer.invoke('workspace:list-dir', dirPath),
 
+  searchWorkspace: (request: {
+    query: string
+    caseSensitive?: boolean
+    maxHits?: number
+  }): Promise<IpcResult<import('../shared/workspaceSearch').WorkspaceSearchHit[]>> =>
+    ipcRenderer.invoke('workspace:search', request),
+
+  listTimeline: (
+    limit?: number
+  ): Promise<
+    IpcResult<
+      Array<{
+        filePath: string
+        title: string
+        lastModified: string
+        workspaceLabel: string
+        source: 'recent' | 'workspace'
+      }>
+    >
+  > => ipcRenderer.invoke('workspace:timeline', limit),
+
+  resolveWikiNote: (targetName: string): Promise<IpcResult<{ filePath: string } | null>> =>
+    ipcRenderer.invoke('workspace:resolve-wiki', targetName),
+
   createWorkspaceNote: (request: {
     parentDir?: string
     fileName?: string

@@ -10,6 +10,8 @@ import { useUiStore } from '../store/useUiStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { applyScrollRatio } from '../utils/debounce'
 import { parseFrontmatter } from '../utils/frontmatter'
+import { wikiLinksToMarkdown } from '../../shared/wikiLinks'
+import { openWikiLink } from '../services/wikiLinkActions'
 import MermaidBlock from './MermaidBlock'
 import PropertiesPanel from './PropertiesPanel'
 
@@ -104,11 +106,53 @@ function PreviewPanel(): React.JSX.Element {
       )
     }
 
-    const mdBody = frontmatter?.body ?? debouncedContent
+    const mdBody = wikiLinksToMarkdown(frontmatter?.body ?? debouncedContent)
     const showProps =
       showMarkdownProperties && frontmatter?.hasFrontmatter && frontmatter.data
         ? Object.keys(frontmatter.data).length > 0
         : false
+
+    const markdownComponents = {
+      a({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+        if (href?.startsWith('wiki:')) {
+          const target = decodeURIComponent(href.slice('wiki:'.length))
+          return (
+            <button
+              type="button"
+              className="wiki-link inline p-0 font-inherit text-blue-600 underline decoration-dotted underline-offset-2 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              title={`Abrir nota: ${target}`}
+              onClick={(e) => {
+                e.preventDefault()
+                void openWikiLink(target)
+              }}
+            >
+              {children}
+            </button>
+          )
+        }
+        return (
+          <a href={href} target="_blank" rel="noreferrer" {...props}>
+            {children}
+          </a>
+        )
+      },
+      ...(mermaidEnabled
+        ? {
+            code({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) {
+              const match = /language-(\w+)/.exec(className || '')
+              const code = String(children).replace(/\n$/, '')
+              if (match?.[1] === 'mermaid') {
+                return <MermaidBlock chart={code} />
+              }
+              return (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              )
+            }
+          }
+        : {})
+    }
 
     return (
       <div className="markdown-preview">
@@ -116,24 +160,7 @@ function PreviewPanel(): React.JSX.Element {
         <ReactMarkdown
           remarkPlugins={remarkPlugins}
           rehypePlugins={rehypePlugins}
-          components={
-            mermaidEnabled
-              ? {
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const code = String(children).replace(/\n$/, '')
-                    if (match?.[1] === 'mermaid') {
-                      return <MermaidBlock chart={code} />
-                    }
-                    return (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    )
-                  }
-                }
-              : undefined
-          }
+          components={markdownComponents}
         >
           {mdBody.length > 0 ? mdBody : '*Nada para pré-visualizar*'}
         </ReactMarkdown>

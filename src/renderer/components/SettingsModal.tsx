@@ -52,6 +52,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const newTabDefaultMarkdown = useSettingsStore((s) => s.newTabDefaultMarkdown)
   const autoEnablePreviewOnMarkdown = useSettingsStore((s) => s.autoEnablePreviewOnMarkdown)
   const rememberFocusMode = useSettingsStore((s) => s.rememberFocusMode)
+  const backlinksPlacement = useSettingsStore((s) => s.backlinksPlacement)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
 
   const knownFont = MONOSPACE_FONT_OPTIONS.includes(fontFamily)
@@ -512,6 +513,26 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
                       void updateSettings({ rememberFocusMode: event.target.checked })
                     }}
                   />
+                </label>
+                <label className="flex flex-col gap-1 pt-2">
+                  <span className="text-xs font-medium text-zinc-500">
+                    Backlinks também no Outline
+                  </span>
+                  <select
+                    className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    value={backlinksPlacement}
+                    onChange={(event) => {
+                      const value = event.target.value === 'panel' ? 'panel' : 'outline'
+                      void updateSettings({ backlinksPlacement: value })
+                    }}
+                  >
+                    <option value="outline">Sim — seção no Outline + ícone na barra</option>
+                    <option value="panel">Não — só o painel da Activity Bar</option>
+                  </select>
+                  <span className="text-[11px] text-zinc-400">
+                    O ícone Backlinks na Activity Bar fica sempre disponível. Use{' '}
+                    <code className="text-[10px]">[[…]]</code> para criar links.
+                  </span>
                 </label>
               </div>
             </div>

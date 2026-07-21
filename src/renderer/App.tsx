@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Columns2, Maximize2, Minimize2, PanelLeft, Settings } from 'lucide-react'
+import { Columns2, Maximize2, Minimize2, Settings } from 'lucide-react'
 import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import SettingsModal from './components/SettingsModal'
@@ -7,7 +7,9 @@ import SearchAllTabsModal from './components/SearchAllTabsModal'
 import ExportPdfModal from './components/ExportPdfModal'
 import ToastStack from './components/ToastStack'
 import EditorWorkspace from './components/EditorWorkspace'
-import FileExplorerSidebar from './components/FileExplorerSidebar'
+import ActivityBar from './components/ActivityBar'
+import SidePanel from './components/SidePanel'
+import type { SidePanelViewId } from '../shared/settings'
 import { dispatchEditorCommand } from './services/editorCommands'
 import { useTabsStore } from './store/useTabsStore'
 import { useSettingsStore } from './store/useSettingsStore'
@@ -70,12 +72,14 @@ function App(): React.JSX.Element {
   const autoSaveIntervalSeconds = useSettingsStore((state) => state.autoSaveIntervalSeconds)
   const splitOrientation = useSettingsStore((state) => state.splitOrientation)
   const updateSettings = useSettingsStore((state) => state.updateSettings)
+  const activeView = useSettingsStore((state) => state.activeView)
+  const sidePanelCollapsed = useSettingsStore((state) => state.sidePanelCollapsed)
+  const sidebarWidth = useSettingsStore((state) => state.sidebarWidth)
 
   const splitPreview = useUiStore((state) => state.splitPreview)
   const toggleSplitPreview = useUiStore((state) => state.toggleSplitPreview)
   const focusMode = useUiStore((state) => state.focusMode)
   const setFocusMode = useUiStore((state) => state.setFocusMode)
-  const sidebarOpen = useUiStore((state) => state.sidebarOpen)
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -119,10 +123,32 @@ function App(): React.JSX.Element {
   }, [applyFocusMode])
 
   const requestToggleSidebar = useCallback((): void => {
-    const next = !useUiStore.getState().sidebarOpen
-    setSidebarOpen(next)
-    void useSettingsStore.getState().updateSettings({ sidebarOpen: next })
+    const collapsed = !useSettingsStore.getState().sidePanelCollapsed
+    setSidebarOpen(!collapsed)
+    void useSettingsStore.getState().updateSettings({
+      sidePanelCollapsed: collapsed,
+      sidebarOpen: !collapsed
+    })
   }, [setSidebarOpen])
+
+  const selectActivityView = useCallback(
+    (view: SidePanelViewId): void => {
+      setSidebarOpen(true)
+      void updateSettings({
+        activeView: view,
+        sidePanelCollapsed: false,
+        sidebarOpen: true
+      })
+    },
+    [setSidebarOpen, updateSettings]
+  )
+
+  const setSidePanelWidth = useCallback(
+    (width: number): void => {
+      void updateSettings({ sidebarWidth: width })
+    },
+    [updateSettings]
+  )
 
   const flushSession = useCallback(async (): Promise<boolean> => {
     const state = useTabsStore.getState()
@@ -264,7 +290,7 @@ function App(): React.JSX.Element {
       await loadWorkspaceInfo()
       if (cancelled) return
       const settings = useSettingsStore.getState()
-      setSidebarOpen(settings.sidebarOpen)
+      setSidebarOpen(!settings.sidePanelCollapsed)
       if (settings.rememberFocusMode && settings.focusModeLast) {
         applyFocusMode(true)
       }
@@ -639,21 +665,6 @@ function App(): React.JSX.Element {
               type="button"
               className={[
                 'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
-                sidebarOpen
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
-              ].join(' ')}
-              onClick={() => requestToggleSidebar()}
-              title="Explorador de arquivos (Ctrl/Cmd+B)"
-              aria-pressed={sidebarOpen}
-            >
-              <PanelLeft size={14} strokeWidth={2} aria-hidden />
-              <span className="hidden sm:inline">Arquivos</span>
-            </button>
-            <button
-              type="button"
-              className={[
-                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
                 splitPreview
                   ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
                   : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
@@ -707,8 +718,22 @@ function App(): React.JSX.Element {
       {!focusMode ? <TabBar /> : null}
 
       <main className="flex min-h-0 flex-1 flex-row">
-        {!focusMode && sidebarOpen ? (
-          <FileExplorerSidebar onClose={() => requestToggleSidebar()} />
+        {!focusMode ? (
+          <>
+            <ActivityBar
+              activeView={activeView}
+              collapsed={sidePanelCollapsed}
+              onSelect={selectActivityView}
+              onToggleCollapse={requestToggleSidebar}
+            />
+            <SidePanel
+              activeView={activeView}
+              collapsed={sidePanelCollapsed}
+              width={sidebarWidth}
+              onWidthChange={setSidePanelWidth}
+              onCollapse={requestToggleSidebar}
+            />
+          </>
         ) : null}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <EditorWorkspace />

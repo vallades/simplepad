@@ -24,9 +24,13 @@ import { getUntitledNotesManager } from './untitledNotesManager'
 import { getSnippetsManager } from './snippetsManager'
 import { getWorkspaceManager } from './workspaceManager'
 import * as workspaceFs from './workspaceFs'
+import { searchWorkspaceFiles } from './workspaceSearch'
 import type { TextSnippet } from '../shared/snippets'
 import type { ListDirResult, WorkspaceInfo } from '../shared/workspace'
 import type { WorkspaceFsResult } from './workspaceFs'
+import type { WorkspaceSearchHit } from '../shared/workspaceSearch'
+import { basename } from 'path'
+import { existsSync, statSync } from 'fs'
 import type {
   AppSettings,
   ConfirmDialogRequest,
@@ -323,6 +327,112 @@ export function registerIpcHandlers(): void {
       } catch (error) {
         log.error('[ipc] workspace:duplicate', error)
         return { ok: false, error: errorMessage(error) }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'workspace:resolve-wiki',
+    (_event, targetName: string): IpcResult<{ filePath: string } | null> => {
+      try {
+        if (typeof targetName !== 'string' || !targetName.trim()) {
+          return { ok: false, error: 'Nome inválido', data: null }
+        }
+        if (!getWorkspaceManager().getActiveRoot()) {
+          return { ok: true, data: null }
+        }
+        const filePath = workspaceFs.resolveWikiNote(targetName.trim())
+        return { ok: true, data: filePath ? { filePath } : null }
+      } catch (error) {
+        log.error('[ipc] workspace:resolve-wiki', error)
+        return { ok: false, error: errorMessage(error), data: null }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'workspace:search',
+    (
+      _event,
+      request: { query: string; caseSensitive?: boolean; maxHits?: number }
+    ): IpcResult<WorkspaceSearchHit[]> => {
+      try {
+        const root = getWorkspaceManager().getActiveRoot()
+        if (!root) {
+          return { ok: true, data: [] }
+        }
+        if (!request || typeof request.query !== 'string') {
+          return { ok: false, error: 'Query inválida', data: [] }
+        }
+        const data = searchWorkspaceFiles(root, {
+          query: request.query,
+          caseSensitive: request.caseSensitive === true,
+          maxHits: typeof request.maxHits === 'number' ? request.maxHits : undefined
+        })
+        return { ok: true, data }
+      } catch (error) {
+        log.error('[ipc] workspace:search', error)
+        return { ok: false, error: errorMessage(error), data: [] }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'workspace:timeline',
+    (
+      _event,
+      limit?: number
+    ): IpcResult<
+      Array<{
+        filePath: string
+        title: string
+        lastModified: string
+        workspaceLabel: string
+        source: 'recent' | 'workspace'
+      }>
+    > => {
+      try {
+        const max = Math.min(40, Math.max(1, typeof limit === 'number' ? Math.round(limit) : 20))
+        const recent = getPreferencesManager().getRecentFiles()
+        const root = getWorkspaceManager().getActiveRoot()
+        const workspaceLabel = root ? basename(root) : 'Pessoal'
+        const seen = new Set<string>()
+        const items: Array<{
+          filePath: string
+          title: string
+          lastModified: string
+          workspaceLabel: string
+          source: 'recent' | 'workspace'
+        }> = []
+
+        for (const filePath of recent) {
+          if (items.length >= max) break
+          if (!filePath || seen.has(filePath)) continue
+          if (!existsSync(filePath)) continue
+          try {
+            const st = statSync(filePath)
+            if (!st.isFile()) continue
+            seen.add(filePath)
+            items.push({
+              filePath,
+              title: basename(filePath),
+              lastModified: st.mtime.toISOString(),
+              workspaceLabel:
+                root && filePath.replace(/\\/g, '/').startsWith(root.replace(/\\/g, '/'))
+                  ? workspaceLabel
+                  : 'Arquivos recentes',
+              source: 'recent'
+            })
+          } catch {
+            // skip
+          }
+        }
+
+        items.sort((a, b) => b.lastModified.localeCompare(a.lastModified))
+        return { ok: true, data: items.slice(0, max) }
+      } catch (error) {
+        log.error('[ipc] workspace:timeline', error)
+        return { ok: false, error: errorMessage(error), data: [] }
       }
     }
   )

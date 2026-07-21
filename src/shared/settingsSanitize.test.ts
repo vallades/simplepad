@@ -94,10 +94,28 @@ describe('sanitizeSettings', () => {
 
   it('sanitizes sidebar open and width', () => {
     expect(sanitizeSettings({ sidebarOpen: true }).sidebarOpen).toBe(true)
-    expect(sanitizeSettings({}).sidebarOpen).toBe(false)
+    expect(sanitizeSettings({ sidebarOpen: true }).sidePanelCollapsed).toBe(false)
+    expect(sanitizeSettings({}).sidePanelCollapsed).toBe(false)
+    expect(sanitizeSettings({}).sidebarOpen).toBe(true)
     expect(sanitizeSettings({ sidebarWidth: 50 }).sidebarWidth).toBe(160)
     expect(sanitizeSettings({ sidebarWidth: 999 }).sidebarWidth).toBe(480)
     expect(sanitizeSettings({ sidebarWidth: 240 }).sidebarWidth).toBe(240)
+  })
+
+  it('migrates and validates activity bar view', () => {
+    expect(sanitizeSettings({ activeView: 'outline' }).activeView).toBe('outline')
+    expect(sanitizeSettings({ activeView: 'nope' as 'explorer' }).activeView).toBe('explorer')
+    expect(sanitizeSettings({ sidePanelCollapsed: true }).sidePanelCollapsed).toBe(true)
+    expect(sanitizeSettings({ sidePanelCollapsed: true }).sidebarOpen).toBe(false)
+  })
+
+  it('sanitizes backlinks placement', () => {
+    expect(sanitizeSettings({ backlinksPlacement: 'panel' }).backlinksPlacement).toBe('panel')
+    expect(sanitizeSettings({}).backlinksPlacement).toBe('outline')
+    // Panel view is always allowed regardless of placement setting
+    expect(
+      sanitizeSettings({ backlinksPlacement: 'outline', activeView: 'backlinks' }).activeView
+    ).toBe('backlinks')
   })
 })
 

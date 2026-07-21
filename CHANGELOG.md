@@ -6,6 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.4.0] — 2026-07-21
+
+**Polimento da Sidebar + Links Internos** (`[[Nota]]`).
+
+### Added
+
+- **Wiki links** `[[Nome da Nota]]` / `[[Nota|rótulo]]` no editor e no Preview
+- Ctrl/Cmd+clique no editor (decoração pontilhada) e clique no Preview
+- Existe → abre em **aba** (nova se ainda não aberta); não existe → **nova aba** Markdown com `# Título` (+ arquivo no workspace se houver)
+- **Backlinks** configuráveis: dentro do Outline **ou** painel separado na Activity Bar (Settings)
+- Activity Bar: `FolderTree`, hover/scale, indicador azul; ícone Backlinks opcional
+
+### Changed
+
+- Versão **2.3.0 → 2.4.0**
+
+## [2.3.0] — 2026-07-21
+
+**Sidebar real** — Outline, busca global e Timeline no Side Panel.
+
+### Added
+
+- **Outline** hierárquico da aba Markdown ativa (debounce, clique → scroll suave no editor)
+- **Busca global**: abas abertas + arquivos do workspace (IPC `workspace:search`, resultados com linha/trecho)
+- **Timeline**: últimas 20 notas (recentes + abas abertas com path); clique abre/foca
+- IPC `workspace:timeline`; animação ao trocar de view no Side Panel
+
+### Changed
+
+- Activity Bar: Timeline e Busca deixam de ser placeholders
+- Versão **2.2.0 → 2.3.0**
+
+## [2.2.0] — 2026-07-21
+
+**Layout estilo Visual Studio Code** — Activity Bar, Side Panel e animações.
+
+### Added
+
+- **Activity Bar** (~48px) à esquerda com ícones: Explorador (primeiro), Outline, Timeline, Busca
+- Clique simples no ícone abre a view; **duplo clique** recolhe o Side Panel
+- **Side Panel** redimensionável (padrão 240px) com transição suave (300ms)
+- Views: Explorador de arquivos, Outline (TOC), placeholders Timeline e Busca
+- Preferências: `activeView`, `sidePanelCollapsed`, `sidebarWidth` (persistidas)
+
+### Changed
+
+- Layout principal: Activity Bar | Side Panel | Editor (+ Preview no split)
+- ⌘B / Ctrl+B alterna colapso do Side Panel
+- Versão **2.1.0 → 2.2.0**
+
 ## [2.1.0] — 2026-07-21
 
 **File Explorer avançado + correções de workspace + menus de contexto.**

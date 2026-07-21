@@ -244,3 +244,234 @@ button:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 1px;
 }
+
+/* ——— VS Code–style Activity Bar + Side Panel (v2.2) ——— */
+:root {
+  --activity-bar-width: 48px;
+  --side-panel-width: 240px;
+  --side-panel-transition: 300ms ease-in-out;
+}
+
+.activity-bar {
+  display: flex;
+  flex-direction: column;
+  width: var(--activity-bar-width);
+  min-width: var(--activity-bar-width);
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #f4f4f5 0%, #ececee 100%);
+  border-right: 1px solid #e4e4e7;
+  z-index: 5;
+}
+
+.dark .activity-bar {
+  background: linear-gradient(180deg, #18181b 0%, #121214 100%);
+  border-right-color: #27272a;
+}
+
+.activity-bar__top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.activity-bar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.activity-bar-item__icon {
+  transition: transform 200ms ease;
+}
+
+.activity-bar-item:hover {
+  color: #18181b;
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.activity-bar-item:hover .activity-bar-item__icon {
+  transform: scale(1.08);
+}
+
+.activity-bar-item:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.dark .activity-bar-item {
+  color: #a1a1aa;
+}
+
+.dark .activity-bar-item:hover {
+  color: #fafafa;
+  background: rgba(96, 165, 250, 0.12);
+}
+
+.activity-bar-item--active {
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.dark .activity-bar-item--active {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.25);
+}
+
+.activity-bar-item__indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 0 3px 3px 0;
+  background: #3b82f6;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition:
+    height 220ms ease,
+    opacity 220ms ease;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.55);
+}
+
+.activity-bar-item--active .activity-bar-item__indicator {
+  height: 20px;
+  opacity: 1;
+}
+
+.activity-bar-item--soon {
+  opacity: 0.5;
+}
+
+/* Wiki links in preview */
+.markdown-preview .wiki-link {
+  cursor: pointer;
+  font: inherit;
+  background: none;
+  border: none;
+}
+
+.side-panel {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #fafafa;
+  border-right: 1px solid #e4e4e7;
+  width: var(--side-panel-width);
+  transition:
+    width var(--side-panel-transition),
+    border-color var(--side-panel-transition);
+  will-change: width;
+}
+
+.dark .side-panel {
+  background: #09090b;
+  border-right-color: #27272a;
+}
+
+.side-panel--collapsed {
+  width: 0 !important;
+  border-right-width: 0;
+}
+
+.side-panel--resizing {
+  transition: none;
+}
+
+.side-panel__inner {
+  display: flex;
+  flex-direction: column;
+  width: var(--side-panel-width);
+  min-width: var(--side-panel-width);
+  height: 100%;
+  opacity: 1;
+  transition: opacity var(--side-panel-transition);
+}
+
+.side-panel--collapsed .side-panel__inner {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.side-panel__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  animation: side-view-in var(--side-panel-transition);
+}
+
+.side-view {
+  animation: side-view-in var(--side-panel-transition);
+}
+
+@keyframes side-view-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-panel,
+  .side-panel__inner,
+  .side-panel__content,
+  .side-view,
+  .activity-bar-item,
+  .activity-bar-item__indicator {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.side-panel__resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 6;
+  background: transparent;
+  transition: background-color 150ms ease;
+}
+
+.side-panel__resizer:hover,
+.side-panel__resizer:active {
+  background: rgba(59, 130, 246, 0.45);
+}
+
+/* Keep Activity Bar on small screens; panel still collapses via UI */
+@media (max-width: 640px) {
+  .activity-bar {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .activity-bar-item {
+    width: 34px;
+    height: 34px;
+  }
+}
