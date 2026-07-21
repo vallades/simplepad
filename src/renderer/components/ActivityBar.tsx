@@ -1,7 +1,6 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { FolderTree, History, Link2, ListTree, Search } from 'lucide-react'
 import type { SidePanelViewId } from '../../shared/settings'
-import { useSettingsStore } from '../store/useSettingsStore'
 
 export interface ActivityBarItem {
   id: SidePanelViewId
@@ -108,19 +107,11 @@ function ActivityBar({
   onSelect,
   onToggleCollapse
 }: ActivityBarProps): React.JSX.Element {
-  const backlinksPlacement = useSettingsStore((s) => s.backlinksPlacement)
-  const items = useMemo(
-    () =>
-      ACTIVITY_BAR_ITEMS.filter(
-        (item) => item.id !== 'backlinks' || backlinksPlacement === 'panel'
-      ),
-    [backlinksPlacement]
-  )
-
+  // Backlinks icon is always available in the Activity Bar
   return (
     <nav className="activity-bar" aria-label="Activity Bar">
       <div className="activity-bar__top">
-        {items.map((item) => (
+        {ACTIVITY_BAR_ITEMS.map((item) => (
           <ActivityBarIcon
             key={item.id}
             item={item}

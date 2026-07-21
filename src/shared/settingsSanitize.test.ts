@@ -112,12 +112,10 @@ describe('sanitizeSettings', () => {
   it('sanitizes backlinks placement', () => {
     expect(sanitizeSettings({ backlinksPlacement: 'panel' }).backlinksPlacement).toBe('panel')
     expect(sanitizeSettings({}).backlinksPlacement).toBe('outline')
-    expect(
-      sanitizeSettings({ backlinksPlacement: 'panel', activeView: 'backlinks' }).activeView
-    ).toBe('backlinks')
+    // Panel view is always allowed regardless of placement setting
     expect(
       sanitizeSettings({ backlinksPlacement: 'outline', activeView: 'backlinks' }).activeView
-    ).toBe('outline')
+    ).toBe('backlinks')
   })
 })
 

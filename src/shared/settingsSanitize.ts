@@ -184,10 +184,6 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       ? candidate.backlinksPlacement
       : DEFAULT_SETTINGS.backlinksPlacement
 
-  // If backlinks are embedded in Outline, don't keep a stale backlinks activeView
-  const resolvedActiveView: SidePanelViewId =
-    backlinksPlacement === 'outline' && activeView === 'backlinks' ? 'outline' : activeView
-
   return {
     fontFamily,
     fontSize,
@@ -210,7 +206,7 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     focusModeLast,
     sidebarOpen,
     sidebarWidth,
-    activeView: resolvedActiveView,
+    activeView,
     sidePanelCollapsed,
     backlinksPlacement
   }
