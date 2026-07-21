@@ -16,6 +16,7 @@ import {
   MIN_SIDEBAR_WIDTH,
   MIN_SPLIT_RATIO,
   type AppSettings,
+  type BacklinksPlacement,
   type SidePanelViewId,
   type SplitOrientation,
   type ThemePreference,
@@ -178,6 +179,15 @@ export function sanitizeSettings(raw: unknown): AppSettings {
 
   const sidebarOpen = !sidePanelCollapsed
 
+  const backlinksPlacement: BacklinksPlacement =
+    candidate.backlinksPlacement === 'panel' || candidate.backlinksPlacement === 'outline'
+      ? candidate.backlinksPlacement
+      : DEFAULT_SETTINGS.backlinksPlacement
+
+  // If backlinks are embedded in Outline, don't keep a stale backlinks activeView
+  const resolvedActiveView: SidePanelViewId =
+    backlinksPlacement === 'outline' && activeView === 'backlinks' ? 'outline' : activeView
+
   return {
     fontFamily,
     fontSize,
@@ -200,8 +210,9 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     focusModeLast,
     sidebarOpen,
     sidebarWidth,
-    activeView,
-    sidePanelCollapsed
+    activeView: resolvedActiveView,
+    sidePanelCollapsed,
+    backlinksPlacement
   }
 }
 

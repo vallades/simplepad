@@ -1,5 +1,5 @@
 /**
- * Resolve and open [[wiki links]] across open tabs and workspace files.
+ * Resolve and open [[wiki links]] — always lands on a tab (new tab if needed).
  */
 
 import { useTabsStore } from '../store/useTabsStore'
@@ -10,6 +10,23 @@ import { openRecentFile } from './fileActions'
 import { createWorkspaceNote } from './workspaceActions'
 import { noteKeyFromPathOrTitle, normalizeNoteKey } from '../../shared/wikiLinks'
 import { revealInEditor } from './editorCommands'
+import { isMarkdownFile } from '../utils/fileUtils'
+import { requestExplorerRefresh } from './explorerEvents'
+
+function displayTitle(target: string): string {
+  return (
+    target
+      .replace(/\.markdown$/i, '')
+      .replace(/\.md$/i, '')
+      .trim() || 'Nota'
+  )
+}
+
+function fileNameForTarget(target: string): string {
+  const t = target.trim()
+  if (/\.(md|markdown)$/i.test(t)) return t
+  return `${t}.md`
+}
 
 function findOpenTabByWikiTarget(target: string): string | null {
   const key = normalizeNoteKey(target)
@@ -22,21 +39,16 @@ function findOpenTabByWikiTarget(target: string): string | null {
   return null
 }
 
-/**
- * Best-effort resolve a wiki target to an absolute path under the workspace.
- */
 async function resolveWorkspacePath(target: string): Promise<string | null> {
   if (!isElectronApiAvailable()) return null
   const root = useWorkspaceStore.getState().rootPath
   if (!root) return null
 
-  // Prefer dedicated IPC when available
   if (typeof window.api.resolveWikiNote === 'function') {
     const result = await window.api.resolveWikiNote(target)
     if (result.ok && result.data?.filePath) return result.data.filePath
   }
 
-  // Fallback: search recent files by basename
   if (typeof window.api.listRecentFiles === 'function') {
     const recent = await window.api.listRecentFiles()
     const key = normalizeNoteKey(target)
@@ -48,8 +60,10 @@ async function resolveWorkspacePath(target: string): Promise<string | null> {
 }
 
 /**
- * Open an internal note by wiki target name.
- * Returns true if a tab was focused or opened.
+ * Open an internal note by wiki target.
+ * - Exists as open tab → focus that tab
+ * - Exists on disk → open in a tab (new tab if not already open)
+ * - Missing → create new Markdown tab with basic content (and file if workspace open)
  */
 export async function openWikiLink(target: string): Promise<boolean> {
   const trimmed = target.trim()
@@ -63,31 +77,39 @@ export async function openWikiLink(target: string): Promise<boolean> {
 
   const path = await resolveWorkspacePath(trimmed)
   if (path) {
+    // openRecentFile creates a new tab when the path is not already open
     await openRecentFile(path)
     return true
   }
 
-  // Create note in workspace root if possible
+  // Create new note
+  const title = displayTitle(trimmed)
+  const fileName = fileNameForTarget(trimmed)
+  const body = `# ${title}\n\n`
+
   const root = useWorkspaceStore.getState().rootPath
-  if (root && typeof createWorkspaceNote === 'function') {
-    const fileName = /\.md$/i.test(trimmed) ? trimmed : `${trimmed}.md`
-    const created = await createWorkspaceNote(
-      root,
-      fileName,
-      `# ${trimmed.replace(/\.md$/i, '')}\n\n`
-    )
+  if (root) {
+    const created = await createWorkspaceNote(root, fileName, body)
     if (created) {
       await openRecentFile(created)
+      requestExplorerRefresh('wiki-create')
       showToast(`Nota criada: ${fileName}`, 'success')
       return true
     }
   }
 
-  showToast(`Nota não encontrada: ${trimmed}`, 'info')
-  return false
+  // No workspace (or create failed): still open a new unsaved tab
+  useTabsStore.getState().createNewTab({
+    title: fileName,
+    content: body,
+    isMarkdown: true,
+    isDirty: true
+  })
+  showToast(`Nova aba: ${title}`, 'info')
+  return true
 }
 
-/** Open backlink source (tab or file) and jump to line. */
+/** Open backlink source (prefer existing tab, else new tab from disk) and jump to line. */
 export async function openBacklinkSource(
   sourceId: string,
   filePath: string | undefined,
@@ -107,7 +129,6 @@ export async function openBacklinkSource(
   })
 }
 
-/** Candidate note titles for autocomplete (open tabs + recent basenames). */
 export function collectNoteTitleCandidates(): string[] {
   const titles: string[] = []
   for (const tab of useTabsStore.getState().tabs) {
@@ -119,3 +140,5 @@ export function collectNoteTitleCandidates(): string[] {
   }
   return titles
 }
+
+export { isMarkdownFile }

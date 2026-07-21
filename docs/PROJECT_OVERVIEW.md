@@ -16,21 +16,21 @@ Histórico: [PROJETO.md](./PROJETO.md).
 
 Sintaxe: `[[Nome da Nota]]` ou `[[Nome|rótulo]]`.
 
-| Superfície      | Ação                                       |
-| --------------- | ------------------------------------------ |
-| Editor (Monaco) | Destaque + **Ctrl/Cmd+clique**             |
-| Preview         | Link clicável                              |
-| Outline sidebar | Seção **Links para esta nota** (backlinks) |
-
-Resolução: aba aberta → arquivo no workspace → criar `Nome.md` (se workspace ativo).
+| Superfície | Ação                                                         |
+| ---------- | ------------------------------------------------------------ |
+| Editor     | Destaque + **Ctrl/Cmd+clique**                               |
+| Preview    | Link clicável                                                |
+| Existe     | Abre em **aba** (nova se não estiver aberta)                 |
+| Não existe | **Nova aba** com `# Título` (+ `.md` no workspace se aberto) |
+| Backlinks  | Settings: **Outline** ou **painel Activity Bar**             |
 
 ## Activity Bar polish
 
 - Ícone explorador: `FolderTree`
-- Hover com leve lift/scale e fundo azul suave
+- Hover com lift/scale e fundo azul suave
 - Indicador lateral azul (3px) no item ativo
-- Refresh da árvore ao salvar/criar (já via `explorerEvents`)
-- DnD de arquivos no explorador (já implementado)
+- Refresh da árvore ao salvar/criar
+- DnD de arquivos no explorador
 
 ## Como testar
 
@@ -40,11 +40,11 @@ npm install && npm test && npm run lint && npm run typecheck
 npm run dev
 ```
 
-1. Em Markdown: digite `[[Outra Nota]]` — destaque no editor
-2. Ctrl/Cmd+clique → abre/cria a nota
-3. Preview com Split — clique no link
-4. Em outra aba, `[[Outra Nota]]` → Outline mostra backlink
-5. Activity Bar: hover e indicador ativo
+1. Markdown: `[[Outra Nota]]` + Ctrl/Cmd+clique → nova aba / foca se aberta
+2. Link inexistente → cria aba (e arquivo se workspace)
+3. Preview → clique no link
+4. Settings → Backlinks em painel separado → ícone Link na Activity Bar
+5. Hover na Activity Bar
 
 ## Release
 

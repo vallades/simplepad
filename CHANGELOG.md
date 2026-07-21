@@ -13,10 +13,10 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 ### Added
 
 - **Wiki links** `[[Nome da Nota]]` / `[[Nota|rótulo]]` no editor e no Preview
-- Ctrl/Cmd+clique no editor (decoração pontilhada) e clique no Preview abrem a nota
-- Resolução no workspace (`workspace:resolve-wiki`); cria `.md` se não existir e houver pasta aberta
-- **Backlinks** no painel Outline: “Links para esta nota” (abas abertas)
-- Activity Bar: ícone `FolderTree`, hover/scale, indicador azul mais visível
+- Ctrl/Cmd+clique no editor (decoração pontilhada) e clique no Preview
+- Existe → abre em **aba** (nova se ainda não aberta); não existe → **nova aba** Markdown com `# Título` (+ arquivo no workspace se houver)
+- **Backlinks** configuráveis: dentro do Outline **ou** painel separado na Activity Bar (Settings)
+- Activity Bar: `FolderTree`, hover/scale, indicador azul; ícone Backlinks opcional
 
 ### Changed
 

@@ -5,6 +5,7 @@ import FileExplorerSidebar from './FileExplorerSidebar'
 import SideOutlineView from './SideOutlineView'
 import SideSearchView from './SideSearchView'
 import SideTimelineView from './SideTimelineView'
+import SideBacklinksView from './SideBacklinksView'
 
 interface SidePanelProps {
   activeView: SidePanelViewId
@@ -18,7 +19,8 @@ const VIEW_TITLES: Record<SidePanelViewId, string> = {
   explorer: 'Explorador',
   outline: 'Outline',
   timeline: 'Timeline',
-  search: 'Busca'
+  search: 'Busca',
+  backlinks: 'Backlinks'
 }
 
 /**
@@ -88,6 +90,7 @@ function SidePanel({
           {activeView === 'outline' ? <SideOutlineView /> : null}
           {activeView === 'timeline' ? <SideTimelineView /> : null}
           {activeView === 'search' ? <SideSearchView /> : null}
+          {activeView === 'backlinks' ? <SideBacklinksView /> : null}
         </div>
       </div>
 

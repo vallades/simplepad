@@ -57,10 +57,18 @@ export interface AppSettings {
   activeView: SidePanelViewId
   /** When true, only Activity Bar is visible (side panel hidden) */
   sidePanelCollapsed: boolean
+  /**
+   * Where to show backlinks for the active note:
+   * - outline: section inside Outline view
+   * - panel: dedicated Activity Bar icon + Side Panel view
+   */
+  backlinksPlacement: BacklinksPlacement
 }
 
 /** Activity Bar / Side Panel views (order: Explorer first) */
-export type SidePanelViewId = 'explorer' | 'outline' | 'timeline' | 'search'
+export type SidePanelViewId = 'explorer' | 'outline' | 'timeline' | 'search' | 'backlinks'
+
+export type BacklinksPlacement = 'outline' | 'panel'
 
 export const DEFAULT_SETTINGS: AppSettings = {
   fontFamily: 'Menlo, Monaco, Consolas, monospace',
@@ -85,7 +93,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarOpen: true,
   sidebarWidth: 240,
   activeView: 'explorer',
-  sidePanelCollapsed: false
+  sidePanelCollapsed: false,
+  backlinksPlacement: 'outline'
 }
 
 export const MIN_SIDEBAR_WIDTH = 160
@@ -98,7 +107,8 @@ export const SIDE_PANEL_VIEWS: readonly SidePanelViewId[] = [
   'explorer',
   'outline',
   'timeline',
-  'search'
+  'search',
+  'backlinks'
 ] as const
 
 export const MIN_MERMAID_FONT_SIZE = 10

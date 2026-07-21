@@ -1,6 +1,7 @@
-import { useRef } from 'react'
-import { FolderTree, History, ListTree, Search } from 'lucide-react'
+import { useMemo, useRef } from 'react'
+import { FolderTree, History, Link2, ListTree, Search } from 'lucide-react'
 import type { SidePanelViewId } from '../../shared/settings'
+import { useSettingsStore } from '../store/useSettingsStore'
 
 export interface ActivityBarItem {
   id: SidePanelViewId
@@ -12,6 +13,7 @@ export interface ActivityBarItem {
 export const ACTIVITY_BAR_ITEMS: readonly ActivityBarItem[] = [
   { id: 'explorer', label: 'Explorador' },
   { id: 'outline', label: 'Outline' },
+  { id: 'backlinks', label: 'Backlinks' },
   { id: 'timeline', label: 'Timeline' },
   { id: 'search', label: 'Busca' }
 ] as const
@@ -44,9 +46,11 @@ function ActivityBarIcon({
       ? FolderTree
       : item.id === 'outline'
         ? ListTree
-        : item.id === 'timeline'
-          ? History
-          : Search
+        : item.id === 'backlinks'
+          ? Link2
+          : item.id === 'timeline'
+            ? History
+            : Search
 
   const handleClick = (): void => {
     const now = Date.now()
@@ -104,10 +108,19 @@ function ActivityBar({
   onSelect,
   onToggleCollapse
 }: ActivityBarProps): React.JSX.Element {
+  const backlinksPlacement = useSettingsStore((s) => s.backlinksPlacement)
+  const items = useMemo(
+    () =>
+      ACTIVITY_BAR_ITEMS.filter(
+        (item) => item.id !== 'backlinks' || backlinksPlacement === 'panel'
+      ),
+    [backlinksPlacement]
+  )
+
   return (
     <nav className="activity-bar" aria-label="Activity Bar">
       <div className="activity-bar__top">
-        {ACTIVITY_BAR_ITEMS.map((item) => (
+        {items.map((item) => (
           <ActivityBarIcon
             key={item.id}
             item={item}
