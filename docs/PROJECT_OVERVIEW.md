@@ -1,52 +1,54 @@
-# SimplePad — Project Overview (v2.3)
+# SimplePad — Project Overview (v2.4)
 
-Visão da linha **v2.3 “Sidebar features”**.  
+Visão da linha **v2.4 “Sidebar polish + wiki links”**.  
 Histórico: [PROJETO.md](./PROJETO.md).
 
 ## Versão
 
-| Campo     | Valor                                          |
-| --------- | ---------------------------------------------- |
-| **Atual** | **2.3.0**                                      |
-| Anterior  | 2.2.0 (layout VS Code)                         |
-| Foco      | Outline, Search e Timeline reais no Side Panel |
-| Tag       | `v2.3.0`                                       |
+| Campo     | Valor                                            |
+| --------- | ------------------------------------------------ |
+| **Atual** | **2.4.0**                                        |
+| Anterior  | 2.3.0 (Outline / Search / Timeline reais)        |
+| Foco      | Polimento Activity Bar + `[[links]]` e backlinks |
+| Tag       | `v2.4.0`                                         |
 
-## Activity Bar views
+## Wiki links
 
-| Ícone | View       | Comportamento                        |
-| ----- | ---------- | ------------------------------------ |
-| 📁    | Explorador | Árvore do workspace                  |
-| ≡     | Outline    | Headings Markdown da aba ativa       |
-| 🕐    | Timeline   | Últimas 20 notas (recentes + abas)   |
-| 🔍    | Busca      | Abas abertas + arquivos do workspace |
+Sintaxe: `[[Nome da Nota]]` ou `[[Nome|rótulo]]`.
 
-## Componentes
+| Superfície      | Ação                                       |
+| --------------- | ------------------------------------------ |
+| Editor (Monaco) | Destaque + **Ctrl/Cmd+clique**             |
+| Preview         | Link clicável                              |
+| Outline sidebar | Seção **Links para esta nota** (backlinks) |
 
-| Peça        | Path                        |
-| ----------- | --------------------------- |
-| Outline     | `SideOutlineView.tsx`       |
-| Search      | `SideSearchView.tsx`        |
-| Timeline    | `SideTimelineView.tsx`      |
-| Search pure | `shared/workspaceSearch.ts` |
-| IPC walk    | `main/workspaceSearch.ts`   |
+Resolução: aba aberta → arquivo no workspace → criar `Nome.md` (se workspace ativo).
+
+## Activity Bar polish
+
+- Ícone explorador: `FolderTree`
+- Hover com leve lift/scale e fundo azul suave
+- Indicador lateral azul (3px) no item ativo
+- Refresh da árvore ao salvar/criar (já via `explorerEvents`)
+- DnD de arquivos no explorador (já implementado)
 
 ## Como testar
 
 ```bash
-git checkout feature/v2.3-sidebar-features
+git checkout feature/v2.4-sidebar-polish-links
 npm install && npm test && npm run lint && npm run typecheck
 npm run dev
 ```
 
-1. Markdown com `#` / `##` → Outline hierárquico; clique → editor rola
-2. Busca: digite termo presente em abas e em arquivos do workspace
-3. Timeline: abrir/salvar notas e ver lista; clique reabre
-4. Trocar de ícone → animação suave no painel
+1. Em Markdown: digite `[[Outra Nota]]` — destaque no editor
+2. Ctrl/Cmd+clique → abre/cria a nota
+3. Preview com Split — clique no link
+4. Em outra aba, `[[Outra Nota]]` → Outline mostra backlink
+5. Activity Bar: hover e indicador ativo
 
 ## Release
 
 ```bash
-git tag -a v2.3.0 -m "SimplePad v2.3.0 - Sidebar Outline, Search and Timeline"
-git push origin v2.3.0
+git tag -a v2.4.0 -m "SimplePad v2.4.0 - Sidebar polish and internal links"
+git push origin v2.4.0
 ```

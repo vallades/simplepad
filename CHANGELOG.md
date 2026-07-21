@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.4.0] — 2026-07-21
+
+**Polimento da Sidebar + Links Internos** (`[[Nota]]`).
+
+### Added
+
+- **Wiki links** `[[Nome da Nota]]` / `[[Nota|rótulo]]` no editor e no Preview
+- Ctrl/Cmd+clique no editor (decoração pontilhada) e clique no Preview abrem a nota
+- Resolução no workspace (`workspace:resolve-wiki`); cria `.md` se não existir e houver pasta aberta
+- **Backlinks** no painel Outline: “Links para esta nota” (abas abertas)
+- Activity Bar: ícone `FolderTree`, hover/scale, indicador azul mais visível
+
+### Changed
+
+- Versão **2.3.0 → 2.4.0**
+
 ## [2.3.0] — 2026-07-21
 
 **Sidebar real** — Outline, busca global e Timeline no Side Panel.
