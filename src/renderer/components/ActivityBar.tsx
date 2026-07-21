@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Files, History, ListTree, Search } from 'lucide-react'
+import { FolderTree, History, ListTree, Search } from 'lucide-react'
 import type { SidePanelViewId } from '../../shared/settings'
 
 export interface ActivityBarItem {
@@ -41,7 +41,7 @@ function ActivityBarIcon({
 
   const Icon =
     item.id === 'explorer'
-      ? Files
+      ? FolderTree
       : item.id === 'outline'
         ? ListTree
         : item.id === 'timeline'
@@ -51,7 +51,6 @@ function ActivityBarIcon({
   const handleClick = (): void => {
     const now = Date.now()
     if (now - lastClickRef.current < 350) {
-      // Double click → collapse panel
       if (timerRef.current != null) {
         window.clearTimeout(timerRef.current)
         timerRef.current = null
@@ -90,14 +89,14 @@ function ActivityBarIcon({
       onClick={handleClick}
     >
       <span className="activity-bar-item__indicator" aria-hidden />
-      <Icon size={22} strokeWidth={1.75} aria-hidden />
+      <Icon size={20} strokeWidth={1.6} className="activity-bar-item__icon" aria-hidden />
     </button>
   )
 }
 
 /**
  * VS Code–style vertical Activity Bar (fixed ~48px).
- * First icon is always File Explorer.
+ * First icon is always File Explorer (FolderTree).
  */
 function ActivityBar({
   activeView,
