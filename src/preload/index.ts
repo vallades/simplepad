@@ -177,6 +177,9 @@ const api = {
     >
   > => ipcRenderer.invoke('workspace:timeline', limit),
 
+  resolveWikiNote: (targetName: string): Promise<IpcResult<{ filePath: string } | null>> =>
+    ipcRenderer.invoke('workspace:resolve-wiki', targetName),
+
   createWorkspaceNote: (request: {
     parentDir?: string
     fileName?: string

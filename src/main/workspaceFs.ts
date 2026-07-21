@@ -6,6 +6,7 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -165,4 +166,71 @@ export function duplicateFile(sourcePath: string): WorkspaceFsResult {
   copyFileSync(from, target)
   log.info('[workspaceFs] duplicate', from, '→', target)
   return { path: target, name: basename(target), isDirectory: false }
+}
+
+function normalizeKey(name: string): string {
+  return name
+    .trim()
+    .replace(/\.markdown$/i, '')
+    .replace(/\.md$/i, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+}
+
+/**
+ * Find a note file under the workspace whose basename matches the wiki target.
+ * Prefers exact `.md` matches; depth-limited walk.
+ */
+export function resolveWikiNote(targetName: string, maxDepth = 6): string | null {
+  const root = getRoot()
+  const key = normalizeKey(targetName)
+  if (!key) return null
+
+  const preferred = [`${targetName.trim()}.md`, `${targetName.trim()}.markdown`, targetName.trim()]
+  for (const name of preferred) {
+    const direct = join(root, name)
+    if (existsSync(direct) && statSync(direct).isFile()) return direct
+  }
+
+  let found: string | null = null
+  const walk = (dir: string, depth: number): void => {
+    if (found || depth > maxDepth) return
+    let names: string[]
+    try {
+      names = readdirSync(dir)
+    } catch {
+      return
+    }
+    for (const name of names) {
+      if (found) return
+      if (name.startsWith('.') && name !== '.env') continue
+      if (
+        name === 'node_modules' ||
+        name === '.git' ||
+        name === 'dist' ||
+        name === 'build' ||
+        name === '.cache'
+      ) {
+        continue
+      }
+      const full = join(dir, name)
+      let st
+      try {
+        st = statSync(full)
+      } catch {
+        continue
+      }
+      if (st.isDirectory()) {
+        walk(full, depth + 1)
+        continue
+      }
+      if (!st.isFile()) continue
+      if (normalizeKey(name) === key) {
+        found = full
+        return
+      }
+    }
+  }
+  walk(root, 0)
+  return found
 }

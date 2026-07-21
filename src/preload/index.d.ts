@@ -74,6 +74,7 @@ export interface SimplePadApi {
       }>
     >
   >
+  resolveWikiNote: (targetName: string) => Promise<IpcResult<{ filePath: string } | null>>
   createWorkspaceNote: (request: {
     parentDir?: string
     fileName?: string

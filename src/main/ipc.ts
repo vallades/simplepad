@@ -332,6 +332,25 @@ export function registerIpcHandlers(): void {
   )
 
   ipcMain.handle(
+    'workspace:resolve-wiki',
+    (_event, targetName: string): IpcResult<{ filePath: string } | null> => {
+      try {
+        if (typeof targetName !== 'string' || !targetName.trim()) {
+          return { ok: false, error: 'Nome inválido', data: null }
+        }
+        if (!getWorkspaceManager().getActiveRoot()) {
+          return { ok: true, data: null }
+        }
+        const filePath = workspaceFs.resolveWikiNote(targetName.trim())
+        return { ok: true, data: filePath ? { filePath } : null }
+      } catch (error) {
+        log.error('[ipc] workspace:resolve-wiki', error)
+        return { ok: false, error: errorMessage(error), data: null }
+      }
+    }
+  )
+
+  ipcMain.handle(
     'workspace:search',
     (
       _event,

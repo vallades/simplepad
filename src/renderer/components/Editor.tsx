@@ -17,6 +17,7 @@ import {
 import { mergeEditorBodyIntoContent } from '../utils/frontmatter'
 import { getSnippetsSync, listSnippets } from '../services/snippetActions'
 import { tryExpandSnippetAtCursor } from '../services/snippetExpand'
+import { attachWikiLinkSupport } from '../monaco/wikiLinks'
 import { getDefaultEditorOptions, type MonacoThemeId } from '../utils/monacoUtils'
 import { isResolvedDark } from '../utils/theme'
 import { registerEditorCommandHandler } from '../services/editorCommands'
@@ -315,6 +316,10 @@ function Editor(): React.JSX.Element {
 
     // Prefetch snippets for Tab expansion
     void listSnippets()
+
+    // [[wiki links]] decorations + Ctrl/Cmd+click
+    const disposeWiki = attachWikiLinkSupport(monacoApi, editor)
+    disposablesRef.current.push({ dispose: disposeWiki })
 
     disposablesRef.current.push(
       // Tab expands snippet when cursor follows a trigger (e.g. ;hoje); else default Tab
