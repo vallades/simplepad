@@ -5,25 +5,34 @@ Histórico: [PROJETO.md](./PROJETO.md).
 
 ## Versão
 
-| Campo     | Valor                                  |
-| --------- | -------------------------------------- |
-| **Atual** | **2.1.0**                              |
-| Anterior  | 2.0.0 (Workspaces + explorer básico)   |
-| Foco      | Explorer VS Code-like + abas portáteis |
+| Campo     | Valor                                       |
+| --------- | ------------------------------------------- |
+| **Atual** | **2.1.0**                                   |
+| Anterior  | 2.0.0 (Workspaces + explorer básico)        |
+| Foco      | Explorer, abas portáteis, menus de contexto |
+| Tag       | `v2.1.0`                                    |
+| Branch    | `feature/v2.1-file-explorer-fixes` → `main` |
 
 ## O que entra na v2.1
 
 ### Correções
 
-1. **Abas portáteis** — rascunhos sem path / `untitled-notes` viajam ao trocar workspace; a sessão do contexto anterior continua no disco (Pessoal ou pasta)
-2. **Refresh da árvore** — save/create no workspace e mudanças externas (chokidar) atualizam o explorer
+1. **Abas portáteis** — rascunhos sem path / `untitled-notes` viajam ao trocar workspace
+2. **Refresh da árvore** — save/create + chokidar
+3. **Input inline** no explorador (create/rename) — Electron não tem `window.prompt`
+4. **Editor sincroniza** ao abrir arquivo pelo explorador (Monaco model + disco)
 
 ### File Explorer avançado
 
 - Toolbar: nova nota, nova pasta, refresh, expandir, recolher
-- Contexto (botão direito): renomear, excluir, nova nota/pasta
-- Busca, DnD de arquivos para a sidebar, loading
-- `⌘B` colapsável; fechada por padrão; largura persistida
+- Menus de contexto ricos (arquivo, pasta, raiz)
+- Busca, DnD, loading, `⌘B`
+
+### Menus de contexto (abas)
+
+- Fechar / outras / à direita / todas
+- Salvar, recarregar, copiar path/nome, revelar no SO
+- Formato Markdown/Plain Text, duplicar, nova aba
 
 ## Arquitetura
 
@@ -46,7 +55,8 @@ explorer refresh:
 | FS ops   | `src/main/workspaceFs.ts`                 |
 | Watcher  | `src/main/workspaceWatcher.ts` (chokidar) |
 | Events   | `src/renderer/services/explorerEvents.ts` |
-| UI       | `FileExplorerSidebar.tsx`                 |
+| UI       | `FileExplorerSidebar.tsx`, `TabBar.tsx`   |
+| Menu UI  | `ContextMenu.tsx`                         |
 
 ## Como testar
 
@@ -57,15 +67,15 @@ npm test && npm run lint && npm run typecheck
 npm run dev
 ```
 
-1. Em **Pessoal**, digite num rascunho sem salvar → abra pasta workspace → rascunho continua aberto
-2. Feche workspace → sessão Pessoal com o rascunho ainda existe
-3. No workspace: Nova nota na sidebar → arquivo aparece na árvore; Salvar → refresh
-4. Crie arquivo no Finder na pasta → árvore atualiza
-5. Renomear / excluir / DnD de `.md` na sidebar
+1. Rascunho em Pessoal → abrir workspace → rascunho continua
+2. Nova nota (input inline) → abre no editor
+3. Clique em várias notas no explorador → editor atualiza
+4. Contexto na aba e no explorador (fechar outras, revelar, duplicar…)
+5. Chokidar: criar arquivo no Finder → árvore atualiza
 
 ## Release
 
 ```bash
-git tag -a v2.1.0 -m "SimplePad v2.1.0 - Advanced File Explorer"
+git tag -a v2.1.0 -m "SimplePad v2.1.0 - Advanced File Explorer and workspace fixes"
 git push origin v2.1.0
 ```

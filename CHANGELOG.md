@@ -6,22 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
-## [2.1.0] — 2026-07-19
+## [2.1.0] — 2026-07-21
 
-**File Explorer avançado + correções de workspace.**
+**File Explorer avançado + correções de workspace + menus de contexto.**
 
 ### Fixed
 
 - Rascunhos **untitled / não salvos** permanecem abertos ao trocar de workspace (sessão Pessoal/global continua salva em separado)
 - Árvore do explorador **atualiza** ao criar/salvar notas no workspace (eventos + chokidar)
+- **Nova nota / pasta / renomear** no explorador: input inline (Electron não implementa `window.prompt`)
+- Clique em arquivo no explorador **atualiza o editor** (sync do model Monaco + reload do disco)
 
 ### Added
 
 - Toolbar da sidebar: Nova nota, Nova pasta, Atualizar, Expandir, Recolher
-- Menu de contexto: renomear, excluir, nova nota/pasta
 - Drag & drop de arquivos de texto para dentro da sidebar (copia para a pasta)
 - Watcher de arquivos no workspace (`chokidar`) com refresh debounced
 - Indicador de loading ao atualizar a árvore
+- **Menus de contexto ricos**:
+  - **Abas:** fechar / fechar outras / à direita / todas, salvar, recarregar, copiar caminho/nome, revelar no Finder/Explorer, formato MD/texto, duplicar, nova aba
+  - **Explorador:** abrir, abrir com app padrão, expandir/recolher, nova nota/pasta, renomear, duplicar, copiar caminho/nome, revelar, excluir, atualizar
+- IPC: `shell:show-item-in-folder`, `shell:open-path`, `workspace:duplicate`
 
 ### Changed
 
