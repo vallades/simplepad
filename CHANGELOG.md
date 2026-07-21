@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.3.0] — 2026-07-21
+
+**Sidebar real** — Outline, busca global e Timeline no Side Panel.
+
+### Added
+
+- **Outline** hierárquico da aba Markdown ativa (debounce, clique → scroll suave no editor)
+- **Busca global**: abas abertas + arquivos do workspace (IPC `workspace:search`, resultados com linha/trecho)
+- **Timeline**: últimas 20 notas (recentes + abas abertas com path); clique abre/foca
+- IPC `workspace:timeline`; animação ao trocar de view no Side Panel
+
+### Changed
+
+- Activity Bar: Timeline e Busca deixam de ser placeholders
+- Versão **2.2.0 → 2.3.0**
+
 ## [2.2.0] — 2026-07-21
 
 **Layout estilo Visual Studio Code** — Activity Bar, Side Panel e animações.

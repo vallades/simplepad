@@ -3,7 +3,8 @@ import type { SidePanelViewId } from '../../shared/settings'
 import { DEFAULT_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH, MIN_SIDEBAR_WIDTH } from '../../shared/settings'
 import FileExplorerSidebar from './FileExplorerSidebar'
 import SideOutlineView from './SideOutlineView'
-import SidePlaceholderView from './SidePlaceholderView'
+import SideSearchView from './SideSearchView'
+import SideTimelineView from './SideTimelineView'
 
 interface SidePanelProps {
   activeView: SidePanelViewId
@@ -22,7 +23,7 @@ const VIEW_TITLES: Record<SidePanelViewId, string> = {
 
 /**
  * Expandable companion column next to the Activity Bar.
- * Width animates via CSS; content swaps by activeView.
+ * Width animates via CSS; content swaps by activeView with fade.
  */
 function SidePanel({
   activeView,
@@ -82,21 +83,11 @@ function SidePanel({
       aria-hidden={collapsed}
     >
       <div className="side-panel__inner">
-        <div className="side-panel__content" data-view={activeView}>
+        <div className="side-panel__content" data-view={activeView} key={activeView}>
           {activeView === 'explorer' ? <FileExplorerSidebar embedded onClose={onCollapse} /> : null}
           {activeView === 'outline' ? <SideOutlineView /> : null}
-          {activeView === 'timeline' ? (
-            <SidePlaceholderView
-              title="Timeline"
-              description="Histórico de notas e alterações — em breve."
-            />
-          ) : null}
-          {activeView === 'search' ? (
-            <SidePlaceholderView
-              title="Busca"
-              description="Busca global no workspace — em breve. Use ⌘⇧F para buscar nas abas abertas."
-            />
-          ) : null}
+          {activeView === 'timeline' ? <SideTimelineView /> : null}
+          {activeView === 'search' ? <SideSearchView /> : null}
         </div>
       </div>
 

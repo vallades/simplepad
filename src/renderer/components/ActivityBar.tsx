@@ -12,8 +12,8 @@ export interface ActivityBarItem {
 export const ACTIVITY_BAR_ITEMS: readonly ActivityBarItem[] = [
   { id: 'explorer', label: 'Explorador' },
   { id: 'outline', label: 'Outline' },
-  { id: 'timeline', label: 'Timeline', comingSoon: true },
-  { id: 'search', label: 'Busca', comingSoon: true }
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'search', label: 'Busca' }
 ] as const
 
 interface ActivityBarProps {

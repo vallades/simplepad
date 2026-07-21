@@ -58,6 +58,22 @@ export interface SimplePadApi {
   openWorkspacePath: (rootPath: string) => Promise<IpcResult<WorkspaceInfo>>
   closeWorkspace: () => Promise<IpcResult<WorkspaceInfo>>
   listWorkspaceDir: (dirPath?: string) => Promise<IpcResult<ListDirResult>>
+  searchWorkspace: (request: {
+    query: string
+    caseSensitive?: boolean
+    maxHits?: number
+  }) => Promise<IpcResult<import('../shared/workspaceSearch').WorkspaceSearchHit[]>>
+  listTimeline: (limit?: number) => Promise<
+    IpcResult<
+      Array<{
+        filePath: string
+        title: string
+        lastModified: string
+        workspaceLabel: string
+        source: 'recent' | 'workspace'
+      }>
+    >
+  >
   createWorkspaceNote: (request: {
     parentDir?: string
     fileName?: string

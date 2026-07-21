@@ -4,7 +4,10 @@
  */
 
 export type EditorCommand =
-  'find' | 'replace' | 'go-to-line' | { type: 'reveal'; lineNumber: number; column: number }
+  | 'find'
+  | 'replace'
+  | 'go-to-line'
+  | { type: 'reveal'; lineNumber: number; column: number; smooth?: boolean }
 
 type Handler = (command: EditorCommand) => void
 
@@ -20,6 +23,15 @@ export function dispatchEditorCommand(command: EditorCommand): boolean {
   return true
 }
 
-export function revealInEditor(lineNumber: number, column: number): boolean {
-  return dispatchEditorCommand({ type: 'reveal', lineNumber, column })
+export function revealInEditor(
+  lineNumber: number,
+  column: number,
+  options?: { smooth?: boolean }
+): boolean {
+  return dispatchEditorCommand({
+    type: 'reveal',
+    lineNumber,
+    column,
+    smooth: options?.smooth ?? true
+  })
 }

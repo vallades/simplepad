@@ -111,11 +111,11 @@ function Editor(): React.JSX.Element {
       const editor = editorRef.current
       if (!editor) return
       if (typeof command === 'object' && command.type === 'reveal') {
-        editor.setPosition({ lineNumber: command.lineNumber, column: command.column })
-        editor.revealPositionInCenter({
-          lineNumber: command.lineNumber,
-          column: command.column
-        })
+        const pos = { lineNumber: command.lineNumber, column: command.column }
+        editor.setPosition(pos)
+        // Smooth scroll when supported (Monaco ScrollType.Smooth = 1)
+        const scrollType = (command.smooth ?? true) ? 1 : 0
+        editor.revealPositionInCenter(pos, scrollType)
         editor.focus()
         return
       }
